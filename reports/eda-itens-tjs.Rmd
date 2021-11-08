@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, echo=FALSE,message=FALSE,warning=FALSE}
+library(tidyverse)
+library(hrbrthemes)
+library(ggbeeswarm)
+theme_set(theme_ipsum_rc())
+```
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(tidy = FALSE, 
+                      echo = FALSE,
+                      fig.height = 10,
+                      fig.width = 8)
+set.seed(1014)
+options(digits = 2, scipen = 999)
+```
+
+```{r}
+pagamentos = read_csv(
+  here::here("data/ready/remuneracoes-contracheques.csv"),
+  col_types = cols(
+    .default = col_character(),
+    data = col_date(format = ""),
+    ativo = col_logical(),
+    valor = col_double(), 
+    mes = col_integer(), 
+    ano = col_integer()
+  )
+)
+```
+
+```{r}
+pessoal = pagamentos %>% 
+  group_by(orgao, data) %>% 
+  summarise(membros = n_distinct(id_contra_cheque), 
+            .groups = "drop")
+
+itens = pagamentos %>% 
+  group_by(orgao, data, categoria, item) %>% 
+  summarise(linhas = n(), com_valor = sum(valor > 0), 
+            .groups = "drop")
+
+contagem = pessoal %>% 
+  left_join(itens, by = c("orgao", "data"))
+```
+
+```{r}
+contagem %>% 
+  count(data, orgao, categoria) %>% 
+  ggplot(aes(x = data, y = n, fill = reorder(categoria, n, sum))) + 
+  facet_wrap(~ orgao) + 
+  geom_area() + 
+  scale_fill_brewer(type = "qual") 
+```
+
+```{r}
+itens %>% 
+  group_by(orgao, data, categoria, item) %>% 
+  summarise(usado = any(com_valor != 0), .groups = "drop_last") %>% 
+  summarise(usados = sum(usado), .groups = "drop") %>% 
+  ggplot(aes(x = data, y = usados, fill = reorder(categoria, usados, sum))) + 
+  facet_grid(reorder(categoria, -usados, sum) ~ orgao) + 
+  geom_area(color = "gray30", show.legend = F) + 
+  scale_fill_brewer(type = "qual") + 
+  labs(title = "Itens com valores diferentes de zero na remuneração",
+       fill = "Categoria do contracheque")
+```
+
+```{r}
+itens %>% 
+  group_by(orgao, data, categoria, item) %>% 
+  summarise(usado = any(com_valor > 0), .groups = "drop") %>% 
+  group_by(orgao, categoria, item) %>% 
+  summarise(meses = sum(usado), .groups = "drop") %>% 
+  arrange(orgao, -meses)
+```
+```{r}
+mapeamento = read_csv(here::here("data/raw/mapeamento-categorias.csv"), 
+                      col_types = cols(.default = col_character())) %>% 
+  janitor::clean_names()
+```
+
