@@ -1,6 +1,8 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Análise exploratória - TJPB, TJRJ e TJAL"
+output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, echo=FALSE,message=FALSE,warning=FALSE}
@@ -78,7 +80,8 @@ itens %>%
   summarise(meses = sum(usado), .groups = "drop") %>% 
   arrange(orgao, -meses)
 ```
-```{r}
+
+```{r eval=FALSE}
 mapeamento = read_csv(here::here("data/raw/mapeamento-categorias.csv"), 
                       col_types = cols(.default = col_character())) %>% 
   janitor::clean_names()
