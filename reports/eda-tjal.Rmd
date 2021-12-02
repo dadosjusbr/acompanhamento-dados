@@ -1,0 +1,194 @@
+---
+title: "Análise exploratória - Tribunal de Justiça do Alagoas"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE,message=FALSE,warning=FALSE}
+library(tidyverse)
+library(hrbrthemes)
+library(ggbeeswarm)
+library(lubridate)
+theme_set(theme_ipsum_rc() +
+  theme(axis.ticks.x = element_line()))
+```
+
+> Os pontos em vermelho são as seguintes marcações para comparação:
+>* o aumento dos benefícios dos meses de set e out/2018 no TJAL
+>* os benefícios aumentarem mais que 10x no mês de dez/2019
+
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(tidy = FALSE, 
+                      echo = FALSE,
+                      fig.height = 10,
+                      fig.width = 8)
+set.seed(1014)
+options(digits = 2, scipen = 999)
+```
+
+```{r}
+pagamentos = read_csv(
+  here::here("data/ready/remuneracoes-contracheques.csv"),
+  col_types = cols(
+    .default = col_character(),
+    data = col_date(format = ""),
+    ativo = col_logical(),
+    valor = col_double(), 
+    mes = col_integer(), 
+    ano = col_integer()
+  )) %>% 
+  filter(orgao == "tjal")
+```
+
+### Recebimentos líquido e bruto
+
+**Recebimento bruto:** é o total de recebimentos em todas as categorias (Contra-cheque, direitos eventuais, direitos pessoais e indenizações) 
+
+**Recebimento líquido:** é o recebimento bruto subtraído dos descontos na categoria contracheque
+
+```{r fig.height=6}
+pagamentos %>% 
+  count(data, natureza, wt = valor, name = "valor") %>% 
+  pivot_wider(names_from = natureza, values_from = valor) %>% 
+  transmute(
+    data = data,
+    `Recebimento bruto` = Recebimento,
+    `Recebimento líquido` = Recebimento - Desconto
+  ) %>% 
+  pivot_longer(-data, names_to = "natureza", values_to = "valor") %>% 
+  ggplot(aes(x = data, y = valor, color = natureza)) +
+  geom_line(size = 1.2) + 
+  geom_point(
+    data = . %>% filter(data %in% c(ymd("2018-09-01"), ymd("2018-10-01"),  ymd("2019-12-01"))),
+    size = 3,
+    color = "red"
+  ) +
+  scale_color_brewer(type = "qual") +
+  labs(
+    title = "Recebimentos bruto e líquido",
+    subtitle = "Tribunal de justiça do Alagoas - TJAL",
+    x = "Valor",
+    y = NULL,
+    color = "Natureza"
+  )
+```
+
+```{r fig.height=4}
+pagamentos %>% 
+  count(ano = year(data), natureza, wt = valor, name = "valor") %>% 
+  pivot_wider(names_from = natureza, values_from = valor) %>% 
+  transmute(
+    ano = ano,
+    `Recebimento bruto` = Recebimento,
+    `Recebimento líquido` = Recebimento - Desconto
+  ) %>% 
+  pivot_longer(-ano, names_to = "natureza", values_to = "valor") %>% 
+  ggplot(aes(x = ano, y = valor, color = natureza)) +
+  geom_line(size = 2) + 
+  scale_color_brewer(type = "qual") +
+  labs(
+    title = "Recebimentos bruto e líquido",
+    subtitle = "Tribunal de justiça do Alagoas - TJAL",
+    x = "Valor",
+    y = NULL,
+    color = "Natureza"
+  )
+```
+
+### Itens do Contracheque
+
+```{r fig.height=20}
+pagamentos %>% 
+  filter(categoria == "contracheque") %>% 
+  count(data, item, wt = valor, name = "valor") %>% 
+  ggplot(aes(x = data, y = valor, fill = item)) +
+  geom_area(color = "gray30", show.legend = FALSE) +
+  facet_wrap(~ reorder(item, -valor, sum), ncol = 1, scales = "free_x") +
+  geom_point(
+    data = . %>% filter(data %in% c(ymd("2018-09-01"), ymd("2018-10-01"),  ymd("2019-12-01"))),
+    size = 3,
+    color = "red",
+    show.legend = F
+  ) +
+  scale_fill_brewer(type = "qual") +
+  scale_x_date(date_breaks = "6 months", date_labels = "%b-%Y") +
+  labs(
+    title = "Itens do contracheque",
+    subtitle = "Tribunal de justiça do Alagoas - TJAL",
+    y = "Valor", x = NULL
+  )
+```
+
+### Itens dos direitos eventuais
+
+```{r fig.height=20}
+pagamentos %>% 
+  filter(categoria == "direitos-eventuais") %>% 
+  count(data, item, categoria, wt = valor, name = "valor") %>% 
+  ggplot(aes(x = data, y = valor, fill = item)) +
+  geom_area(color = "gray30", show.legend = F) + 
+  geom_point(
+    data = . %>% filter(data %in% c(ymd("2018-09-01"), ymd("2018-10-01"),  ymd("2019-12-01"))),
+    size = 3,
+    color = "red",
+    show.legend = F
+  ) +
+  scale_x_date(date_breaks = "6 months", date_labels = "%b-%Y") +
+  facet_wrap(~ reorder(item, -valor), ncol = 1, scales = "free_x") +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    title = "Itens dos direitos eventuais",
+    subtitle = "Tribunal de justiça do Alagoas - TJAL",
+    y = "Valor", x = NULL
+  )
+```
+
+### Itens dos direitos pessoais
+
+```{r fig.height=6}
+pagamentos %>% 
+  filter(categoria == "direitos-pessoais") %>% 
+  count(data, item, categoria, wt = valor, name = "valor") %>% 
+  ggplot(aes(x = data, y = valor, fill = item)) +
+  geom_area(color = "gray30", show.legend = F) + 
+  facet_wrap(~ reorder(item, -valor), ncol = 1, scales = "free_x") +
+  geom_point(
+    data = . %>% filter(data %in% c(ymd("2018-09-01"), ymd("2018-10-01"),  ymd("2019-12-01"))),
+    size = 3,
+    color = "red",
+    show.legend = F
+  ) +
+  scale_x_date(date_breaks = "6 months", date_labels = "%b-%Y") +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    title = "Itens dos direitos pessoais",
+    subtitle = "Tribunal de justiça do Alagoas - TJAL",
+    y = "Valor", x = NULL
+  )
+```
+
+### Itens das indenizações
+
+```{r fig.height=20}
+pagamentos %>% 
+  filter(categoria == "indenizações") %>% 
+  count(data, item, categoria, wt = valor, name = "valor") %>% 
+  ggplot(aes(x = data, y = valor, fill = item)) +
+  geom_area(color = "gray30", show.legend = F) + 
+  geom_point(
+    data = . %>% filter(data %in% c(ymd("2018-09-01"), ymd("2018-10-01"),  ymd("2019-12-01"))),
+    size = 3,
+    color = "red",
+    show.legend = F
+  ) +
+  facet_wrap(~ reorder(item, -valor), ncol = 1, scales = "free_x") +
+  scale_x_date(date_breaks = "6 months", date_labels = "%b-%Y") +
+  scale_fill_brewer(type = "qual") +
+  labs(
+    title = "Itens das indenizações",
+    subtitle = "Tribunal de justiça do Alagoas - TJAL",
+    x = "Valor"
+  )
+```
