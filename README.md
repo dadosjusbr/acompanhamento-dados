@@ -14,4 +14,4 @@ Dados brutos vão em `dados/raw`, e prontos em `dados/ready`. Outros dados que n
 
 Código para obter dados (e colocá-los em `dados/raw`) e transformar dados (colocando-os e `dados/ready`), assim como funções reusáveis vão em `src/`. 
 
-Relatórios que usam dados prontos (`dados/ready`) ficam em `reports/`. Coloque o html de versões para publicação em `docs/` e eles estarão disponíveis em https://dadosjusbr.github.io/analises/. Não coloque o html dos relatórios em `reports/`. 
+Relatórios que usam dados prontos (`dados/ready`) ficam em `reports/`. Coloque o html de versões para publicação em `docs/` e eles estarão disponíveis em https://dadosjusbr.github.io/acompanhamento-dados/. Não coloque o html dos relatórios em `reports/`. 
