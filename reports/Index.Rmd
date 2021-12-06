@@ -10,4 +10,4 @@ knitr::opts_chunk$set(echo = TRUE)
 Temos no repositório:
 
 - [Análise exploratória - todos os tribunais](https://dadosjusbr.github.io/acompanhamento-dados/eda-itens-tjs.html)
-- [Análise exploratória - TJAL](https://dadosjusbr.github.io/acompanhamento-dados/eda-itens-tjs.html)
+- [Análise exploratória - TJAL](https://dadosjusbr.github.io/acompanhamento-dados/eda-tjal.html)
