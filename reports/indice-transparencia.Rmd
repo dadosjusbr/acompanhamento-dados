@@ -1,0 +1,247 @@
+---
+title: "Análise exploratória - Tribunal de Justiça do Alagoas"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+```{r setup, echo=FALSE,message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(tidy = FALSE, 
+                      echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.height = 10,
+                      fig.width = 8)
+set.seed(1014)
+options(digits = 2, scipen = 999)
+```
+
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(tidyverse)
+library(hrbrthemes)
+library(ggbeeswarm)
+library(lubridate)
+library(here)
+
+# peguei as cores do site e criei um vetor com nomes fáceis de lembrar
+cores_dadosjusbr <- c(
+  lilas = "#B361C6",
+  cyan = "#2FBB96",
+  cinza_azulado = "#3e5363",
+  verde = "#96ba2f",
+  laranja = "#F2C94C"
+)
+
+cores_natureza <- c(
+  "Desconto" = cores_dadosjusbr[["lilas"]],
+  "Recebimento" = cores_dadosjusbr[["cyan"]]
+)
+
+theme_set(
+  theme_ipsum_rc() +
+  theme(
+    axis.ticks.x = element_line(),
+    plot.title = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    plot.subtitle = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    axis.text.x = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    axis.text.y = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    axis.title.x = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    axis.title.y = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    legend.text = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    legend.title = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+    strip.text = element_text(color = cores_dadosjusbr[["cinza_azulado"]])
+  )
+)
+
+update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]])
+```
+
+```{r}
+estrutura <- function() {
+  full <- cols(
+    orgao = col_character(),
+    receita_base = col_character(),
+    despesas = col_character(),
+    outras_receitas = col_character(),
+    acesso = col_character(),
+    ano = col_integer(),
+    mes = col_integer(),
+    acesso_i = col_integer(),
+    indice_completude = col_double(), 
+    indice_facilidade = col_double(),
+    indice_transparencia = col_double(),
+    tem_lotacao = col_logical(),
+    tem_cargo = col_logical(),
+    tem_matricula = col_logical(),
+    nao_requer_login = col_logical(),
+    nao_requer_captcha = col_logical(),
+    formato_consistente = col_logical(),
+    estritamente_tabular = col_logical()
+  )
+  media <- cols(
+    orgao = col_character(),
+    media_indice_completude = col_double(),
+    media_indice_facilidade = col_double(),
+    media_indice_transparencia = col_double()
+  )
+  
+  return(list(full = full, media = media))
+}
+
+col_defs <- estrutura()
+
+indice <- "data/load" %>% 
+  here() %>%
+  list.files(pattern = "^indice_transparencia.+",
+             full.names = TRUE) %>% 
+  set_names(c("full", "media")) %>% 
+  map2(col_defs, ~ read_csv(.x, col_types = .y))
+```
+
+## Índice de transparência - média 12 meses
+
+```{r}
+indice$full %>% 
+  transmute(
+    orgao,
+    ano,
+    indice_completude,
+    indice_facilidade,
+    indice_transparencia
+  ) %>% 
+  group_by(orgao, ano) %>% 
+  summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
+  pivot_longer(-c(orgao, ano), names_to = "categoria", values_to = "pontuacao") %>% 
+  filter(ano == 2020L, categoria == "indice_transparencia") %>% 
+  mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence(),
+         orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-")) %>% 
+  ggplot(aes(
+    x = reorder(orgao, pontuacao),
+    y = pontuacao,
+    fill = categoria
+  )) +
+  geom_col(show.legend = F, alpha = .7) +
+  geom_text(aes(label = round(pontuacao, 2)), hjust = 1, fontface = "bold", size = 4.5) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, .01)) +
+  scale_fill_manual(values = c("Transparencia" = cores_dadosjusbr[["cyan"]])) +
+  coord_flip() +
+  labs(
+    title = "Índice de Transparência nos Tribunais de Justiça",
+    subtitle = "Média para o ano de 2021",
+    y = "Pontuação",
+    x = "Órgão"
+  )
+```
+
+
+```{r}
+indice$full %>%
+  # mutate(data = lubridate::dmy(str_glue("01-{mes}-{ano}"))) %>% 
+  transmute(
+    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
+    data = lubridate::dmy(str_glue("01-{mes}-{ano}")),
+    indice_completude = indice_completude != 0,
+    indice_facilidade = indice_facilidade != 0,
+    indice_transparencia = indice_transparencia != 0
+  ) %>%
+  complete(orgao, data, fill = list(
+    indice_completude = F,
+    indice_facilidade = F,
+    indice_transparencia = F
+  )) %>% 
+  arrange(data) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, indice_transparencia),
+    fill = if_else(indice_transparencia, "0,65", "0") %>% 
+      ordered(levels = c("0", "0,65"))
+  )) +
+  geom_tile(color = cores_dadosjusbr[["cinza_azulado"]], alpha = .8) +
+  scale_fill_manual(values = c("0" = cores_dadosjusbr[["lilas"]], 
+                               "0,65" = cores_dadosjusbr[["cyan"]])) +
+  scale_x_date(expand = c(0,0 )) +
+  labs(
+    title = "Índice de transparência mês a mês",
+    fill = "Pontuação\nno mês",
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+```
+
+
+## Índice de Facilidade - média 12 meses
+
+
+```{r}
+indice$full %>% 
+  transmute(
+    orgao,
+    ano,
+    indice_completude,
+    indice_facilidade,
+    indice_transparencia
+  ) %>% 
+  group_by(orgao, ano) %>% 
+  summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
+  pivot_longer(-c(orgao, ano), names_to = "categoria", values_to = "pontuacao") %>% 
+  filter(ano == 2020L, categoria == "indice_facilidade") %>% 
+  mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence(),
+         orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-")) %>% 
+  ggplot(aes(
+    x = reorder(orgao, pontuacao),
+    y = pontuacao,
+    fill = categoria
+  )) +
+  geom_col(show.legend = F, alpha = .7) +
+  geom_text(aes(label = round(pontuacao, 2)), hjust = 1, fontface = "bold", size = 4.5) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, .01)) +
+  scale_fill_manual(values = c("Facilidade" = cores_dadosjusbr[["lilas"]])) +
+  coord_flip() +
+  labs(
+    title = "Índice de Facilidade de acesso aos dados dos Tribunais de Justiça",
+    subtitle = "Média para o ano de 2021",
+    y = "Pontuação",
+    x = "Órgão"
+  )
+```
+
+## Índice de Completude - média 12 meses 
+
+```{r}
+indice$full %>% 
+  transmute(
+    orgao,
+    ano,
+    indice_completude,
+    indice_facilidade,
+    indice_transparencia
+  ) %>% 
+  group_by(orgao, ano) %>% 
+  summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
+  pivot_longer(-c(orgao, ano), names_to = "categoria", values_to = "pontuacao") %>% 
+  filter(ano == 2020L, categoria == "indice_completude") %>% 
+  mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence(),
+         orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-")) %>% 
+  ggplot(aes(
+    x = reorder(orgao, pontuacao),
+    y = pontuacao,
+    fill = categoria
+  )) +
+  geom_col(show.legend = F, alpha = .7) +
+  geom_text(aes(label = round(pontuacao, 2)), hjust = 1, fontface = "bold", size = 4.5) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, .01)) +
+  scale_fill_manual(values = c("Completude" = cores_dadosjusbr[["laranja"]])) +
+  coord_flip() +
+  labs(
+    title = "Índice de Completude dados dos Tribunais de Justiça",
+    subtitle = "Média para o ano de 2021",
+    y = "Pontuação",
+    x = "Órgão"
+  )
+```
+
