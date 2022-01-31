@@ -110,11 +110,17 @@ indice <- "data/load" %>%
              full.names = TRUE) %>% 
   set_names(c("full", "media")) %>% 
   map2(col_defs, ~ read_csv(.x, col_types = .y))
+
+# vamos recalcular os índices
+indice$full <- indice$full %>% 
+  select(-indice_completude,
+         -indice_facilidade,
+         -indice_transparencia)
 ```
 
-## Critérios
+## Metodologia
 
-### Completude
+### Índice de Facilidade
 
 - `nao_requer_login`: se para acessar a planilha é preciso fazer login (1 ponto, o painel do CNJ não requer login): $1$
 - `nao_requer_captcha`: se para acessar a planilha é preciso digitar captcha (1 ponto, o painel do CNJ não requer captcha): $1$
@@ -124,69 +130,132 @@ indice <- "data/load" %>%
 
 A somatória para todos os órgãos será sempre:
 
-$$(0+0+0+1+1+1) / 6 = 3/6 = 0,5$$
+### Média simples
+$$\textrm{Índice Facilidade} = (1+1+0+1+1) / 5 = 4/5 = 0,8$$
+
+```{r}
+indice$full <- indice$full %>% 
+  mutate(nao_requer_login = 1,
+         nao_requer_captcha = 1,
+         acesso = 0,
+         formato_consistente = 1,
+         estritamente_tabular = 1,
+         indice_facilidade = (nao_requer_login + nao_requer_captcha + acesso + formato_consistente + estritamente_tabular) / 5)
+```
+
 
 E quando um órgão não sobe a planilha de pagamentos no CNJ ele zera em todos os quesitos.
 
-### Facilidade
+### Índice de Completude
 
-- `tem_lotacao`: Se tem informação de lotação (1 ponto, nenhum órgão tem): 0
-- `tem_cargo`: Se tem informação do cargo do membro (1ponto, nenhum órgão tem): 0
-- `tem_matricula`: Se tem informação de matrícula (1 ponto, nenhum órgão tem): 0
-- `receita_base`: Se tem dados de receita-base (1 ponto, todos os órgãos tem): 1
-- `despesas`: Se tem dados de despesa (1 ponto, todos os órgãos tem): 1
-- `outras_receitas`: Se tem dados de outras receitas (1 ponto, todos os órgãos tem): 1
+- `tem_lotacao`: Se tem informação de lotação (1 ponto, nenhum órgão tem): $0$
+- `tem_cargo`: Se tem informação do cargo do membro (1ponto, nenhum órgão tem): $0$
+- `tem_matricula`: Se tem informação de matrícula (1 ponto, nenhum órgão tem): $0$
+- `receita_base`: Se tem dados de receita-base (1 ponto, todos os órgãos tem): $1$
+- `despesas`: Se tem dados de despesa (1 ponto, todos os órgãos tem): $1$
+- `outras_receitas`: Se tem dados de outras receitas (1 ponto, todos os órgãos tem): $1$
 
 A somatória para todos os órgãos será sempre:
 
-$$(1+1+0+1+1) / 5 = 4/5 = 0,8$$
+$$\textrm{Índice Completude} = (0+0+0+1+1+1) / 6 = 3/6 = 0,5$$
 
 E quando um órgão não sobe a planilha de pagamentos no CNJ ele zera em todos os quesitos.
+
+```{r}
+indice$full <- indice$full %>%
+  mutate(tem_lotacao = as.integer(tem_lotacao),
+         tem_cargo = as.integer(tem_cargo),
+         tem_matricula = as.integer(tem_matricula),
+         receita_base = if_else(is.na(receita_base), "", receita_base),
+         receita_base = if_else(receita_base == "DETALHADO", 1, 0),
+         despesas = if_else(is.na(despesas), "", despesas),
+         despesas = if_else(despesas == "DETALHADO", 1, 0),
+         outras_receitas = if_else(is.na(outras_receitas), "", outras_receitas),
+         outras_receitas = if_else(outras_receitas == "DETALHADO", 1, 0),
+         indice_completude = (tem_lotacao + tem_cargo + tem_matricula + receita_base + despesas + outras_receitas) / 6)
+```
+
+
+## Índice de transparência
+
+O índice de transparência é uma média harmônica entre as pontuações verificadas no índice de Completude e o índice de Transparência:
+
+$$\textrm{Índice Transparência} = \frac{2 \times \textrm{Índice Facilidade} \times \textrm{Índice Completude}}{\textrm{Índice Facilidade} + \textrm{Índice Completude}} $$
+
+$$\textrm{Índice Transparência} = \frac{2 \times 0,8 \times 0,5}{0,8+0,5} = \frac{0,8}{1,3} \approx 0,62$$
+Caso algum dos índices seja igual a zero, então o índice de transparência também será zero.
+
+```{r}
+indice$full <- indice$full %>% mutate(
+    indice_transparencia = if_else(
+      indice_completude == 0, 0,
+      2 * (indice_facilidade * indice_completude) / (indice_facilidade + indice_completude)
+  ))
+```
+
 
 ## Transparência nos tribunais de justiça
 
 ```{r}
+cut_orgao <- max(indice$full$indice_transparencia)
+
 indice$full %>% 
   filter(ano == 2020L) %>% 
   transmute(
-    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
-    ano,
+    orgao = orgao %>% 
+      toupper() %>% 
+      str_replace("^TJ", "TJ-"),
+    ano, mes,
     indice_completude,
     indice_facilidade,
     indice_transparencia
-  ) %>% 
+  ) %>% #arrange(orgao, ano, mes) %>% print(n = Inf)
   group_by(orgao, ano) %>% 
   summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
+  mutate(orgao = if_else(indice_completude == 0.5 & indice_facilidade == 0.8, "Demais órgãos", orgao)) %>%
+  distinct() %>% 
   pivot_longer(-c(orgao, ano), values_to = "pontuacao", names_to = "indice") %>%
   mutate(
     indice = case_when(
       indice == "indice_completude" ~ "Completude",
       indice == "indice_facilidade" ~ "Facilidade",
       TRUE ~ "Transparência"
-  )) %>%
+  )) %>% 
   ggplot(aes(
     y = reorder(orgao, pontuacao, sum),
     x = pontuacao
   )) +
   geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
   geom_point(
-    aes(fill = indice, size = indice),
-    shape = 21) +
-  scale_x_continuous(limits = c(0, 1)) +
-  scale_size_manual(values = c("Completude" = 2.5, "Transparência" = 5, "Facilidade" = 2.5)) +
+    data = . %>% filter(indice != "Transparência") %>% 
+      rename(dimensao = indice),
+    aes(size = dimensao, fill = dimensao),
+    shape = 21,
+    size = 3.5
+    ) +
+  geom_point(
+    data = . %>% filter(indice == "Transparência") %>% 
+      mutate(indice = "Índice de Transparência"),
+    aes(color = indice),
+    size = 6, 
+    alpha = .7
+    ) +
+  scale_x_continuous(limits = c(0, 1.3), breaks = c(0, .5, 1), minor_breaks = c(.25, .75)) +
+  #scale_size_manual(values = c("Completude" = 3, "Facilidade" = 3)) +
   scale_fill_manual(values = c(
     "Completude" = cores_dadosjusbr[["laranja"]],
-    "Transparência" = cores_dadosjusbr[["cyan"]],
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
-  geom_curve(aes(x = .75, xend = 0.49, y = "TJ-RR", yend = "TJ-TO"),
+  scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
+  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-MG", yend = "TJ-MG"),
              arrow = arrow(length = unit(2, "mm")), curvature = -0.5
              ) + 
   geom_label(
-    aes(x = .8, y = "TJ-RR",
-        label = str_glue("O índice de Transparência\né uma média das pontuações\n",
+    aes(x = 1.1, y = "TJ-MG",
+        label = str_glue("O índice de Transparência\né uma média harmônica\ndas pontuações\n",
                          "obtidas nas dimensões\nCompletude e Facilidade")
         ),
+    vjust = 0,
     label.r = unit(0.3, "lines"),
     lineheight = 1.1
   ) +
@@ -195,8 +264,8 @@ indice$full %>%
     subtitle = "Médias nos últimos 12 meses, por órgão",
     x = "Pontuação",
     y = NULL,
-    fill = "Índice:",
-    size = "Índice:"
+    fill = "Dimensões:",
+    color = ""
   ) +
   theme(
     legend.position = "top",
@@ -284,17 +353,13 @@ plot_indice_barra <- function(df, indice) {
 }
 ```
 
-```{r}
+```{r echo = FALSE}
 indice$full %>% 
   plot_indice_barra("Transparência")
-```
 
-```{r}
 indice$full %>% 
   plot_indice_barra("Completude")
-```
 
-```{r}
 indice$full %>% 
   plot_indice_barra("Facilidade")
 ```
