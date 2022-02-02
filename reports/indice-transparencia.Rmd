@@ -133,7 +133,6 @@ indice$full <- indice$full %>%
 
 A somatória para todos os órgãos será sempre:
 
-### Média simples
 $$\textrm{Índice Facilidade} = (1+1+0+1+1) / 5 = 4/5 = 0,8$$
 
 ```{r}
