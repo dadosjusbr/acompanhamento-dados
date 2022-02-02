@@ -1,5 +1,5 @@
 ---
-title: "Análise exploratória - Tribunal de Justiça do Alagoas"
+title: "Índice de Transparência nos Tribunais de Justiça"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -19,7 +19,7 @@ options(digits = 2, scipen = 999, OutDec = ",")
 
 
 Sys.setenv(LANGUAGE = "pt-br")
-Sys.setlocale("LC_TIME", "pt_BR")
+
 ```
 
 
@@ -106,21 +106,24 @@ col_defs <- estrutura()
 
 indice <- "data/load" %>% 
   here() %>%
-  list.files(pattern = "^indice_transparencia.+",
+  list.files(pattern = "^indice_transparencia.*_20220201",
              full.names = TRUE) %>% 
-  set_names(c("full", "media")) %>% 
+  set_names(c("full", "media")) %>%
   map2(col_defs, ~ read_csv(.x, col_types = .y))
 
 # vamos recalcular os índices
 indice$full <- indice$full %>% 
   select(-indice_completude,
          -indice_facilidade,
-         -indice_transparencia)
+         -indice_transparencia) %>% 
+  filter(str_detect(orgao, "^tj"))
 ```
 
 ## Metodologia
 
 ### Índice de Facilidade
+
+> O índice de facilidade é constante para todos os órgãos, pois os dados são acessados e extraídos da mesma plataforma do CNJ. Esses valores são travados para todos os tribunais e, portanto, refletem o estado da plataforma.
 
 - `nao_requer_login`: se para acessar a planilha é preciso fazer login (1 ponto, o painel do CNJ não requer login): $1$
 - `nao_requer_captcha`: se para acessar a planilha é preciso digitar captcha (1 ponto, o painel do CNJ não requer captcha): $1$
@@ -142,9 +145,6 @@ indice$full <- indice$full %>%
          estritamente_tabular = 1,
          indice_facilidade = (nao_requer_login + nao_requer_captcha + acesso + formato_consistente + estritamente_tabular) / 5)
 ```
-
-
-E quando um órgão não sobe a planilha de pagamentos no CNJ ele zera em todos os quesitos.
 
 ### Índice de Completude
 
@@ -310,8 +310,6 @@ indice$full %>%
   facet_wrap(~ categoria)
 ```
 
-Gráficos separados:
-
 ```{r}
 plot_indice_barra <- function(df, indice) {
   
@@ -353,7 +351,7 @@ plot_indice_barra <- function(df, indice) {
 }
 ```
 
-```{r echo = FALSE}
+```{r echo = FALSE, eval = FALSE}
 indice$full %>% 
   plot_indice_barra("Transparência")
 
@@ -410,49 +408,6 @@ indice$full %>%
 ```
 
 ```{r fig.height=6, fig.width=10}
-
-indice$full %>%
-  transmute(
-    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
-    data = dmy(str_glue("01-{mes}-{ano}")),
-    indice_completude = indice_completude != 0,
-    indice_facilidade = indice_facilidade != 0,
-    indice_transparencia = indice_transparencia != 0
-  ) %>%
-  complete(orgao, data, fill = list(
-    indice_completude = F,
-    indice_facilidade = F,
-    indice_transparencia = F
-  )) %>% 
-  mutate(
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>% 
-  # filter(orgao == "TJ-AL") %>% 
-  ggplot(aes(
-    x = data,
-    y = reorder(orgao, indice_facilidade),
-    fill = if_else(indice_facilidade, "0,8", "0") %>% 
-      ordered(levels = c("0", "0,8"))
-  )) +
-  geom_tile(color = "gray90", size = .01) +
-  scale_fill_manual(values = c("0" = cores_dadosjusbr[["cinza_azulado"]], 
-                               "0,8" = cores_dadosjusbr[["lilas"]])) +
-  scale_x_date(expand = c(0, 0)) +
-  labs(
-    title = "Índice de Facilidade mês a mês",
-    fill = "Pontuação\nno mês",
-    x = "Cada célula representa 1 mês",
-    y = NULL
-  ) +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.spacing = unit(2, "mm"),
-        strip.text = element_text(face = "bold")) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
-```
-
-```{r fig.height=6, fig.width=10}
 indice$full %>%
   transmute(
     orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
@@ -494,7 +449,168 @@ indice$full %>%
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
 ```
 
-### Médias anuais
+## Completude dos dados
+
+```{r fig.width=10}
+indice$full %>%
+  transmute(
+    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
+    ano,
+    mes,
+    indice_completude = indice_completude != 0
+  ) %>% 
+  complete(orgao, ano, mes, fill = list(
+    indice_completude = FALSE
+  )) %>% 
+  mutate(mes = ordered(month.abb[mes], levels = month.abb),
+         indice_completude = indice_completude) %>% 
+  add_count(orgao, ano, wt = indice_completude) %>% 
+  select(orgao, ano, indice_completude, n) %>% 
+  distinct() %>% 
+  filter(indice_completude) %>%
+  complete(orgao, ano, fill = list(indice_completude = TRUE, n = 0)) %>% 
+  ggplot(aes(
+    x = tidytext::reorder_within(orgao, -n, ano),
+    y = n
+  )) +
+  geom_col(aes(y = 12, fill = "Não disponível"),
+           width = .9) +
+  geom_col(aes(fill = "Disponível"), color = "gray25") +
+  tidytext::scale_x_reordered() +
+  facet_wrap(~ ano, ncol = 1, scales = "free_x") +
+  scale_y_continuous(
+    breaks = seq(0, 12, 3)[-1], 
+    labels = paste(seq(0, 12, 3)[-1], "Meses")
+  ) +
+  scale_fill_manual(values = c(
+    "Disponível" = cores_dadosjusbr[["laranja"]],
+    "Não disponível" = alpha(cores_dadosjusbr[["cinza_azulado"]], .9)
+  )) +
+  labs(
+    title = "Completude de dados por ano e órgão",
+    subtitle = str_glue("Quantidade de meses com disponibilidade de dados de remuneração\n",
+                        "por ano órgão"),
+    y = "Quantidade de meses",
+    x = "Órgão (sigla)",
+    fill = "Situação do dado:"
+  ) +
+  theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 8),
+        axis.ticks.x = element_blank(),
+        panel.spacing = unit(1, "mm"),
+        strip.text = element_text(face = "bold", size = 15))
+```
+
+```{r}
+library(waffle)
+indice$full %>% 
+  transmute(
+    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
+    ano,
+    mes,
+    indice_completude = indice_completude != 0
+  ) %>% 
+  complete(orgao, ano, mes, fill = list(
+    indice_completude = FALSE
+  )) %>% 
+  mutate(mes = ordered(month.abb[mes], levels = month.abb),
+         indice_completude = indice_completude) %>% 
+  add_count(orgao, ano, wt = indice_completude) %>% 
+  select(orgao, ano, indice_completude, n) %>% 
+  distinct() %>% 
+  filter(indice_completude) %>%
+  complete(orgao, ano, fill = list(indice_completude = TRUE, n = 0)) %>%
+  group_by(ano) %>% 
+  summarise(
+    qt_completos = sum(n),
+    qt_incompletos = sum(12 - n)
+  ) %>% 
+  pivot_longer(-ano, values_to = "qt", names_to = "status") %>% 
+  ggplot(aes(values = qt, fill = reorder(status, -qt))) +
+  geom_waffle(flip = T, n_rows = 10, color = "gray60") +
+  scale_x_discrete() + 
+  scale_fill_manual(
+    values = c(cores_dadosjusbr[["laranja"]], cores_dadosjusbr[["cinza_azulado"]]),
+    labels = c("Dado disponível", "Dado indisponível")
+  ) +
+  scale_y_continuous(
+    labels = function(x) x * 10, # make this multiplyer the same as n_rows
+    expand = c(0,0)
+  ) +
+  coord_equal() +
+  guides(fill = guide_legend(reverse = F)) +
+  facet_wrap(~ ano, nrow = 1, strip.position = "bottom") +
+  labs(
+    title = "Completude dos dados por ano",
+    subtitle = str_glue(
+      "Por ano, são esperadas 324 atualizações (27 tribunais atualizando 12 meses/ano)\n",
+      "Cada quadrado no gráfico representa uma planilha mensal de dados de remuneração"),
+    fill = "Situação"
+  ) +
+  theme(panel.grid = element_blank(),
+        axis.ticks.y = element_blank(),
+        plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+```
+
+```{r fig.height=5}
+indice$full %>% 
+  transmute(
+    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
+    ano,
+    mes,
+    indice_completude = indice_completude != 0
+  ) %>% 
+  complete(orgao, ano, mes, fill = list(
+    indice_completude = FALSE
+  )) %>% 
+  mutate(mes = ordered(month.abb[mes], levels = month.abb),
+         indice_completude = indice_completude) %>% 
+  add_count(orgao, ano, wt = indice_completude) %>% 
+  select(orgao, ano, indice_completude, n) %>% 
+  distinct() %>% 
+  filter(indice_completude) %>%
+  complete(orgao, ano, fill = list(indice_completude = TRUE, n = 0)) %>%
+  group_by(ano) %>% 
+  summarise(qt_completos = sum(n),
+            qt_incompletos = sum(12 - n)) %>% 
+  pivot_longer(-ano, values_to = "qt", names_to = "status") %>% 
+  ggplot(aes(x = ano, y = qt, fill = status, color = status)) +
+  geom_col() +
+  geom_text(
+    data = . %>% filter(status == "qt_incompletos"),
+    aes(label = qt),
+    vjust = -.5,
+    size = 5,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(
+    values = c("qt_incompletos" = cores_dadosjusbr[["cinza_azulado"]],
+               "qt_completos" = cores_dadosjusbr[["laranja"]]),
+    labels = c("Dado indisponível", "Dado disponível")
+  ) +
+  scale_color_manual(
+    values = c("qt_incompletos" = cores_dadosjusbr[["cinza_azulado"]],
+               "qt_completos" = cores_dadosjusbr[["laranja"]]),
+    labels = c("Dado indisponível", "Dado disponível")
+  ) +
+  scale_y_continuous(
+    breaks = c(0, 50, 150, 250, 324)
+  ) +
+  labs(
+    title = "Meses faltantes para dados de remuneração",
+    subtitle = "Dados disponibilizados por 27 Tribunais de Justiça",
+    y = "Número de planilhas mensais",
+    x = "Ano",
+    fill = "Situação do dado:",
+    color = "Situação do dado:"
+  ) +
+  guides(fill = guide_legend(reverse = TRUE),
+         color = guide_legend(reverse = TRUE))
+```
+
+
+## Médias anuais do índice de Transparência
 
 ```{r}
 indice$full %>% 
@@ -544,6 +660,8 @@ indice$full %>%
   scale_x_discrete(expand = c(0, .01))
 ```
 
+## Médias anuais do índice de Completude
+
 ```{r}
 indice$full %>% 
   transmute(
@@ -577,48 +695,6 @@ indice$full %>%
   ) +
   labs(
     title = "Média anual do Índice de Completude",
-    x = "Ano",
-    y = NULL,
-    fill = "Índice de\ntransparência"
-  ) +
-  scale_x_discrete(expand = c(0, .01))
-```
-
-```{r}
-indice$full %>% 
-  transmute(
-    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
-    ano,
-    data = lubridate::dmy(str_glue("01-{mes}-{ano}")),
-    indice_completude,
-    indice_facilidade,
-    indice_transparencia,
-  
-  ) %>% 
-  group_by(orgao, ano) %>% 
-  summarise(across(starts_with("indice"), mean), .groups = "drop") %>%
-  ggplot(aes(
-    y = reorder(orgao, indice_completude),
-    x = as.ordered(ano),
-    fill = indice_completude
-  )) +
-  geom_tile(color = "gray90") +
-  scale_fill_gradientn(colours = rev(c(
-    "#e47cfc",
-    cores_indice[["Facilidade"]],
-    cores_dadosjusbr[["cinza_azulado"]],
-    "#30404d"
-  )),
-  limits = c(0, 1),
-  breaks = c(.2, .4, .6, .8)
-  ) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.ticks.x = element_blank()
-  ) +
-  labs(
-    title = "Média anual do Índice de Facilidade",
     x = "Ano",
     y = NULL,
     fill = "Índice de\ntransparência"
