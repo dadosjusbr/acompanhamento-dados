@@ -5,7 +5,19 @@ library(tidyverse)
 
 url_base = "https://cloud5.lsd.ufcg.edu.br:8080/swift/v1/dadosjusbr"
 anos = 2018:2021
-orgaos = c("tjpb", "tjrj", "tjal")
+
+# estou pegando a lista de órgãos disponíveis daqui:
+# https://docs.google.com/spreadsheets/d/1sIebyMnsFMwGnUCZiQ6d_dIvPmvLtcFhszZnMU_QSTY/edit#gid=0
+orgaos = "1sIebyMnsFMwGnUCZiQ6d_dIvPmvLtcFhszZnMU_QSTY" %>% 
+  googlesheets4::read_sheet(sheet = "Estaduais e do DFT", range = "A:E") %>%
+  filter(str_detect(Órgão, "^TJ"), status == "Ok") %>% 
+  pull(Órgão) %>% 
+  tolower()
+
+# orgaos = c("tjsp", "tjrj", "tjro", "tjrs", "tjpa", "tjsc", "tjdft", "tjmt",
+#            "tjes", "tjms", "tjam", "tjma", "tjto", "tjap", "tjac", "tjrr", 
+#            "tjce", "tjrn", "tjpb", "tjal", "tjpi", "tjba", "tjpe", "tjgo",
+#            "tjse", "tjpr", "tjmg")
 
 diretorio = here::here("data/raw")
 dir.create(diretorio, showWarnings = F, recursive = T)
@@ -24,7 +36,8 @@ walk2(alvo$url, alvo$dest, safe_download)
 
 # Unzip
 
-walk2(alvo$dest, alvo$data_dir, ~ unzip(.x, exdir = .y))
+safe_unzip <- safely(~ unzip(.x, exdir = .y))
+walk2(alvo$dest, alvo$data_dir, safe_unzip)
 
 # Cruza e apronta
 
@@ -84,7 +97,7 @@ incomes = remuneracoes %>%
 
 diretorio = dir.create(here::here("data/ready"), recursive = T)
 incomes %>% 
-  write_csv(here::here("data/ready/remuneracoes-contracheques.csv"))
+  saveRDS(here::here("data/ready/remuneracoes-contracheques.csv"))
 
 metadados %>% 
   left_join(coletas, by = "chave_coleta") %>% 
