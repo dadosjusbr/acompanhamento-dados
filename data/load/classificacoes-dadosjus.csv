@@ -1,0 +1,229 @@
+orgao,categoria,campo,item,categoria_dj,incide_teto_segundo_cnj,incide_teto_segundo_dj
+TJAL,contracheque,Normal,Subsídio,Remuneração,S,NA
+TJAL,contracheque,Normal,Diárias,Diárias,N,NA
+TJAL,contracheque,Normal,Remuneração do órgão de origem,Remuneração,S,NA
+TJAL,contracheque,Normal,Descontos Diversos,Descontos,Não se aplica,NA
+TJAL,contracheque,Normal,Retenção por Teto Constitucional,Descontos,Não se aplica,NA
+TJAL,contracheque,Normal,Previdência Pública,Descontos,Não se aplica,NA
+TJAL,contracheque,Normal,Imposto de renda,Descontos,Não se aplica,NA
+TJAL,direitos-eventuais,Normal,Pagamentos retroativos,Opaco,Impossível Saber,NA
+TJAL,direitos-eventuais,Normal,Indenização de férias,Opaco,N,NA
+TJAL,direitos-eventuais,Normal,Antecipação de gratificação natalina,Benefício,N,NA
+TJAL,direitos-eventuais,Normal,Abono constitucional de 1/3 de férias,Benefício,N,NA
+TJAL,direitos-eventuais,Normal,Gratificação por exercício cumulativo,Remuneração,S,NA
+TJAL,direitos-eventuais,Normal,Gratificação natalina,Benefício,N,NA
+TJAL,direitos-eventuais,Normal,Substituição,Remuneração,S,NA
+TJAL,direitos-eventuais,Normal,Antecipação de férias,Opaco,N,NA
+TJAL,direitos-eventuais,Normal,Gratificação por encargo Curso/Concurso,Remuneração,N,S
+TJAL,direitos-eventuais,Normal,JETON,Penduricalho,N,S
+TJAL,direitos-pessoais,Normal,Abono de permanência,Benefício,N,NA
+TJAL,indenizações,Normal,Auxílio-alimentação,Penduricalho,N,NA
+TJAL,indenizações,Normal,Auxílio Moradia,Penduricalho,N,NA
+TJAL,indenizações,Normal,Auxílio Saúde,Penduricalho,N,NA
+TJAL,indenizações,Normal,Ajuda de Custo,Penduricalho,N,NA
+TJAL,indenizações,Normal,Auxílio Natalidade,Penduricalho,N,NA
+TJAL,indenizações,Normal,Auxílio Pré-escolar,Penduricalho,N,NA
+TJAL,Direitos eventuais,Detalhe,"EXERCICIO PRESIDENCIA, VICE-PRESIDENCIA E CORREGEDORIA",NA,NA,NA
+TJAL,Indenizações,Detalhe,GRATIFICAÇÃO ACERVO,NA,NA,NA
+TJPB,contracheque,Normal,Subsídio,Remuneração,S,NA
+TJPB,contracheque,Normal,Diárias,Diárias,N,NA
+TJPB,contracheque,Normal,Remuneração do órgão de origem,Remuneração,S,NA
+TJPB,contracheque,Normal,Descontos Diversos,Descontos,Não se aplica,NA
+TJPB,contracheque,Normal,Retenção por Teto Constitucional,Descontos,Não se aplica,NA
+TJPB,contracheque,Normal,Previdência Pública,Descontos,Não se aplica,NA
+TJPB,contracheque,Normal,Imposto de renda,Descontos,Não se aplica,NA
+TJPB,direitos-eventuais,Normal,Pagamentos retroativos,Opaco,Impossível Saber,NA
+TJPB,direitos-eventuais,Normal,Indenização de férias,Opaco,N,NA
+TJPB,direitos-eventuais,Normal,Antecipação de gratificação natalina,Benefício,N,NA
+TJPB,direitos-eventuais,Normal,Abono constitucional de 1/3 de férias,Benefício,N,NA
+TJPB,direitos-eventuais,Normal,Gratificação por exercício cumulativo,Remuneração,S,NA
+TJPB,direitos-eventuais,Normal,Gratificação natalina,Benefício,N,NA
+TJPB,direitos-eventuais,Normal,Substituição,Remuneração,S,NA
+TJPB,direitos-eventuais,Normal,Antecipação de férias,Opaco,N,NA
+TJPB,direitos-eventuais,Normal,Gratificação por encargo Curso/Concurso,Remuneração,N,S
+TJPB,direitos-eventuais,Normal,JETON,Penduricalho,N,S
+TJPB,direitos-pessoais,Normal,Abono de permanência,Benefício,N,NA
+TJPB,indenizações,Normal,Auxílio-alimentação,Penduricalho,N,NA
+TJPB,indenizações,Normal,Auxílio Moradia,Penduricalho,N,NA
+TJPB,indenizações,Normal,Auxílio Saúde,Penduricalho,N,NA
+TJPB,indenizações,Normal,Ajuda de Custo,Penduricalho,N,NA
+TJPB,indenizações,Normal,Auxílio Natalidade,Penduricalho,N,NA
+TJPB,indenizações,Normal,Auxílio Pré-escolar,Penduricalho,N,NA
+TJPB,Direitos eventuais,Detalhe,Complementação Salarial,Opaco,NA,Impossível saber
+TJPB,Direitos eventuais,Detalhe,Gratificação de Exercicio,Remuneração,S,NA
+TJPB,Direitos eventuais,Detalhe,Gratificação de Exercício,Remuneração,S,NA
+TJRJ,contracheque,Normal,Subsídio,Remuneração,S,NA
+TJRJ,contracheque,Normal,Diárias,Diárias,N,NA
+TJRJ,contracheque,Normal,Remuneração do órgão de origem,Remuneração,S,NA
+TJRJ,contracheque,Normal,Descontos Diversos,Descontos,Não se aplica,NA
+TJRJ,contracheque,Normal,Retenção por Teto Constitucional,Descontos,Não se aplica,NA
+TJRJ,contracheque,Normal,Previdência Pública,Descontos,Não se aplica,NA
+TJRJ,contracheque,Normal,Imposto de renda,Descontos,Não se aplica,NA
+TJRJ,direitos-eventuais,Normal,Pagamentos retroativos,Opaco,Impossível Saber,NA
+TJRJ,direitos-eventuais,Normal,Indenização de férias,Opaco,N,NA
+TJRJ,direitos-eventuais,Normal,Antecipação de gratificação natalina,Benefício,N,NA
+TJRJ,direitos-eventuais,Normal,Abono constitucional de 1/3 de férias,Benefício,N,NA
+TJRJ,direitos-eventuais,Normal,Gratificação por exercício cumulativo,Remuneração,S,NA
+TJRJ,direitos-eventuais,Normal,Gratificação natalina,Benefício,N,NA
+TJRJ,direitos-eventuais,Normal,Substituição,Remuneração,S,NA
+TJRJ,direitos-eventuais,Normal,Antecipação de férias,Opaco,N,NA
+TJRJ,direitos-eventuais,Normal,Gratificação por encargo Curso/Concurso,Remuneração,N,S
+TJRJ,direitos-eventuais,Normal,JETON,Penduricalho,N,S
+TJRJ,direitos-pessoais,Normal,Abono de permanência,Benefício,N,NA
+TJRJ,indenizações,Normal,Auxílio-alimentação,Penduricalho,N,NA
+TJRJ,indenizações,Normal,Auxílio Moradia,Penduricalho,N,NA
+TJRJ,indenizações,Normal,Auxílio Saúde,Penduricalho,N,NA
+TJRJ,indenizações,Normal,Ajuda de Custo,Penduricalho,N,NA
+TJRJ,indenizações,Normal,Auxílio Natalidade,Penduricalho,N,NA
+TJRJ,indenizações,Normal,Auxílio Pré-escolar,Penduricalho,N,NA
+TJRJ,Direitos pessoais,Detalhe,"ARTIGO 95, III da CF",Opaco,N,Não sabemos
+TJRJ,Direitos eventuais,Detalhe,13º ABONO EC 41/03,Benefício,N,NA
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,13º/SUBSTITUIÇÃO",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,13º/SUBSTITUIÇÃO,Ind Pla ResTJOE12/2015Ant",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,13º/SUBSTITUIÇÃO,PECUNIA LICENCA EXER.ANT.",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,13º/SUBSTITUIÇÃO,PECUNIA LICENÇA VIGENTE",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,Ind Pla ResTJOE12/2015Ant",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,INSTRUTOR PÓS GRADUAÇÃO",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,PECUNIA LICENCA EXER.ANT.",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,PECUNIA LICENCA EXER.ANT.,Ind Pla ResTJOE12/2015Ant",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º ABONO EC 41/03,PECUNIA LICENÇA VIGENTE",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,13º/SUBSTITUIÇÃO,Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º/SUBSTITUIÇÃO,Ind Pla ResTJOE12/2015Ant",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º/SUBSTITUIÇÃO,Inden Plan ResTJOE12/2015",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º/SUBSTITUIÇÃO,Inden Plan ResTJOE12/2015,Ind Pla ResTJOE12/2015Ant",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º/SUBSTITUIÇÃO,PECUNIA LICENCA EXER.ANT.",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"13º/SUBSTITUIÇÃO,PECUNIA LICENÇA VIGENTE",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,DEVOL.DE FERIAS,Benefício,N,NA
+TJRJ,Direitos eventuais,Detalhe,"DEVOL.DE FERIAS,PECUNIA LICENCA EXER.ANT.",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,DIF. ENT. FERIAS,Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"DIF. ENT. FERIAS,13º/SUBSTITUIÇÃO",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"DIF. ENT. FERIAS,PECUNIA LICENCA EXER.ANT.",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,"DIF. ENT. FERIAS,PECUNIA LICENÇA VIGENTE",Opaco,NA,Impossível saber
+TJRJ,Direitos eventuais,Detalhe,GRAT. HORA/AULA,Remuneração,N,Sim
+TJRJ,Direitos eventuais,Detalhe,GRAT. HORA/AULA,Remuneração,N,Sim
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,13º ABONO EC 41/03",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,13º ABONO EC 41/03,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,13º/SUBSTITUIÇÃO",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,13º/SUBSTITUIÇÃO,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,INSTRUTOR PÓS GRADUAÇÃO",Remuneração,N,Sim
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,PECUNIA LICENCA EXER.ANT.,INSTRUTOR PÓS GRADUAÇÃO",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,PECUNIA LICENÇA VIGENTE",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,REPR. 5535/09 III, IV e V",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,REPR. 5535/09 III, IV e V,13º ABONO EC 41/03",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,REPR. 5535/09 III, IV e V,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,REPR. 5535/09 III, IV e V,PECUNIA LICENÇA VIGENTE",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,REPR.Lei 5535/09 VI e VII",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,REPR.Lei 5535/09 VI e VII,Ind Pla ResTJOE12/2015Ant",NA,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"GRAT. HORA/AULA,REPR.Lei 5535/09 VI e VII,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,Ind Pla ResTJOE12/2015Ant,Benefício,S,NA
+TJRJ,Direitos eventuais,Detalhe,Inden Plan ResTJOE12/2015,Benefício,S,NA
+TJRJ,Direitos eventuais,Detalhe,"Inden Plan ResTJOE12/2015,Ind Pla ResTJOE12/2015Ant",Benefício,S,NA
+TJRJ,Direitos eventuais,Detalhe,INSTRUTOR PÓS GRADUAÇÃO,Remuneração,N,Sim
+TJRJ,Direitos eventuais,Detalhe,PECUNIA LICENCA EXER.ANT.,CONFIRMAR,S,NA
+TJRJ,Direitos eventuais,Detalhe,"PECUNIA LICENCA EXER.ANT.,Ind Pla ResTJOE12/2015Ant",Opaco,S,NA
+TJRJ,Direitos eventuais,Detalhe,"PECUNIA LICENCA EXER.ANT.,Inden Plan ResTJOE12/2015,Ind Pla ResTJOE12/2015Ant",Opaco,S,NA
+TJRJ,Direitos eventuais,Detalhe,"PECUNIA LICENCA EXER.ANT.,INSTRUTOR PÓS GRADUAÇÃO",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"PECUNIA LICENCA EXER.ANT.,PECUNIA LICENÇA VIGENTE",Opaco,S,NA
+TJRJ,Direitos eventuais,Detalhe,PECUNIA LICENÇA VIGENTE,CONFIRMAR,S,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR. 5535/09 III, IV e V",DECIDIR,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR. 5535/09 III, IV e V,13º ABONO EC 41/03",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR. 5535/09 III, IV e V,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,REPR.Lei 5535/09 VI e VII,DECIDIR,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º ABONO EC 41/03",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º ABONO EC 41/03,13º/SUBSTITUIÇÃO",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º ABONO EC 41/03,13º/SUBSTITUIÇÃO,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º ABONO EC 41/03,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º ABONO EC 41/03,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º ABONO EC 41/03,PECUNIA LICENCA EXER.ANT.,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º ABONO EC 41/03,PECUNIA LICENÇA VIGENTE",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º/SUBSTITUIÇÃO",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º/SUBSTITUIÇÃO,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º/SUBSTITUIÇÃO,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,13º/SUBSTITUIÇÃO,PECUNIA LICENÇA VIGENTE",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,DEVOL.DE FERIAS",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,Inden Plan ResTJOE12/2015",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,Inden Plan ResTJOE12/2015,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,INSTRUTOR PÓS GRADUAÇÃO",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,PECUNIA LICENCA EXER.ANT.,Ind Pla ResTJOE12/2015Ant",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPR.Lei 5535/09 VI e VII,PECUNIA LICENÇA VIGENTE",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,REPRE. Lei 5535/09 I e II,DECIDIR,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPRE. Lei 5535/09 I e II,PECUNIA LICENCA EXER.ANT.",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPRE. Lei 5535/09 I e II,PECUNIA LICENÇA VIGENTE",Opaco,NA,NA
+TJRJ,Direitos eventuais,Detalhe,"REPRES.  - Lei 5535/09, inc. I  e  II",DECIDIR,NA,NA
+TJRJ,Indenizações,Detalhe,Indenização Transporte Res TJ/OE 11/2015,Penduricalho,N,Sim
+TJRJ,Indenizações,Detalhe,AUXÍLIO EDUCAÇÃO PÓS-GRADUAÇÃO MAGISTRADO,Penduricalho,N,Sim
+TJRJ,Indenizações,Detalhe,AUXÍLIO EDUCAÇÃO,Penduricalho,N,Sim
+TJRJ,Indenizações,Detalhe,"AUXÍLIO EDUCAÇÃO,DIARIAS",Opaco,N,Sim
+TJRJ,Indenizações,Detalhe,DIARIAS,Diárias,N,Sim
+TJRS,contracheque,Normal,Subsídio,Remuneração,S,NA
+TJRS,contracheque,Normal,Diárias,Diárias,N,NA
+TJRS,contracheque,Normal,Remuneração do órgão de origem,Remuneração,S,NA
+TJRS,contracheque,Normal,Descontos Diversos,Descontos,Não se aplica,NA
+TJRS,contracheque,Normal,Retenção por Teto Constitucional,Descontos,Não se aplica,NA
+TJRS,contracheque,Normal,Previdência Pública,Descontos,Não se aplica,NA
+TJRS,contracheque,Normal,Imposto de renda,Descontos,Não se aplica,NA
+TJRS,direitos-eventuais,Normal,Pagamentos retroativos,Opaco,Impossível Saber,NA
+TJRS,direitos-eventuais,Normal,Indenização de férias,Opaco,N,NA
+TJRS,direitos-eventuais,Normal,Antecipação de gratificação natalina,Benefício,N,NA
+TJRS,direitos-eventuais,Normal,Abono constitucional de 1/3 de férias,Benefício,N,NA
+TJRS,direitos-eventuais,Normal,Gratificação por exercício cumulativo,Remuneração,S,NA
+TJRS,direitos-eventuais,Normal,Gratificação natalina,Benefício,N,NA
+TJRS,direitos-eventuais,Normal,Substituição,Remuneração,S,NA
+TJRS,direitos-eventuais,Normal,Antecipação de férias,Opaco,N,NA
+TJRS,direitos-eventuais,Normal,Gratificação por encargo Curso/Concurso,Remuneração,N,S
+TJRS,direitos-eventuais,Normal,JETON,Penduricalho,N,S
+TJRS,direitos-pessoais,Normal,Abono de permanência,Benefício,N,NA
+TJRS,indenizações,Normal,Auxílio-alimentação,Penduricalho,N,NA
+TJRS,indenizações,Normal,Auxílio Moradia,Penduricalho,N,NA
+TJRS,indenizações,Normal,Auxílio Saúde,Penduricalho,N,NA
+TJRS,indenizações,Normal,Ajuda de Custo,Penduricalho,N,NA
+TJRS,indenizações,Normal,Auxílio Natalidade,Penduricalho,N,NA
+TJRS,indenizações,Normal,Auxílio Pré-escolar,Penduricalho,N,NA
+TJRS,Direitos eventuais,Detalhe,Licença prêmio indenizada,Penduricalho,S,NA
+TJRS,Direitos eventuais,Detalhe,Licença prêmio indenizda,Penduricalho,S,NA
+TJRS,Direitos eventuais,Detalhe,correção e juros indenizações,Opaco,NA,Impossível saber
+TJRS,Direitos eventuais,Detalhe,Correção e juros indenizações,Opaco,NA,Impossível saber
+TJRS,Indenizações,Detalhe,abono familia,Penduricalho,N,Sim
+TJRS,Indenizações,Detalhe,abono família,Penduricalho,N,Sim
+TJRS,Indenizações,Detalhe,Abono família,Penduricalho,N,Sim
+TJBA,contracheque,Normal,Subsídio,Remuneração,S,NA
+TJBA,contracheque,Normal,Diárias,Diárias,N,NA
+TJBA,contracheque,Normal,Remuneração do órgão de origem,Remuneração,S,NA
+TJBA,contracheque,Normal,Descontos Diversos,Descontos,Não se aplica,NA
+TJBA,contracheque,Normal,Retenção por Teto Constitucional,Descontos,Não se aplica,NA
+TJBA,contracheque,Normal,Previdência Pública,Descontos,Não se aplica,NA
+TJBA,contracheque,Normal,Imposto de renda,Descontos,Não se aplica,NA
+TJBA,direitos-eventuais,Normal,Pagamentos retroativos,Opaco,Impossível Saber,NA
+TJBA,direitos-eventuais,Normal,Indenização de férias,Opaco,N,NA
+TJBA,direitos-eventuais,Normal,Antecipação de gratificação natalina,Benefício,N,NA
+TJBA,direitos-eventuais,Normal,Abono constitucional de 1/3 de férias,Benefício,N,NA
+TJBA,direitos-eventuais,Normal,Gratificação por exercício cumulativo,Remuneração,S,NA
+TJBA,direitos-eventuais,Normal,Gratificação natalina,Benefício,N,NA
+TJBA,direitos-eventuais,Normal,Substituição,Remuneração,S,NA
+TJBA,direitos-eventuais,Normal,Antecipação de férias,Opaco,N,NA
+TJBA,direitos-eventuais,Normal,Gratificação por encargo Curso/Concurso,Remuneração,N,S
+TJBA,direitos-eventuais,Normal,JETON,Penduricalho,N,S
+TJBA,direitos-pessoais,Normal,Abono de permanência,Benefício,N,NA
+TJBA,indenizações,Normal,Auxílio-alimentação,Penduricalho,N,NA
+TJBA,indenizações,Normal,Auxílio Moradia,Penduricalho,N,NA
+TJBA,indenizações,Normal,Auxílio Saúde,Penduricalho,N,NA
+TJBA,indenizações,Normal,Ajuda de Custo,Penduricalho,N,NA
+TJBA,indenizações,Normal,Auxílio Natalidade,Penduricalho,N,NA
+TJBA,indenizações,Normal,Auxílio Pré-escolar,Penduricalho,N,NA
+TJBA,Direitos pessoais,Detalhe,ABONO PERMANÊNCIA GRATIFICAÇÃO NATALINA,Opaco,N,Não sabemos
+TJBA,Direitos pessoais,Detalhe,VANTAGEM PESSOAL DE SALARIO FAMILIA,Penduricalho,N,Sim
+TJBA,Direitos pessoais,Detalhe,VANTAGEM PESSOAL DE SALARIO FAMILIA / (ABONO PERMANÊNCIA GRATIFICAÇÃO NATALINA,Opaco,N,Não sabemos
+TJBA,Direitos eventuais,Detalhe,DIFERENÇA DE ENTRÂNCIA,Remuneração,S,NA
+TJBA,Direitos eventuais,Detalhe,DIFERENÇA DE ENTRÂNCIA / DIR. DE FORO,Opaco,S,NA
+TJBA,Direitos eventuais,Detalhe,DIFERENÇA DE ENTRÂNCIA / DIR. DE FORO / GRAT. INSTRUTORIA,Opaco,NA,Impossível saber
+TJBA,Direitos eventuais,Detalhe,DIFERENÇA DE ENTRÂNCIA / GRAT. INSTRUTORIA,Opaco,NA,Impossível saber
+TJBA,Direitos eventuais,Detalhe,DIR. DE FORO,Remuneração,S,NA
+TJBA,Direitos eventuais,Detalhe,DIR. DE FORO / GRAT. INSTRUTORIA,Opaco,NA,Impossível saber
+TJBA,Direitos eventuais,Detalhe,GRAT. INSTRUTORIA,Remuneração,N,Sim
+TJBA,Direitos eventuais,Detalhe,ABONO PECUNIÁRIO,Benefício,N,NA
+TJBA,Direitos eventuais,Detalhe,REPRESENTAÇÃO,CONSULTAR,NA,NA
+TJBA,Direitos eventuais,Detalhe,REPRESENTAÇÃO / ABONO PECUNIÁRIO,Opaco,NA,NA
