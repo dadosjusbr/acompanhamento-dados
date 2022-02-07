@@ -29,6 +29,7 @@ library(hrbrthemes)
 library(ggbeeswarm)
 library(lubridate)
 library(here)
+library(waffle)
 
 # peguei as cores do site e criei um vetor com nomes fáceis de lembrar
 cores_dadosjusbr <- c(
@@ -174,7 +175,6 @@ indice$full <- indice$full %>%
          indice_completude = (tem_lotacao + tem_cargo + tem_matricula + receita_base + despesas + outras_receitas) / 6)
 ```
 
-
 ## Índice de transparência
 
 O índice de transparência é uma média harmônica entre as pontuações verificadas no índice de Completude e o índice de Transparência:
@@ -199,7 +199,7 @@ indice$full <- indice$full %>% mutate(
 cut_orgao <- max(indice$full$indice_transparencia)
 
 indice$full %>% 
-  filter(ano == 2020L) %>% 
+  filter(ano == 2021L) %>% 
   transmute(
     orgao = orgao %>% 
       toupper() %>% 
@@ -235,6 +235,11 @@ indice$full %>%
   geom_point(
     data = . %>% filter(indice == "Transparência") %>% 
       mutate(indice = "Índice de Transparência"),
+    size = .25
+    ) +
+  geom_point(
+    data = . %>% filter(indice == "Transparência") %>% 
+      mutate(indice = "Índice de Transparência"),
     aes(color = indice),
     size = 6, 
     alpha = .7
@@ -246,15 +251,16 @@ indice$full %>%
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
   scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
-  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-MG", yend = "TJ-MG"),
-             arrow = arrow(length = unit(2, "mm")), curvature = -0.5
+  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-SE", yend = "TJ-SE"),
+             color = cores_dadosjusbr[["cinza_azulado"]],
+             arrow = arrow(length = unit(2, "mm")), curvature = -0.2
              ) + 
   geom_label(
-    aes(x = 1.1, y = "TJ-MG",
+    aes(x = 1.1, y = "TJ-SP",
         label = str_glue("O índice de Transparência\né uma média harmônica\ndas pontuações\n",
                          "obtidas nas dimensões\nCompletude e Facilidade")
         ),
-    vjust = 0,
+    vjust = 1,
     label.r = unit(0.3, "lines"),
     lineheight = 1.1
   ) +
@@ -267,6 +273,7 @@ indice$full %>%
     color = ""
   ) +
   theme(
+    plot.title = element_text(size = 15),
     legend.position = "top",
     legend.justification = "left",
     legend.background = element_rect(fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
@@ -501,7 +508,6 @@ indice$full %>%
 ```
 
 ```{r}
-library(waffle)
 indice$full %>% 
   transmute(
     orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
