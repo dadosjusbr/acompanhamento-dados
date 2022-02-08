@@ -103,7 +103,7 @@ col_defs <- estrutura()
 
 indice <- "data/load" %>% 
   here() %>%
-  list.files(pattern = "^indice_transparencia.*_20220201",
+  list.files(pattern = "^indice_transparencia.*_2022_02_08",
              full.names = TRUE) %>% 
   set_names(c("full", "media")) %>%
   map2(col_defs, ~ read_csv(.x, col_types = .y))
@@ -129,46 +129,44 @@ indice$full <- indice$full %>%
 ```{r fig.height=8, fig.width=10}
 indice$full %>% 
   select(orgao, ano, mes, acesso, indice_facilidade) %>%
+  mutate(acesso = replace_na(acesso, "Raspagem não possível")) %>% 
   complete(orgao, ano, mes, fill = list(
     acesso = "Dados não existem", indice_facilidade = NA
-  )) %>% 
+  )) %>%
   mutate(
     data = dmy(str_glue("01-{mes}-{ano}")),
     mes = month.abb[month(data)],
     acesso = acesso %>% 
-      str_to_title() %>% 
+      str_to_sentence() %>% 
       str_replace_all("Amigavel", "Amigável") %>% 
       str_replace_all("simulacao", "simulação") %>% 
       str_replace_all("usuario", "de usuário") %>% 
-      str_replace_all("_", " ") %>% 
-      replace_na("Raspagem não possível") %>% 
+      str_replace_all("_", " ") %>%  
       ordered(levels = c(
         "Amigável para raspagem",
         "Necessita simulação de usuário",
         "Raspagem dificultada",
         "Raspagem não possível",
         "Dados não existem"
-      )),
+      )), #) %>%  count(acesso),
     ord = case_when(
       acesso == "Amigável para raspagem" ~ 4,
       acesso == "Necessita simulação de usuário" ~ 3,
       acesso == "Raspagem dificultada" ~ 1,
       acesso == "Raspagem não possível" ~ .25,
       TRUE ~ 0
-  )) %>%
+  )) %>% 
   add_count(orgao, wt = ord, name = "ord_orgao") %>% 
   ggplot(aes(y = reorder(orgao, ord_orgao), x = data, fill = acesso)) +
   geom_tile(color = "gray90") +
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
-  scale_fill_manual(
-    values = c(
+  scale_fill_manual(values = c(
       "Amigável para raspagem" = cores_dadosjusbr[["cyan"]],
       "Necessita simulação de usuário" = cores_dadosjusbr[["laranja"]],
       "Raspagem dificultada" = cores_dadosjusbr[["lilas"]],
       "Raspagem não possível" = cores_dadosjusbr[["cinza_azulado"]],
-      "Dados não existem" == "gray50"
-    )
-  ) +
+      "Dados não existem" = "gray50"
+    )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
     fill = "Forma de acesso",
