@@ -11,4 +11,5 @@ Temos no repositório:
 
 - [Análise exploratória - todos os tribunais](https://dadosjusbr.github.io/acompanhamento-dados/eda-itens-tjs.html)
 - [Análise exploratória - TJAL](https://dadosjusbr.github.io/acompanhamento-dados/eda-tjal.html)
-- [Índice de Transparência](https://dadosjusbr.github.io/acompanhamento-dados/indice-transparencia.html)
+- [Índice de Transparência - Tribunais de Justiça](https://dadosjusbr.github.io/acompanhamento-dados/indice-transparencia-tj.html)
+- [Índice de Transparência - Ministérios Públicos](https://dadosjusbr.github.io/acompanhamento-dados/indice-transparencia-mp.html)

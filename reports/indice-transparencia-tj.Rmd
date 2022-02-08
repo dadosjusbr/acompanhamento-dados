@@ -283,6 +283,90 @@ indice$full %>%
 
 ```{r}
 indice$full %>% 
+  filter(ano == 2021L) %>% 
+  transmute(
+    orgao = orgao %>% 
+      toupper() %>% 
+      str_replace("^TJ", "TJ-"),
+    ano, mes,
+    indice_completude,
+    indice_facilidade,
+    indice_transparencia
+  ) %>% #arrange(orgao, ano, mes) %>% print(n = Inf)
+  group_by(orgao, ano) %>% 
+  summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
+#  mutate(orgao = if_else(indice_completude == 0.5 & indice_facilidade == 0.8, "Demais órgãos", orgao)) %>%
+  distinct() %>% 
+  pivot_longer(-c(orgao, ano), values_to = "pontuacao", names_to = "indice") %>%
+  mutate(
+    indice = case_when(
+      indice == "indice_completude" ~ "Completude",
+      indice == "indice_facilidade" ~ "Facilidade",
+      TRUE ~ "Transparência"
+  )) %>% 
+  ggplot(aes(
+    y = reorder(orgao, pontuacao, sum),
+    x = pontuacao
+  )) +
+  geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
+  geom_point(
+    data = . %>% filter(indice != "Transparência") %>% 
+      rename(dimensao = indice),
+    aes(size = dimensao, fill = dimensao),
+    shape = 21,
+    size = 3.5
+    ) +
+  geom_point(
+    data = . %>% filter(indice == "Transparência") %>% 
+      mutate(indice = "Índice de Transparência"),
+    size = .25
+    ) +
+  geom_point(
+    data = . %>% filter(indice == "Transparência") %>% 
+      mutate(indice = "Índice de Transparência"),
+    aes(color = indice),
+    size = 6, 
+    alpha = .7
+    ) +
+  scale_x_continuous(limits = c(0, 1.3), breaks = c(0, .5, 1), minor_breaks = c(.25, .75)) +
+  #scale_size_manual(values = c("Completude" = 3, "Facilidade" = 3)) +
+  scale_fill_manual(values = c(
+    "Completude" = cores_dadosjusbr[["laranja"]],
+    "Facilidade" = cores_dadosjusbr[["lilas"]]
+  )) +
+  scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
+  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-SE", yend = "TJ-SE"),
+             color = cores_dadosjusbr[["cinza_azulado"]],
+             arrow = arrow(length = unit(2, "mm")), curvature = -0.2
+             ) + 
+  geom_label(
+    aes(x = 1.1, y = "TJ-SP",
+        label = str_glue("O índice de Transparência\né uma média harmônica\ndas pontuações\n",
+                         "obtidas nas dimensões\nCompletude e Facilidade")
+        ),
+    vjust = 1,
+    label.r = unit(0.3, "lines"),
+    lineheight = 1.1
+  ) +
+  labs(
+    title = "Índice de Transparência nos Tribunais de Justiça",
+    subtitle = "Médias nos últimos 12 meses, por órgão",
+    x = "Pontuação",
+    y = NULL,
+    fill = "Dimensões:",
+    color = ""
+  ) +
+  theme(
+    plot.title = element_text(size = 15),
+    legend.position = "top",
+    legend.justification = "left",
+    legend.background = element_rect(fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
+                                     color = "transparent")
+  )
+```
+
+```{r}
+indice$full %>% 
   transmute(
     orgao,
     ano,
