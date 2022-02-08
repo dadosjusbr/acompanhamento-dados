@@ -19,7 +19,6 @@ options(digits = 2, scipen = 999, OutDec = ",")
 
 
 Sys.setenv(LANGUAGE = "pt-br")
-
 ```
 
 
@@ -70,7 +69,6 @@ theme_set(
 update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]])
 ```
 
-
 ```{r}
 estrutura <- function() {
   full <- cols(
@@ -107,7 +105,7 @@ col_defs <- estrutura()
 
 indice <- "data/load" %>% 
   here() %>%
-  list.files(pattern = "^indice_transparencia.*_20220201",
+  list.files(pattern = "^indice_transparencia.*_2022_02_08",
              full.names = TRUE) %>% 
   set_names(c("full", "media")) %>%
   map2(col_defs, ~ read_csv(.x, col_types = .y))
@@ -244,19 +242,21 @@ indice$full %>%
     size = 6, 
     alpha = .7
     ) +
-  scale_x_continuous(limits = c(0, 1.3), breaks = c(0, .5, 1), minor_breaks = c(.25, .75)) +
+  scale_x_continuous(limits = c(0, 1.3), 
+                     breaks = c(0, .5, 1), 
+                     minor_breaks = c(.25, .75)) +
   #scale_size_manual(values = c("Completude" = 3, "Facilidade" = 3)) +
   scale_fill_manual(values = c(
     "Completude" = cores_dadosjusbr[["laranja"]],
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
   scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
-  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-SE", yend = "TJ-SE"),
+  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-RS", yend = "TJ-RS"),
              color = cores_dadosjusbr[["cinza_azulado"]],
              arrow = arrow(length = unit(2, "mm")), curvature = -0.2
              ) + 
   geom_label(
-    aes(x = 1.1, y = "TJ-SP",
+    aes(x = 1.1, y = "Demais órgãos",
         label = str_glue("O índice de Transparência\né uma média harmônica\ndas pontuações\n",
                          "obtidas nas dimensões\nCompletude e Facilidade")
         ),
@@ -335,15 +335,18 @@ indice$full %>%
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
   scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
-  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-SE", yend = "TJ-SE"),
+  geom_curve(aes(x = 1.1, xend = cut_orgao, y = "TJ-SE", yend = "TJ-SE"),
              color = cores_dadosjusbr[["cinza_azulado"]],
              arrow = arrow(length = unit(2, "mm")), curvature = -0.2
              ) + 
   geom_label(
-    aes(x = 1.1, y = "TJ-SP",
-        label = str_glue("O índice de Transparência\né uma média harmônica\ndas pontuações\n",
-                         "obtidas nas dimensões\nCompletude e Facilidade")
-        ),
+    aes(
+      x = 1.1, 
+      y = "TJ-SP",
+      label = str_glue(
+        "O índice de Transparência\né uma média harmônica\ndas pontuações\n",
+        "obtidas nas dimensões\nCompletude e Facilidade")
+    ),
     vjust = 1,
     label.r = unit(0.3, "lines"),
     lineheight = 1.1
@@ -454,7 +457,7 @@ indice$full %>%
 
 ## Valores registrados mês a mês
 
-```{r fig.height=6, fig.width=10}
+```{r fig.height=7, fig.width=10}
 
 indice$full %>%
   transmute(
@@ -480,7 +483,7 @@ indice$full %>%
     fill = if_else(indice_transparencia, "0,65", "0") %>% 
       ordered(levels = c("0", "0,65"))
   )) +
-  geom_tile(color = "gray90", size = .01) +
+  geom_tile(color = "gray90") +
   scale_fill_manual(values = c("0" = cores_dadosjusbr[["cinza_azulado"]], 
                                "0,65" = cores_dadosjusbr[["cyan"]])) +
   scale_x_date(expand = c(0, 0)) +
@@ -497,7 +500,7 @@ indice$full %>%
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x", )
 ```
 
-```{r fig.height=6, fig.width=10}
+```{r fig.height=7, fig.width=10}
 indice$full %>%
   transmute(
     orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
@@ -522,7 +525,7 @@ indice$full %>%
     fill = if_else(indice_completude, "0,5", "0") %>% 
       ordered(levels = c("0", "0,5"))
   )) +
-  geom_tile(color = "gray80", size = .01) +
+  geom_tile(color = "gray80") +
   scale_fill_manual(values = c("0" = cores_dadosjusbr[["cinza_azulado"]], 
                                "0,5" = cores_dadosjusbr[["laranja"]])) +
   scale_x_date(expand = c(0, 0)) +
@@ -578,8 +581,10 @@ indice$full %>%
   )) +
   labs(
     title = "Completude de dados por ano e órgão",
-    subtitle = str_glue("Quantidade de meses com disponibilidade de dados de remuneração\n",
-                        "por ano órgão"),
+    subtitle = str_glue(
+      "Quantidade de meses com disponibilidade de dados de remuneração\n",
+      "por ano órgão"
+    ),
     y = "Quantidade de meses",
     x = "Órgão (sigla)",
     fill = "Situação do dado:"
