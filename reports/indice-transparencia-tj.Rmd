@@ -311,11 +311,6 @@ indice$full %>%
     y = reorder(orgao, pontuacao, sum),
     x = pontuacao
   )) +
-  geom_segment(aes(x = 0,
-                   xend = 1,
-                   y = reorder(orgao, pontuacao, sum), 
-                   yend = reorder(orgao, pontuacao, sum)), 
-               size = 0.1, color = "gray80") +
   geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
   geom_point(
     data = . %>% filter(indice != "Transparência") %>% 
@@ -336,33 +331,41 @@ indice$full %>%
     size = 6, 
     alpha = .7
     ) +
-  scale_x_continuous(limits = c(0, 1.3), breaks = c(0, .5, 1), minor_breaks = c(.25, .75),
-                     expand = c(0,0)) +
-  #scale_size_manual(values = c("Completude" = 3, "Facilidade" = 3)) +
+  scale_x_continuous(
+    limits = c(-.01, 1.02),
+    breaks = c(0, .25, .5, .75, 1), 
+    minor_breaks = c(.25, .75),
+    expand = c(0.001, 0)
+  ) +
   scale_fill_manual(values = c(
     "Completude" = cores_dadosjusbr[["laranja"]],
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
   scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
-  geom_curve(aes(x = 1.1, xend = cut_orgao, y = "TJ-SC", yend = "TJ-SC"),
-             color = cores_dadosjusbr[["cinza_azulado"]],
-             arrow = arrow(length = unit(2, "mm")), curvature = -0.2
-             ) + 
+  geom_curve(
+    aes(x = .85,
+        xend = cut_orgao,
+        y = "TJ-SC",
+        yend = "TJ-SC"),
+    color = cores_dadosjusbr[["cinza_azulado"]],
+    size = .3,
+    arrow = arrow(length = unit(2, "mm")),
+    curvature = -0.2
+  ) + 
   geom_label(
-    aes(
-      x = 1.1, 
-      y = "TJ-SP",
-      label = str_glue(
-        "O índice de Transparência\né uma média harmônica\ndas pontuações\n",
-        "obtidas nas dimensões\nCompletude e Facilidade")
-    ),
+    aes(x = .92, 
+        y = "TJ-SP",
+        label = str_glue(
+          "O índice de\nTransparência é uma\nmédia harmônica\ndas pontuações\n",
+          "obtidas nas dimensões\nCompletude e Facilidade")),
     vjust = 1,
+    size = 3,
     label.r = unit(0.3, "lines"),
+    fontface = "bold",
     lineheight = 1.1
   ) +
   labs(
-    title = "Índice de Transparência nos Tribunais de Justiça",
-    subtitle = "Médias para os anos de 2018 até 2021, por órgão",
+    title = "Índice de Transparência DadosJusBr (2018-2021)\nTribunais de Justiça",
     x = "Pontuação",
     y = NULL,
     fill = "Dimensões:",
@@ -371,18 +374,25 @@ indice$full %>%
   theme(
     plot.title = element_text(size = 15),
     axis.title.x = element_text(hjust = .37),
-    panel.grid.major.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(vjust = -.2),
+    #panel.grid.major.y = element_blank(),
     legend.position = "top",
     legend.justification = "left",
-    legend.background = element_rect(fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
-                                     color = "transparent")
-  ) +
-  guides(fill  = guide_legend(order = 2,
-                              label.theme = element_text(size = 10),
-                              title.theme = element_text(size = 10)),
-         color = guide_legend(order = 1,
-                              label.theme = element_text(size = 12))
-         )
+    legend.background = element_rect(
+      fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
+      color = "transparent"
+    )) +
+  guides(
+    fill  = guide_legend(
+      order = 2,
+      label.theme = element_text(size = 10),
+      title.theme = element_text(size = 10)
+    ),
+    color = guide_legend(
+      order = 1,
+      label.theme = element_text(size = 12))
+    )
 ```
 
 ```{r}
