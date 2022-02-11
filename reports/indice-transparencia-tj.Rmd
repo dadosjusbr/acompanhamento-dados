@@ -105,7 +105,7 @@ col_defs <- estrutura()
 
 indice <- "data/load" %>% 
   here() %>%
-  list.files(pattern = "^indice_transparencia.*_2022_02_08",
+  list.files(pattern = "^indice_transparencia.*_2022_02_11",
              full.names = TRUE) %>% 
   set_names(c("full", "media")) %>%
   map2(col_defs, ~ read_csv(.x, col_types = .y))
@@ -194,24 +194,24 @@ indice$full <- indice$full %>% mutate(
 ## Transparência nos tribunais de justiça
 
 ```{r}
+
 cut_orgao <- max(indice$full$indice_transparencia)
 
 indice$full %>% 
-  filter(ano == 2021L) %>% 
+  #filter(ano == 2021L) %>% 
   transmute(
     orgao = orgao %>% 
       toupper() %>% 
       str_replace("^TJ", "TJ-"),
-    ano, mes,
     indice_completude,
     indice_facilidade,
     indice_transparencia
   ) %>% #arrange(orgao, ano, mes) %>% print(n = Inf)
-  group_by(orgao, ano) %>% 
+  group_by(orgao) %>% 
   summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
   mutate(orgao = if_else(indice_completude == 0.5 & indice_facilidade == 0.8, "Demais órgãos", orgao)) %>%
   distinct() %>% 
-  pivot_longer(-c(orgao, ano), values_to = "pontuacao", names_to = "indice") %>%
+  pivot_longer(-orgao, values_to = "pontuacao", names_to = "indice") %>%
   mutate(
     indice = case_when(
       indice == "indice_completude" ~ "Completude",
@@ -251,7 +251,7 @@ indice$full %>%
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
   scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
-  geom_curve(aes(x = 1.1, xend = .56, y = "TJ-RS", yend = "TJ-RS"),
+  geom_curve(aes(x = 1.1, xend = cut_orgao, y = "TJ-RS", yend = "TJ-RS"),
              color = cores_dadosjusbr[["cinza_azulado"]],
              arrow = arrow(length = unit(2, "mm")), curvature = -0.2
              ) + 
@@ -266,7 +266,7 @@ indice$full %>%
   ) +
   labs(
     title = "Índice de Transparência nos Tribunais de Justiça",
-    subtitle = "Médias nos últimos 12 meses, por órgão",
+    subtitle = "Médias para os anos de 2018 até 2021, por órgão",
     x = "Pontuação",
     y = NULL,
     fill = "Dimensões:",
@@ -278,27 +278,31 @@ indice$full %>%
     legend.justification = "left",
     legend.background = element_rect(fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
                                      color = "transparent")
-  )
+  ) +
+  guides(fill  = guide_legend(order = 2,
+                              label.theme = element_text(size = 10),
+                              title.theme = element_text(size = 10)),
+         color = guide_legend(order = 1,
+                              label.theme = element_text(size = 12))
+         )
 ```
 
 ```{r}
 indice$full %>% 
-  filter(ano == 2021L) %>% 
   transmute(
     orgao = orgao %>% 
       toupper() %>% 
       str_replace("^TJ", "TJ-"),
-    ano, mes,
     indice_completude,
     indice_facilidade,
     indice_transparencia
-  ) %>% #arrange(orgao, ano, mes) %>% print(n = Inf)
-  group_by(orgao, ano) %>% 
+  ) %>% 
+  group_by(orgao) %>% 
   summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
-#  mutate(orgao = if_else(indice_completude == 0.5 & indice_facilidade == 0.8, "Demais órgãos", orgao)) %>%
   distinct() %>% 
-  pivot_longer(-c(orgao, ano), values_to = "pontuacao", names_to = "indice") %>%
+  pivot_longer(-orgao, values_to = "pontuacao", names_to = "indice") %>%
   mutate(
+    grid = 1,
     indice = case_when(
       indice == "indice_completude" ~ "Completude",
       indice == "indice_facilidade" ~ "Facilidade",
@@ -328,32 +332,41 @@ indice$full %>%
     size = 6, 
     alpha = .7
     ) +
-  scale_x_continuous(limits = c(0, 1.3), breaks = c(0, .5, 1), minor_breaks = c(.25, .75)) +
-  #scale_size_manual(values = c("Completude" = 3, "Facilidade" = 3)) +
+  scale_x_continuous(
+    limits = c(-.01, 1.02),
+    breaks = c(0, .25, .5, .75, 1), 
+    minor_breaks = c(.25, .75),
+    expand = c(0.001, 0)
+  ) +
   scale_fill_manual(values = c(
     "Completude" = cores_dadosjusbr[["laranja"]],
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
   scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
-  geom_curve(aes(x = 1.1, xend = cut_orgao, y = "TJ-SE", yend = "TJ-SE"),
-             color = cores_dadosjusbr[["cinza_azulado"]],
-             arrow = arrow(length = unit(2, "mm")), curvature = -0.2
-             ) + 
+  geom_curve(
+    aes(x = .85,
+        xend = cut_orgao,
+        y = "TJ-SC",
+        yend = "TJ-SC"),
+    color = cores_dadosjusbr[["cinza_azulado"]],
+    size = .3,
+    arrow = arrow(length = unit(2, "mm")),
+    curvature = -0.2
+  ) + 
   geom_label(
-    aes(
-      x = 1.1, 
-      y = "TJ-SP",
-      label = str_glue(
-        "O índice de Transparência\né uma média harmônica\ndas pontuações\n",
-        "obtidas nas dimensões\nCompletude e Facilidade")
-    ),
+    aes(x = .92, 
+        y = "TJ-SP",
+        label = str_glue(
+          "O índice de\nTransparência é uma\nmédia harmônica\ndas pontuações\n",
+          "obtidas nas dimensões\nCompletude e Facilidade")),
     vjust = 1,
+    size = 3,
     label.r = unit(0.3, "lines"),
+    fontface = "bold",
     lineheight = 1.1
   ) +
   labs(
-    title = "Índice de Transparência nos Tribunais de Justiça",
-    subtitle = "Médias nos últimos 12 meses, por órgão",
+    title = "Índice de Transparência DadosJusBr (2018-2021)\nTribunais de Justiça",
     x = "Pontuação",
     y = NULL,
     fill = "Dimensões:",
@@ -361,26 +374,39 @@ indice$full %>%
   ) +
   theme(
     plot.title = element_text(size = 15),
+    axis.title.x = element_text(hjust = .37),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(vjust = -.2),
+    #panel.grid.major.y = element_blank(),
     legend.position = "top",
     legend.justification = "left",
-    legend.background = element_rect(fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
-                                     color = "transparent")
-  )
+    legend.background = element_rect(
+      fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
+      color = "transparent"
+    )) +
+  guides(
+    fill  = guide_legend(
+      order = 2,
+      label.theme = element_text(size = 10),
+      title.theme = element_text(size = 10)
+    ),
+    color = guide_legend(
+      order = 1,
+      label.theme = element_text(size = 12))
+    )
 ```
 
 ```{r}
 indice$full %>% 
   transmute(
     orgao,
-    ano,
     indice_completude,
     indice_facilidade,
     indice_transparencia
   ) %>% 
-  group_by(orgao, ano) %>% 
+  group_by(orgao) %>% 
   summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
-  pivot_longer(-c(orgao, ano), names_to = "categoria", values_to = "pontuacao") %>% 
-  filter(ano == 2020L) %>% 
+  pivot_longer(-orgao, names_to = "categoria", values_to = "pontuacao") %>% 
   mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence() %>% str_replace("Transparencia", "Transparência"),
          categoria = ordered(categoria, levels = c("Completude", "Facilidade", "Transparência")),
          orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-")) %>% 
@@ -413,15 +439,14 @@ plot_indice_barra <- function(df, indice) {
   df %>% 
     transmute(
       orgao,
-      ano,
       indice_completude,
       indice_facilidade,
       indice_transparencia
     ) %>% 
-    group_by(orgao, ano) %>% 
+    group_by(orgao) %>% 
     summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
-    pivot_longer(-c(orgao, ano), names_to = "categoria", values_to = "pontuacao") %>% 
-    filter(ano == 2020L, categoria == idx) %>% 
+    pivot_longer(-orgao, names_to = "categoria", values_to = "pontuacao") %>% 
+    filter(categoria == idx) %>% 
     mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence(),
            orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-")) %>% 
     ggplot(aes(
@@ -429,22 +454,26 @@ plot_indice_barra <- function(df, indice) {
       y = pontuacao,
       fill = categoria
     )) +
-    geom_col(show.legend = F, alpha = .7) +
+    geom_col(show.legend = F, alpha = .8) +
     geom_text(aes(label = round(pontuacao, 2)), hjust = 1, fontface = "bold", size = 4.5) +
     scale_y_continuous(limits = c(0, 1), expand = c(0, .01)) +
     scale_fill_manual(values = cores_indice[[indice]]) +
     coord_flip() +
     labs(
-      title = str_glue("Índice de {indice} nos Tribunais de Justiça"),
-      subtitle = "Média para o ano de 2021",
+      title = str_glue(
+        "Dimensão de {indice} (2018-2021) -  Tribunais de Justiça"
+      ),
       y = "Pontuação",
       x = "Órgão"
-    )
+    ) +
+    theme(axis.ticks.x = element_blank(),
+          plot.title = element_text(size = 14),
+          plot.subtitle = element_text(size = 12))
   
 }
 ```
 
-```{r echo = FALSE, eval = FALSE}
+```{r}
 indice$full %>% 
   plot_indice_barra("Transparência")
 
@@ -525,12 +554,13 @@ indice$full %>%
     fill = if_else(indice_completude, "0,5", "0") %>% 
       ordered(levels = c("0", "0,5"))
   )) +
-  geom_tile(color = "gray80") +
+  geom_tile(color = "gray50") +
   scale_fill_manual(values = c("0" = cores_dadosjusbr[["cinza_azulado"]], 
                                "0,5" = cores_dadosjusbr[["laranja"]])) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Índice de Completude mês a mês",
+    title = "Completude dos dados de remuneração",
+    subtitle = "Tribunais de Justiça - mês a mês",
     fill = "Pontuação\nno mês",
     x = "Cada célula representa 1 mês",
     y = NULL
