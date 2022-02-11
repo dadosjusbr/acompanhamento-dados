@@ -1,7 +1,8 @@
 .DS_Store
 reports/*.html
 
-dados/raw
+data/raw
+data/ready
 .RData
 .Rhistory
 /.Rproj.user
