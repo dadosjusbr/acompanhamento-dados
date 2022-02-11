@@ -105,7 +105,7 @@ col_defs <- estrutura()
 
 indice <- "data/load" %>% 
   here() %>%
-  list.files(pattern = "^indice_transparencia.*_2022_02_08",
+  list.files(pattern = "^indice_transparencia.*_2022_02_11",
              full.names = TRUE) %>% 
   set_names(c("full", "media")) %>%
   map2(col_defs, ~ read_csv(.x, col_types = .y))
@@ -194,6 +194,7 @@ indice$full <- indice$full %>% mutate(
 ## Transparência nos tribunais de justiça
 
 ```{r}
+
 cut_orgao <- max(indice$full$indice_transparencia)
 
 indice$full %>% 
@@ -459,19 +460,20 @@ plot_indice_barra <- function(df, indice) {
     scale_fill_manual(values = cores_indice[[indice]]) +
     coord_flip() +
     labs(
-      title = str_glue("{indice} dos dados nos Tribunais de Justiça"),
-      subtitle = "Médias para os anos de 2018 até 2021, por órgão",
+      title = str_glue(
+        "Dimensão de {indice} (2018-2021) -  Tribunais de Justiça"
+      ),
       y = "Pontuação",
       x = "Órgão"
     ) +
     theme(axis.ticks.x = element_blank(),
           plot.title = element_text(size = 14),
-          plot.title = element_text(size = 12))
+          plot.subtitle = element_text(size = 12))
   
 }
 ```
 
-```{r echo = FALSE, eval = FALSE}
+```{r}
 indice$full %>% 
   plot_indice_barra("Transparência")
 
