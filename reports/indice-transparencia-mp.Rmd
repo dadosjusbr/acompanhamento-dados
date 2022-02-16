@@ -93,8 +93,6 @@ indice <- "data/load/indice_transparencia_2022_02_11.csv" %>%
   here() %>%
   read_csv(col_types = col_defs)
 
-indice %>% count(acesso, acesso_i)
-
 # vamos recalcular os índices
 indice <- indice %>% 
   # select(-indice_completude,
