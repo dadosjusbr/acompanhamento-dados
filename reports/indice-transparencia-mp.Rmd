@@ -103,7 +103,7 @@ col_defs <- estrutura()
 
 indice <- "data/load" %>% 
   here() %>%
-  list.files(pattern = "^indice_transparencia.*_2022_02_08",
+  list.files(pattern = "^indice_transparencia.*_2022_02_11",
              full.names = TRUE) %>% 
   set_names(c("full", "media")) %>%
   map2(col_defs, ~ read_csv(.x, col_types = .y))
@@ -119,54 +119,78 @@ indice$full <- indice$full %>%
 
 ## Índice de Facilidade
 
+### Necessidade de login
+
+Necessidade de Login: a necessidade de fornecimento de informações pessoais e autenticação para acesso dos dados. Requrer é o pior caso.
+
+Valores:
+
+- $1$: não requer login
+- $0$: requer login
+
+```{r}
+indice$full %>% 
+  select(orgao, ano, mes, nao_requer_login, indice_facilidade)
+```
+
+
 ### Acesso
 
-- **Acesso direto**: Conseguimos prever/construir uma URL com base no órgão/mês/ano que leve ao download do dado. Pode ser diretamente ou via API.
-- **Amigavel para raspagem**: Aqui temos URLs determinísticas, tags usadas com semântica bem-definida 
-- **Raspagem dificultada**: URLs não determinísticas, tags com semântica difusa (dois componentes com mesmo id)
-- **Necessita simulação de usuário**: Não dá para fazer raspagem e precisou usar webdriver ou coisa do tipo
+Se é possível acessar os dados programaticamente através de URLs que seguem boas práticas, se é necessário raspar os dados de maneira fácil (pois páginas e URLs têm boas práticas de estrutura), se é necessário raspagem complexa ou se é necessário simular um usuário usando um navegador (pior caso).
 
-```{r fig.height=8, fig.width=10}
-indice$full %>% 
+Valores:
+
+- $1,00$: o acesso é feito de forma **DIRETA**, através de URLs que seguem boas práticas
+- $0,50$: o acesso é **AMIGAVEL PARA RASPAGEM**
+- $0,25$: o acesso **NÃO É AMIGAVEL PARA RASPAGEM**
+- $0,00$: é **NECESSÁRIO SIMULAÇÃO DE USUÁRIO** para acesso
+
+```{r}
+mps_nao_coletados <- c("RJ", "RS", "PA", "SC", "ES", "MA", "AC", "RR") %>% 
+  paste0("MP-", .)
+
+acesso <- indice$full %>% 
   select(orgao, ano, mes, acesso, indice_facilidade) %>%
-  mutate(acesso = replace_na(acesso, "Raspagem não possível")) %>% 
-  complete(orgao, ano, mes, fill = list(
-    acesso = "Dados não existem", indice_facilidade = NA
-  )) %>%
   mutate(
     data = dmy(str_glue("01-{mes}-{ano}")),
     mes = month.abb[month(data)],
+    orgao = factor(
+      orgao, levels = unique(c(unique(indice$full$orgao), mps_nao_coletados))
+    ),
+    pontuacao_acesso = case_when(
+      acesso == "DIRETA" ~ 1,
+      acesso == "AMIGAVEL_PARA_RASPAGEM" ~ 0.5,
+      acesso == "RASPAGEM_DIFICULTADA" ~ 0.25,
+      acesso == "NECESSITA_SIMULACAO_USUARIO" ~ 0
+      ),
     acesso = acesso %>% 
       str_to_sentence() %>% 
       str_replace_all("Amigavel", "Amigável") %>% 
       str_replace_all("simulacao", "simulação") %>% 
       str_replace_all("usuario", "de usuário") %>% 
-      str_replace_all("_", " ") %>%  
-      ordered(levels = c(
-        "Amigável para raspagem",
-        "Necessita simulação de usuário",
-        "Raspagem dificultada",
-        "Raspagem não possível",
-        "Dados não existem"
-      )), #) %>%  count(acesso),
-    ord = case_when(
-      acesso == "Amigável para raspagem" ~ 4,
-      acesso == "Necessita simulação de usuário" ~ 3,
-      acesso == "Raspagem dificultada" ~ 1,
-      acesso == "Raspagem não possível" ~ .25,
-      TRUE ~ 0
-  )) %>% 
-  add_count(orgao, wt = ord, name = "ord_orgao") %>% 
-  ggplot(aes(y = reorder(orgao, ord_orgao), x = data, fill = acesso)) +
+      str_replace_all("_", " ") %>% 
+      fct_reorder(pontuacao_acesso)
+  ) 
+
+```
+
+```{r fig.height=10, fig.width=9}
+acesso %>% 
+  complete() %>% 
+  ggplot(aes(
+    y = reorder(orgao, pontuacao_acesso, sum, na.rm = TRUE),
+    x = data, 
+    fill = acesso
+  )) +
   geom_tile(color = "gray90") +
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
   scale_fill_manual(values = c(
-      "Amigável para raspagem" = cores_dadosjusbr[["cyan"]],
-      "Necessita simulação de usuário" = cores_dadosjusbr[["laranja"]],
-      "Raspagem dificultada" = cores_dadosjusbr[["lilas"]],
-      "Raspagem não possível" = cores_dadosjusbr[["cinza_azulado"]],
-      "Dados não existem" = "gray50"
-    )) +
+    "Direta" = cores_dadosjusbr[["cyan"]],
+    "Amigável para raspagem" = cores_dadosjusbr[["laranja"]],
+    "Raspagem dificultada" = cores_dadosjusbr[["lilas"]],
+    "Necessita simulação de usuário" = cores_dadosjusbr[["cinza_azulado"]]
+  ), na.value = "red") +
+  scale_y_discrete()+#drop=FALSE) +
   scale_x_date(expand = c(0, 0)) +
   labs(
     fill = "Forma de acesso",
@@ -178,5 +202,65 @@ indice$full %>%
   theme(legend.position = "top",
         legend.justification = "left") +
   guides(fill = guide_legend(ncol = 1, title.position = "top"))
+```
+
+```{r}
+acesso %>% 
+  select(-data) %>% 
+  group_by(orgao, ano) %>% 
+  summarise(across(where(is.double), mean, na.rm = TRUE), .groups = "drop") %>%
+  pivot_longer(-c(orgao, ano), names_to = "indice", values_to = "valor") %>% 
+  mutate(ord = if_else(indice == "indice_facilidade", valor, NA_real_)) %>% 
+  fill(ord, .direction = "down") %>% 
+  mutate(
+    indice = if_else(indice == "indice_facilidade",
+                     "Índice de Facilidade", 
+                     "Pontuação Acesso")
+  ) %>% 
+  ggplot(aes(
+    x = tidytext::reorder_within(orgao, ord, ano, sum),
+    y = valor,
+    color = indice,
+    group = orgao
+  )) +
+  coord_flip() +
+  scale_color_manual(values = c(
+    "Índice de Facilidade" = cores_dadosjusbr[["lilas"]],
+    "Pontuação Acesso" = cores_dadosjusbr[["cinza_azulado"]]
+  ), guide = guide_legend(reverse = TRUE)) +
+  scale_size_manual(values = c(3, 1),
+                    guide = guide_legend(reverse = TRUE)) +
+  facet_wrap(~ ano, scales = "free") +
+  geom_line(color = "gray80", size = 1.5) +
+  geom_point(aes(size = indice)) +
+  # geom_text(
+  #   data = . %>% filter(indice == "Índice de Facilidade"),
+  #   aes(label = orgao),
+  #   color = "black",
+  #   hjust = -0.3,
+  #   size = 3
+  # ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  tidytext::scale_x_reordered() +
+  labs(x = "Órgão",
+       y = "Pontuação",
+       color = NULL,
+       size = NULL,
+       title = "Índice de Facilidade vs Pontuação de Acesso (2018-2021)",
+       subtitle = "Média anual por órgão",
+       caption = "Classificações quanto ao acesso: "
+       ) +
+  theme(
+    legend.position = "top",
+    axis.text.y = element_text(size = 10),
+    panel.grid.minor.x = element_blank(),
+    axis.ticks.x = element_blank(), 
+    legend.justification = "left",
+    strip.text = element_text(face = "bold"),
+    legend.background = element_rect(
+      fill = "gray95", color = "transparent"
+    ),
+    axis.text.x = element_text(size = 9)
+  )
 ```
 
