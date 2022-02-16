@@ -8,16 +8,10 @@ anos = 2018:2021
 
 # estou pegando a lista de órgãos disponíveis daqui:
 # https://docs.google.com/spreadsheets/d/1sIebyMnsFMwGnUCZiQ6d_dIvPmvLtcFhszZnMU_QSTY/edit#gid=0
-orgaos = "1sIebyMnsFMwGnUCZiQ6d_dIvPmvLtcFhszZnMU_QSTY" %>% 
-  googlesheets4::read_sheet(sheet = "Estaduais e do DFT", range = "A:E") %>%
-  filter(str_detect(Órgão, "^TJ"), status == "Ok") %>% 
-  pull(Órgão) %>% 
-  tolower()
-
-# orgaos = c("tjsp", "tjrj", "tjro", "tjrs", "tjpa", "tjsc", "tjdft", "tjmt",
-#            "tjes", "tjms", "tjam", "tjma", "tjto", "tjap", "tjac", "tjrr", 
-#            "tjce", "tjrn", "tjpb", "tjal", "tjpi", "tjba", "tjpe", "tjgo",
-#            "tjse", "tjpr", "tjmg")
+orgaos = c("tjsp", "tjrj", "tjro", "tjrs", "tjpa", "tjsc", "tjdft", "tjmt",
+           "tjes", "tjms", "tjam", "tjma", "tjto", "tjap", "tjac", "tjrr",
+           "tjce", "tjrn", "tjpb", "tjal", "tjpi", "tjba", "tjpe", "tjgo",
+           "tjse", "tjpr", "tjmg")
 
 diretorio = here::here("data/raw")
 dir.create(diretorio, showWarnings = F, recursive = T)
@@ -39,7 +33,7 @@ walk2(alvo$url, alvo$dest, safe_download)
 safe_unzip <- safely(~ unzip(.x, exdir = .y))
 walk2(alvo$dest, alvo$data_dir, safe_unzip)
 
-# Cruza e apronta
+ # Cruza e apronta
 
 cols_remuneracao <- cols(
   .default = col_character()
@@ -51,18 +45,32 @@ cols_contra_cheque <- cols(
 
 cols_metadados <- cols(
   chave_coleta = col_character(),
+  nao_requer_login = col_logical(),
+  nao_requer_captcha = col_logical(),
   acesso = col_character(),
   extensao = col_character(),
+  estritamente_tabular = col_logical(),
+  formato_consistente = col_logical(),
+  tem_matricula = col_logical(),
+  tem_lotacao = col_logical(),
+  tem_cargo = col_logical(),
   detalhamento_receita_base = col_character(),
   detalhamento_outras_receitas = col_character(),
-  detalhamento_descontos = col_character()
+  detalhamento_descontos = col_character(),
+  orgao = col_character(),
+  mes = col_integer(),
+  ano = col_integer(),
+  data = col_date()
 )
 
 contra_cheque <- list.files(path = alvo$data_dir,
                             pattern = "contra_cheque",
-                            full.names = T) %>%
+                            full.names = T)[1] %>%
   map_df(~ read_csv(.x, col_types = cols_contra_cheque)) %>% 
+  filter(!str_detect(chave_coleta, "chave")) %>% 
   mutate(ativo = if_else(ativo == "true", TRUE, FALSE))
+
+write_csv(contra_cheque, file = here::here("data/ready/contra-cheque.csv"))
 
 remuneracoes <- list.files(path = alvo$data_dir,
                            pattern = "remuneracao",
@@ -97,7 +105,7 @@ incomes = remuneracoes %>%
 
 diretorio = dir.create(here::here("data/ready"), recursive = T)
 incomes %>% 
-  saveRDS(here::here("data/ready/remuneracoes-contracheques.csv"))
+  write.csv(here::here("data/ready/remuneracoes-contracheques.csv"))
 
 metadados %>% 
   left_join(coletas, by = "chave_coleta") %>% 
