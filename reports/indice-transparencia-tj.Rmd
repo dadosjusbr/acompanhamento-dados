@@ -53,7 +53,6 @@ cores_indice <- c(
 theme_set(
   theme_ipsum_rc() +
   theme(
-    axis.ticks.x = element_line(),
     plot.title = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
     plot.subtitle = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
     axis.text.x = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
@@ -116,6 +115,26 @@ indice$full <- indice$full %>%
          -indice_facilidade,
          -indice_transparencia) %>% 
   filter(str_detect(orgao, "^tj"))
+
+contra_cheques <- read_csv(
+  here::here("data/ready/contra-cheque.csv"),
+  col_types = cols(
+   id_contra_cheque = col_character(),
+   chave_coleta = col_character(),
+   nome = col_character(),
+   matricula = col_character(),
+   funcao = col_character(),
+   local_trabalho = col_character(),
+   tipo = col_character(),
+   ativo = col_logical()
+  )) %>% 
+  separate(
+    chave_coleta,
+    into = c("orgao", "mes", "ano"),
+    sep = "/",
+    remove = FALSE
+  ) %>% 
+  mutate(across(c(mes, ano), as.integer))
 ```
 
 ## Metodologia
@@ -173,7 +192,7 @@ indice$full <- indice$full %>%
          indice_completude = (tem_lotacao + tem_cargo + tem_matricula + receita_base + despesas + outras_receitas) / 6)
 ```
 
-## Índice de transparência
+### Índice de transparência
 
 O índice de transparência é uma média harmônica entre as pontuações verificadas no índice de Completude e o índice de Transparência:
 
@@ -487,7 +506,6 @@ indice$full %>%
 ## Valores registrados mês a mês
 
 ```{r fig.height=7, fig.width=10}
-
 indice$full %>%
   transmute(
     orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
@@ -825,3 +843,145 @@ indice$full %>%
   ) +
   scale_x_discrete(expand = c(0, .01))
 ```
+
+
+## Contracheques faltantes
+
+```{r}
+contagem_contra_cheques <- contra_cheques %>% 
+  filter(nome != "0") %>% 
+  count(orgao, ano, mes, name = "qt_contracheques") %>% 
+  complete(orgao, ano, mes,
+           fill= list(qt_contracheques = NA_integer_)) %>%
+  mutate(tem_dado = !is.na(qt_contracheques)) %>%
+  group_by(orgao, ano) %>% 
+  fill(qt_contracheques, .direction = "downup") %>% 
+  mutate(meses_completos = sum(tem_dado)) %>% 
+  ungroup() %>% 
+  group_by(orgao) %>% 
+  fill(qt_contracheques, .direction = "down") %>% 
+  ungroup()
+```
+
+```{r fig.height=4, fig.width=5}
+contagem_contra_cheques %>% 
+  filter(!tem_dado) %>%
+  ungroup() %>% 
+  fill(qt_contracheques) %>% 
+  count(ano = ordered(ano, levels = c(2019, 2020, 2021)),
+        wt = qt_contracheques,
+        name = "qt_contracheques_nao_divulgados") %>% 
+  ggplot(aes(x = ano, y = qt_contracheques_nao_divulgados, fill = ano)) +
+  geom_col(show.legend = FALSE) + 
+  geom_text(aes(
+    label = format(
+      qt_contracheques_nao_divulgados,
+      big.mark = ".",
+      decimal.mark = ","
+    ),
+    color = ano),
+    size = 6,
+    show.legend = FALSE,
+    vjust = 1.5,
+    fontface = "bold"
+    ) +
+  scale_fill_manual(values = c(
+    "2021" = cores_dadosjusbr[["lilas"]],
+    "2020" = cores_dadosjusbr[["cyan"]],
+    "2019" = cores_dadosjusbr[["cinza_azulado"]]
+  )) +
+  scale_color_manual(values = c(
+    "2021" = "gray10",
+    "2020" = cores_dadosjusbr[["cinza_azulado"]],
+    "2019" = "gray95"
+  )) +
+  scale_y_continuous(expand = c(0.01, 0)) +
+  labs(
+    title = "Quantidade de contracheques não divulgados",
+    y = "Quantidade de contracheques",
+    x = NULL
+  )
+```
+
+```{r fig.height=4, fig.width=5}
+contagem_contra_cheques %>% 
+  fill(qt_contracheques) %>% 
+  count(ano = ordered(ano, levels = c(2018, 2019, 2020, 2021)),
+        tem_dado,
+        wt = qt_contracheques,
+        name = "qt_contracheques") %>% 
+  complete(ano, tem_dado, fill = list(qt_contracheques = 0L)) %>%
+  mutate(tem_dado = if_else(
+    tem_dado,
+    "qt_contracheques_disponibilizados",
+    "qt_contracheques_nao_disponibilizados")
+  ) %>% 
+  pivot_wider(names_from = tem_dado,
+              values_from = qt_contracheques) %>% 
+  mutate(
+    perc = qt_contracheques_nao_disponibilizados /
+      (qt_contracheques_nao_disponibilizados + qt_contracheques_disponibilizados)) %>% 
+  ggplot(aes(x = ano, y = perc, group = '')) +
+  geom_line() +
+  geom_point() +
+  scale_y_percent() +
+  labs(
+    x = NULL,
+    y = "%",
+    title = "% de contracheques não disponibilizados"
+  )
+```
+
+```{r}
+contagem_contra_cheques %>% 
+  filter(!tem_dado) %>%
+  fill(qt_contracheques) %>% 
+  count(orgao, 
+        ano = ordered(ano, levels = c(2021, 2020, 2019)),
+        wt = qt_contracheques,
+        name = "qt_contracheques_nao_divulgados") %>%
+  ggplot(aes(
+    x = reorder(
+      orgao,
+      qt_contracheques_nao_divulgados,
+      sum
+    ),
+    y = qt_contracheques_nao_divulgados,
+    fill = ano
+  )) +
+  coord_flip() +
+  geom_col() +
+  labs(
+    title = "Quantidade de contracheques não divulgados",
+    subtitle = "Por ano e órgão",
+    y = "Quantidade de contracheques",
+    x = NULL,
+    fill = "Ano"
+  ) + 
+  scale_fill_manual(values = c(
+    "2021" = cores_dadosjusbr[["lilas"]],
+    "2020" = cores_dadosjusbr[["cyan"]],
+    "2019" = cores_dadosjusbr[["cinza_azulado"]]
+  ))
+```
+
+```{r}
+contagem_contra_cheques %>% 
+  group_by(orgao, ano, tem_dado) %>% 
+  summarise(qt_contracheques = sum(qt_contracheques),
+            .groups = "drop") %>% 
+  complete(orgao, ano, tem_dado, 
+           fill = list(qt_contracheques = 0L)) %>%
+
+  # mutate(tem_dado = if_else(
+  #   tem_dado,
+  #   "qt_contracheques_disponibilizados",
+  #   "qt_contracheques_nao_disponibilizados")
+  # ) %>% 
+  # pivot_wider(names_from = tem_dado,
+  #             values_from = qt_contracheques)
+  ggplot(aes(x = ano, y = qt_contracheques, fill = tem_dado)) +
+  facet_wrap(~reorder(orgao, tem_dado)) +
+  geom_col(position = "fill") 
+```
+
