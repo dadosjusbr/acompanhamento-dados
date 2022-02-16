@@ -68,48 +68,35 @@ update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]])
 ```
 
 ```{r}
-estrutura <- function() {
-  full <- cols(
+col_defs <- cols(
     orgao = col_character(),
-    receita_base = col_character(),
-    despesas = col_character(),
-    outras_receitas = col_character(),
-    acesso = col_character(),
     ano = col_integer(),
     mes = col_integer(),
-    acesso_i = col_integer(),
-    indice_completude = col_double(), 
-    indice_facilidade = col_double(),
-    indice_transparencia = col_double(),
     tem_lotacao = col_logical(),
     tem_cargo = col_logical(),
     tem_matricula = col_logical(),
+    receita_base = col_character(),
+    despesas = col_character(),
+    outras_receitas = col_character(),
     nao_requer_login = col_logical(),
     nao_requer_captcha = col_logical(),
+    acesso = col_character(),
     formato_consistente = col_logical(),
-    estritamente_tabular = col_logical()
+    estritamente_tabular = col_logical(),
+    acesso_i = col_double(),
+    indice_completude = col_double(), 
+    indice_facilidade = col_double(),
+    indice_transparencia = col_double()
   )
-  media <- cols(
-    orgao = col_character(),
-    media_indice_completude = col_double(),
-    media_indice_facilidade = col_double(),
-    media_indice_transparencia = col_double()
-  )
-  
-  return(list(full = full, media = media))
-}
 
-col_defs <- estrutura()
-
-indice <- "data/load" %>% 
+indice <- "data/load/indice_transparencia_2022_02_11.csv" %>% 
   here() %>%
-  list.files(pattern = "^indice_transparencia.*_2022_02_11",
-             full.names = TRUE) %>% 
-  set_names(c("full", "media")) %>%
-  map2(col_defs, ~ read_csv(.x, col_types = .y))
+  read_csv(col_types = col_defs)
+
+indice %>% count(acesso, acesso_i)
 
 # vamos recalcular os índices
-indice$full <- indice$full %>% 
+indice <- indice %>% 
   # select(-indice_completude,
   #        -indice_facilidade,
   #        -indice_transparencia) %>% 
@@ -148,7 +135,7 @@ Os órgãos abaixo não estão sendo coletados devido a problemas de disponíbil
 - $0,00$: requer login
 
 ```{r fig.height=7}
-indice$full %>%
+indice %>%
   transmute(
     orgao, nao_requer_login,
     nao_requer_login_status = if_else(
@@ -219,7 +206,7 @@ indice$full %>%
 - $0,00$: requer captcha
 
 ```{r fig.height=7}
-indice$full %>%
+indice %>%
   transmute(
     orgao, nao_requer_captcha,
     nao_requer_captcha_status = if_else(
@@ -292,7 +279,7 @@ indice$full %>%
 - $0,00$: é **NECESSÁRIO SIMULAÇÃO DE USUÁRIO** para acesso
 
 ```{r fig.height=8}
-acesso <- indice$full %>% 
+acesso <- indice %>% 
   select(orgao, ano, mes, acesso, indice_facilidade) %>%
   mutate(
     pontuacao_acesso = case_when(
@@ -432,7 +419,7 @@ acesso %>%
 
 
 ```{r fig.height=7}
-indice$full %>%
+indice %>%
   #filter(orgao == "MP-PB", ano == 2021, mes == 12) %>% glimpse()
   transmute(
     orgao, formato_consistente,
@@ -503,7 +490,7 @@ indice$full %>%
 - $0,00$: quando o formato não é estritamente tabular
 
 ```{r fig.height=7}
-indice$full %>%
+indice %>%
   #filter(orgao == "MP-PB", ano == 2021, mes == 12) %>% glimpse()
   transmute(
     orgao, estritamente_tabular,
