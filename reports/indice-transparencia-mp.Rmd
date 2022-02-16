@@ -10,8 +10,8 @@ knitr::opts_chunk$set(tidy = FALSE,
                       echo = FALSE,
                       message = FALSE,
                       warning = FALSE,
-                      fig.height = 10,
-                      fig.width = 8)
+                      fig.height = 8,
+                      fig.width = 9)
 set.seed(1014)
 options(digits = 2, scipen = 999, OutDec = ",")
 
@@ -117,46 +117,184 @@ indice$full <- indice$full %>%
   mutate(orgao = toupper(orgao) %>% str_replace("^MP", "MP-"))
 ```
 
+## Órgãos que não estão sendo coletados
+
+Os órgãos abaixo não estão sendo coletados devido a problemas de disponíbilidade e acesso causados pelos próprios órgãos (mudança de formato, alta complexidade para extração, inconsistências, etc.)
+
+- MP-RJ
+- MP-RS
+- MP-PA
+- MP-SC
+- MP-ES
+- MP-MA
+- MP-AC
+- MP-RR
+
 ## Índice de Facilidade
+
+- Necessidade de login
+- Necessário captcha
+- Formato de acesso
+- Manteve consistência no formato
+- Formato estritamente tabular
 
 ### Necessidade de login
 
-Necessidade de Login: a necessidade de fornecimento de informações pessoais e autenticação para acesso dos dados. Requrer é o pior caso.
+**Definição**: A necessidade de fornecimento de informações pessoais e autenticação para acesso dos dados. Requrer é o pior caso.
 
-Valores:
+**Valores**:
 
-- $1$: não requer login
-- $0$: requer login
+- $1,00$: não requer login
+- $0,00$: requer login
 
-```{r}
-indice$full %>% 
-  select(orgao, ano, mes, nao_requer_login, indice_facilidade)
+```{r fig.height=7}
+indice$full %>%
+  transmute(
+    orgao, nao_requer_login,
+    nao_requer_login_status = if_else(
+      nao_requer_login,
+      "Não requer login",
+      "Dado não disponível (Erro status 4)"
+    ),
+    indice_facilidade,
+    data = dmy(str_glue("01-{mes}-{ano}"))
+  ) %>%
+  complete(
+    orgao, data, fill = list(
+      nao_requer_login_status = "Dado não disponível",
+      nao_requer_login = FALSE
+  )) %>%
+  mutate(
+    nao_requer_login_status = ordered(
+      nao_requer_login_status,
+      levels = c(
+        "Não requer login",
+        "Requer login",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data)
+  ) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, nao_requer_login, sum),
+    fill = nao_requer_login_status
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Não requer login" = cores_dadosjusbr[["cyan"]],
+    "Requer login" = cores_dadosjusbr[["lilas"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Requer Login para acesso aos dados",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
 ```
 
+### Necessário Captcha
+
+**Definição**: Verificação se o acesso está sendo feito por humanos.
+
+**Valores**:
+
+- $1,00$: não requer captcha
+- $0,00$: requer captcha
+
+```{r fig.height=7}
+indice$full %>%
+  transmute(
+    orgao, nao_requer_captcha,
+    nao_requer_captcha_status = if_else(
+      nao_requer_captcha,
+      "Não requer captcha",
+      "Dado não disponível (Erro status 4)"
+    ),
+    indice_facilidade,
+    data = dmy(str_glue("01-{mes}-{ano}"))
+  ) %>%
+  complete(
+    orgao, data, fill = list(
+      nao_requer_captcha_status = "Dado não disponível",
+      nao_requer_captcha = FALSE
+  )) %>%
+  mutate(
+    nao_requer_captcha_status = ordered(
+      nao_requer_captcha_status,
+      levels = c(
+        "Não requer captcha",
+        "Requer captcha",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data)
+  ) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, nao_requer_captcha, sum),
+    fill = nao_requer_captcha_status
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Não requer captcha" = cores_dadosjusbr[["cyan"]],
+    "Requer captcha" = cores_dadosjusbr[["lilas"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Requer captcha para acesso aos dados",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+```
 
 ### Acesso
 
-Se é possível acessar os dados programaticamente através de URLs que seguem boas práticas, se é necessário raspar os dados de maneira fácil (pois páginas e URLs têm boas práticas de estrutura), se é necessário raspagem complexa ou se é necessário simular um usuário usando um navegador (pior caso).
+**Definição**: Se é possível acessar os dados programaticamente através de URLs que seguem boas práticas, se é necessário raspar os dados de maneira fácil (pois páginas e URLs têm boas práticas de estrutura), se é necessário raspagem complexa ou se é necessário simular um usuário usando um navegador (pior caso).
 
-Valores:
+**Valores**:
 
 - $1,00$: o acesso é feito de forma **DIRETA**, através de URLs que seguem boas práticas
 - $0,50$: o acesso é **AMIGAVEL PARA RASPAGEM**
 - $0,25$: o acesso **NÃO É AMIGAVEL PARA RASPAGEM**
 - $0,00$: é **NECESSÁRIO SIMULAÇÃO DE USUÁRIO** para acesso
 
-```{r}
-mps_nao_coletados <- c("RJ", "RS", "PA", "SC", "ES", "MA", "AC", "RR") %>% 
-  paste0("MP-", .)
-
+```{r fig.height=8}
 acesso <- indice$full %>% 
   select(orgao, ano, mes, acesso, indice_facilidade) %>%
   mutate(
-    data = dmy(str_glue("01-{mes}-{ano}")),
-    mes = month.abb[month(data)],
-    orgao = factor(
-      orgao, levels = unique(c(unique(indice$full$orgao), mps_nao_coletados))
-    ),
     pontuacao_acesso = case_when(
       acesso == "DIRETA" ~ 1,
       acesso == "AMIGAVEL_PARA_RASPAGEM" ~ 0.5,
@@ -169,14 +307,25 @@ acesso <- indice$full %>%
       str_replace_all("simulacao", "simulação") %>% 
       str_replace_all("usuario", "de usuário") %>% 
       str_replace_all("_", " ") %>% 
-      fct_reorder(pontuacao_acesso)
-  ) 
-
+      replace_na("Dado indisponível (status 4)")
+  ) %>% 
+  complete(orgao, ano, mes,
+           fill = list(acesso = "Dado indisponível")) %>% 
+  mutate(
+    data = dmy(str_glue("01-{mes}-{ano}")),
+    mes = month.abb[month(data)],
+    acesso = ordered(acesso, levels = c(
+      "Direta",
+      "Amigável para raspagem",
+      "Raspagem dificultada",
+      "Necessita simulação de usuário",
+      "Dado indisponível (status 4)",
+      "Dado indisponível"
+  )))
 ```
 
-```{r fig.height=10, fig.width=9}
+```{r fig.height=8, fig.width=9}
 acesso %>% 
-  complete() %>% 
   ggplot(aes(
     y = reorder(orgao, pontuacao_acesso, sum, na.rm = TRUE),
     x = data, 
@@ -185,17 +334,19 @@ acesso %>%
   geom_tile(color = "gray90") +
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
   scale_fill_manual(values = c(
-    "Direta" = cores_dadosjusbr[["cyan"]],
-    "Amigável para raspagem" = cores_dadosjusbr[["laranja"]],
+    "Direta" = cores_dadosjusbr[["verde"]],
+    "Amigável para raspagem" = cores_dadosjusbr[["cyan"]],
     "Raspagem dificultada" = cores_dadosjusbr[["lilas"]],
-    "Necessita simulação de usuário" = cores_dadosjusbr[["cinza_azulado"]]
-  ), na.value = "red") +
-  scale_y_discrete()+#drop=FALSE) +
+    "Necessita simulação de usuário" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado indisponível (status 4)" = "red",
+    "Dado indisponível" = cores_dadosjusbr[["laranja"]]
+  ), drop=FALSE) +
+  scale_y_discrete() +
   scale_x_date(expand = c(0, 0)) +
   labs(
     fill = "Forma de acesso",
-    title = "Classificação da forma de acesso para dados de remuneração\nnos Ministérios Públicos",
-    subtitle = "Acessibilidade dos dados verificadas mês a mês",
+    title = "Classificação da forma de acesso",
+    subtitle = "Ministérios Públicos - mês a mês",
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
@@ -204,9 +355,10 @@ acesso %>%
   guides(fill = guide_legend(ncol = 1, title.position = "top"))
 ```
 
-```{r}
+```{r fig.height=10, fig.width=9}
 acesso %>% 
   select(-data) %>% 
+  na.omit() %>% 
   group_by(orgao, ano) %>% 
   summarise(across(where(is.double), mean, na.rm = TRUE), .groups = "drop") %>%
   pivot_longer(-c(orgao, ano), names_to = "indice", values_to = "valor") %>% 
@@ -248,11 +400,16 @@ acesso %>%
        size = NULL,
        title = "Índice de Facilidade vs Pontuação de Acesso (2018-2021)",
        subtitle = "Média anual por órgão",
-       caption = "Classificações quanto ao acesso: "
+       caption = str_glue("Classificações quanto ao acesso:\n",
+                          "Direto: 1p\n",
+                          "Amigável para raspagem: 0,5p\n",
+                          "Não é amigável para raspagem: 0,25\n",
+                          "Necessário simulação de usuário: 0,p")
        ) +
   theme(
     legend.position = "top",
-    axis.text.y = element_text(size = 10),
+    plot.caption = element_text(hjust = 0),
+    axis.text.y = element_text(size = 9),
     panel.grid.minor.x = element_blank(),
     axis.ticks.x = element_blank(), 
     legend.justification = "left",
@@ -264,3 +421,145 @@ acesso %>%
   )
 ```
 
+### Manteve consistência do formato
+
+**Definição**: Esse campo captura se houve mudanças no formato como os dados que foram disponibilizados.
+
+**Valores**:
+
+- $1,00$: quando o formato é consistente
+- $0,00$: quando o formato não é consistente
+
+
+```{r fig.height=7}
+indice$full %>%
+  #filter(orgao == "MP-PB", ano == 2021, mes == 12) %>% glimpse()
+  transmute(
+    orgao, formato_consistente,
+    formato_consistente_status = case_when(
+      formato_consistente & !is.na(acesso) ~ "Consistente",
+      !formato_consistente & is.na(acesso) ~ "Dado não disponível (Erro status 4)",
+      TRUE ~ "Inconsistente"
+    ),
+    data = dmy(str_glue("01-{mes}-{ano}"))
+  ) %>%
+  complete(
+    orgao, data, fill = list(
+      formato_consistente_status = "Dado não disponível",
+      formato_consistente = FALSE
+  )) %>%
+  mutate(
+    formato_consistente_status = ordered(
+      formato_consistente_status,
+      levels = c(
+        "Consistente",
+        "Inconsistente",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data)
+  ) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, formato_consistente, sum),
+    fill = formato_consistente_status
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Consistente" = cores_dadosjusbr[["cyan"]],
+    "Inconsistente" = cores_dadosjusbr[["lilas"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Manteve consistência do formato",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+```
+
+### Formato estritamente tabular
+
+**Definição**: Os dados estão em formato que permite importação direta em software de análise ou precisam ser processados primeiro (por ex. por estarem em um doc ou pdf).
+
+**Valores**:
+
+- $1,00$: quando o formato é estritamente tabular
+- $0,00$: quando o formato não é estritamente tabular
+
+```{r fig.height=7}
+indice$full %>%
+  #filter(orgao == "MP-PB", ano == 2021, mes == 12) %>% glimpse()
+  transmute(
+    orgao, estritamente_tabular,
+    estritamente_tabular_status = case_when(
+      estritamente_tabular & !is.na(acesso) ~ "Estritamente tabular",
+      !estritamente_tabular & is.na(acesso) ~ "Dado não disponível (Erro status 4)",
+      TRUE ~ "Não tabular"
+    ),
+    data = dmy(str_glue("01-{mes}-{ano}"))
+  ) %>%
+  complete(
+    orgao, data, fill = list(
+      estritamente_tabular_status = "Dado não disponível",
+      estritamente_tabular = FALSE
+  )) %>%
+  mutate(
+    estritamente_tabular_status = ordered(
+      estritamente_tabular_status,
+      levels = c(
+        "Estritamente tabular",
+        "Não tabular",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data)
+  ) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, estritamente_tabular, sum),
+    fill = estritamente_tabular_status
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Estritamente tabular" = cores_dadosjusbr[["cyan"]],
+    "Não tabular" = cores_dadosjusbr[["lilas"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Formato estritamente tabular",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+```
