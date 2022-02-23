@@ -548,3 +548,345 @@ indice %>%
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
 ```
+
+## Índice de Completude
+
+- Nome e matrícula
+- Lotação
+- Cargo
+- Remuneração básica
+- Outras receitas
+- Detalhamento de despesas
+
+### Nome e matrícula
+
+**Definição**: Nome e número de identificação do funcionário
+
+**Valores**:
+
+- $1,00$: possui ambos os atributos
+- $0,00$: não possui um dos atributos 
+
+```{r}
+indice %>% #glimpse()
+  transmute(
+    orgao, tem_matricula,
+    tem_matricula_status = case_when(
+      tem_matricula ~ "Possui nome e matrícula", 
+      !tem_matricula & !is.na(acesso) ~ "Não possui nome e matrícula",
+      TRUE ~ "Dado não disponível (Erro status 4)"
+    ),
+    data = dmy(str_glue("01-{mes}-{ano}"))
+  ) %>% 
+  complete(
+    orgao, data, fill = list(
+      tem_matricula_status = "Dado não disponível",
+      tem_matricula = FALSE
+  )) %>%
+  mutate(
+    tem_matricula_status = ordered(
+      tem_matricula_status,
+      levels = c(
+        "Possui nome e matrícula",
+        "Não possui nome e matrícula",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data)
+  ) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, tem_matricula, sum),
+    fill = tem_matricula_status
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Possui nome e matrícula" = cores_dadosjusbr[["cyan"]],
+    "Não possui nome e matrícula" = cores_dadosjusbr[["lilas"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Possui nome e matrícula",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+```
+
+### Lotação
+
+**Definição**: local onde o sercidor exerce as atribuições e responsabilidades do cargo público.
+
+**Valores**:
+
+- $1,00$: possui o atributo lotação
+- $0,00$: não possui o atributo lotação 
+
+```{r}
+indice %>% #glimpse()
+  transmute(
+    orgao, tem_lotacao,
+    tem_lotacao_status = case_when(
+      tem_lotacao ~ "Possui lotação", 
+      !tem_lotacao & !is.na(acesso) ~ "Não possui lotação",
+      TRUE ~ "Dado não disponível (Erro status 4)"
+    ),
+    data = dmy(str_glue("01-{mes}-{ano}"))
+  ) %>% 
+  complete(
+    orgao, data, fill = list(
+      tem_lotacao_status = "Dado não disponível",
+      tem_lotacao = FALSE
+  )) %>%
+  mutate(
+    tem_lotacao_status = ordered(
+      tem_lotacao_status,
+      levels = c(
+        "Possui lotação",
+        "Não possui lotação",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data)
+  ) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, tem_lotacao, sum),
+    fill = tem_lotacao_status
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Possui lotação" = cores_dadosjusbr[["cyan"]],
+    "Não possui lotação" = cores_dadosjusbr[["lilas"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Possui lotação",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+```
+
+### Cargo
+
+**Definição**: função que o servidor exerce no órgão.
+
+**Valores**:
+
+- $1,00$: possui o atributo cargo
+- $0,00$: não possui o atributo cargo 
+
+```{r}
+indice %>% #glimpse()
+  transmute(
+    orgao, tem_cargo,
+    tem_cargo_status = case_when(
+      tem_cargo ~ "Possui atributo cargo", 
+      !tem_cargo & !is.na(acesso) ~ "Não possui atributo cargo",
+      TRUE ~ "Dado não disponível (Erro status 4)"
+    ),
+    data = dmy(str_glue("01-{mes}-{ano}"))
+  ) %>% 
+  complete(
+    orgao, data, fill = list(
+      tem_cargo_status = "Dado não disponível",
+      tem_cargo = FALSE
+  )) %>%
+  mutate(
+    tem_cargo_status = ordered(
+      tem_cargo_status,
+      levels = c(
+        "Possui atributo cargo",
+        "Não possui atributo cargo",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data)
+  ) %>%
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, tem_cargo, sum),
+    fill = tem_cargo_status
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Possui atributo cargo" = cores_dadosjusbr[["cyan"]],
+    "Não possui atributo cargo" = cores_dadosjusbr[["lilas"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Possui atributo Cargo",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+```
+
+### Remuneração básica
+
+**Definição**: para os Ministérios Públicos o valor da remuneração básica é composto pela soma do valor da remuneração do Cargo Efetivo e o valor correspondente a outras verbas remuneratórias, legais ou judiciais.
+
+**Valores**: 
+
+- $1,00$: apresenta remuneração básica **detalhada**
+- $0,50$: apresenta remuneração básica **sumarizada**
+- $0,00$: não apresenta remuneração básica
+
+### Despesas
+
+**Definição**: valor correspondentes a descontos obrigatórios como: Contribuição Previdenciária, Imposto de Renda e Retenção por Teto Constitucional
+
+**Valores**: 
+
+- $1,00$: apresenta despesas **detalhadas**
+- $0,50$: apresenta despesas **sumarizadas**
+- $0,00$: não apresenta despesas
+
+
+### Outras remunerações
+
+**Despesas**: ínclui remuneração eventual ou temporária, tais como: função de confiança ou cargo em comissão, gratificação natalina, férias constitucionais, abono permanência, insalubridade, bem como as indenizações, por exemplo: pecúnias ou auxílios como: alimentação, saúde, creche, moradia, natalidade.
+
+**Valores**: 
+
+- $1,00$: apresenta outras receitas **detalhadas**
+- $0,50$: apresenta outras receitas **sumarizadas**
+- $0,00$: não apresenta outras receitas
+
+
+### Detalhamento de remunerações em conjunto
+
+```{r}
+indice %>% 
+  transmute(
+    orgao, 
+    receita_base,
+    outras_receitas,
+    despesas,
+    data = dmy(str_glue("01-{mes}-{ano}")),
+    remuneracoes = case_when(
+      receita_base == "DETALHADO" & 
+        outras_receitas == "DETALHADO" &
+        despesas == "DETALHADO" ~ "Todas as remunerações e despess detalhadas",
+      receita_base == "DETALHADO" & 
+        outras_receitas == "DETALHADO" &
+        despesas != "DETALHADO" ~ "Remunerações detalhadas, despesas sumarizadas",
+      receita_base == "DETALHADO" & 
+        despesas == "DETALHADO" &
+        outras_receitas != "DETALHADO" ~ "Remunerações básicas e despesas detalhadas,\nremunerações eventuais/temporárias sumarizadas",
+      TRUE ~ "Dado não disponível (Erro status 4)"
+  )) %>% 
+  complete(
+    orgao, data, fill = list(
+      receita_base = NA,
+      outras_receitas = NA,
+      despesas = NA,
+      remuneracoes = "Dado não disponível"
+  )) %>% 
+  mutate(
+    remuneracoes = ordered(
+      remuneracoes,
+      levels = c(
+        "Todas as remunerações e despess detalhadas",
+        "Remunerações detalhadas, despesas sumarizadas",
+        "Remunerações básicas e despesas detalhadas,\nremunerações eventuais/temporárias sumarizadas",
+        "Dado não disponível",
+        "Dado não disponível (Erro status 4)"
+      )),
+    mes = month.abb[month(data)],
+    ano = year(data),
+    receita_base = case_when(
+      receita_base == "DETALHADO" ~ 1,
+      receita_base == "SUMARIZADO" ~ 0.5,
+      TRUE ~ 0),
+    outras_receitas = case_when(
+      outras_receitas == "DETALHADO" ~ 1,
+      outras_receitas == "SUMARIZADO" ~ 0.5,
+      TRUE ~ 0),
+    despesas = case_when(
+      despesas == "DETALHADO" ~ 1,
+      despesas == "SUMARIZADO" ~ 0.5,
+      TRUE ~ 0),
+    remuneracao_pontos = receita_base + outras_receitas + despesas
+  ) %>% 
+  ggplot(aes(
+    x = data,
+    y = reorder(orgao, remuneracao_pontos, sum),
+    fill = remuneracoes
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Todas as remunerações e despess detalhadas" = cores_dadosjusbr[["cyan"]],
+    "Remunerações detalhadas, despesas sumarizadas" = cores_dadosjusbr[["lilas"]],
+    "Remunerações básicas e despesas detalhadas,\nremunerações eventuais/temporárias sumarizadas" =
+      cores_dadosjusbr[["laranja"]],
+    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+    "Dado não disponível (Erro status 4)" = "red"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Detalhamento de remunerações e despesas",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+```
+
