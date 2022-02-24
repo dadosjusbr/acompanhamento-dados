@@ -778,6 +778,78 @@ indice %>% #glimpse()
 - $0,50$: apresenta remuneração básica **sumarizada**
 - $0,00$: não apresenta remuneração básica
 
+```{r}
+pecunias <- function(df, my_colname) {
+  
+  newcolname <- glue::glue("{my_colname}_pontos")
+  colname_complete <- str_remove(my_colname, "_pontos")
+                                 
+  pecunia <- case_when(
+    newcolname == "despesas_pontos" ~ "despesas",
+    newcolname == "receita_base_pontos" ~ "remuneração básica",
+    newcolname == "outras_receitas_pontos" ~ "remunerações eventuais/temporárias"
+  )
+  
+  df %>% 
+    transmute(
+      orgao, 
+      data = dmy(str_glue("01-{mes}-{ano}")),
+      !!sym(my_colname) := replace_na(!! sym(my_colname), "Dado não disponível (erro status 4)"),
+      !!newcolname := case_when(
+        !!sym(my_colname) == "DETALHADO" ~ 1,
+        !!sym(my_colname) == "SUMARIZADO" ~ 0.5,
+        TRUE ~ NA_real_
+    )) %>% 
+    complete(orgao, data) %>% 
+    mutate(
+      !!sym(my_colname) := replace_na(!!sym(my_colname), "Dado não disponível"),
+      !!sym(newcolname) := replace_na(!!sym(newcolname), 0),
+      !!sym(my_colname) := ordered(!!sym(my_colname), levels = c(
+        "DETALHADO",
+        "SUMARIZADO",
+        "Dado não disponível",
+        "Dado não disponível (erro status 4)"
+      )),
+      mes = month.abb[month(data)],
+      ano = year(data)
+    ) %>%
+    ggplot(aes(
+      x = data,
+      y = reorder(orgao, !!sym(newcolname), sum),
+      fill := !!sym(my_colname)
+    )) +
+    geom_tile(color = "gray90") +
+    scale_fill_manual(values = c(
+      "DETALHADO" = cores_dadosjusbr[["cyan"]],
+      "SUMARIZADO" = cores_dadosjusbr[["lilas"]],
+      "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
+      "Dado não disponível (erro status 4)" = "red"
+    )) +
+    scale_x_date(expand = c(0, 0)) +
+    labs(
+      title = glue::glue("Detalhamento de {pecunia}"),
+      subtitle = "Ministérios Públicos - mês a mês",
+      fill = NULL,
+      x = "Cada célula representa 1 mês",
+      y = NULL
+    ) +
+    theme(
+      legend.position = "top",
+      legend.direction = "vertical",
+      legend.justification = "left",
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.spacing = unit(2, "mm"),
+      strip.text = element_text(face = "bold")
+    ) +
+    guides(fill = guide_legend(ncol = 2)) +
+    facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  
+}
+
+pecunias(indice, "receita_base")
+```
+
 ### Despesas
 
 **Definição**: valor correspondentes a descontos obrigatórios como: Contribuição Previdenciária, Imposto de Renda e Retenção por Teto Constitucional
@@ -788,6 +860,9 @@ indice %>% #glimpse()
 - $0,50$: apresenta despesas **sumarizadas**
 - $0,00$: não apresenta despesas
 
+```{r}
+pecunias(indice, "despesas")
+```
 
 ### Outras remunerações
 
@@ -799,6 +874,9 @@ indice %>% #glimpse()
 - $0,50$: apresenta outras receitas **sumarizadas**
 - $0,00$: não apresenta outras receitas
 
+```{r}
+pecunias(indice, "outras_receitas")
+```
 
 ### Detalhamento de remunerações em conjunto
 
@@ -889,4 +967,3 @@ indice %>%
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
 ```
-
