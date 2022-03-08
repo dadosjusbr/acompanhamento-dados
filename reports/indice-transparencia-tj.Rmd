@@ -978,6 +978,8 @@ contagem_contra_cheques %>%
   theme(plot.title = element_text(size = 12))
 ```
 
+Percentual de contracheques
+
 ```{r fig.height=4, fig.width=5}
 my_lbl_perc <- function(x) scales::percent(x, accuracy = 0.1, decimal.mark = ",", big.mark = ".")
 contagem_contra_cheques %>% 
