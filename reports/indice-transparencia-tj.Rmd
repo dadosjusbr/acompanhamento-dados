@@ -17,7 +17,6 @@ knitr::opts_chunk$set(tidy = FALSE,
 set.seed(1014)
 options(digits = 2, scipen = 999, OutDec = ",")
 
-
 Sys.setenv(LANGUAGE = "pt-br")
 ```
 
@@ -29,6 +28,7 @@ library(ggbeeswarm)
 library(lubridate)
 library(here)
 library(waffle)
+library(googlesheets4)
 
 # peguei as cores do site e criei um vetor com nomes fáceis de lembrar
 cores_dadosjusbr <- c(
@@ -85,12 +85,12 @@ col_defs <- cols(
     formato_consistente = col_logical(),
     estritamente_tabular = col_logical(),
     acesso_i = col_double(),
-    indice_completude = col_double(), 
+    indice_completude = col_double(),
     indice_facilidade = col_double(),
     indice_transparencia = col_double()
   )
 
-indice <- "data/load/indice_transparencia_2022_02_16.csv" %>% 
+indice <- "data/load/indice_transparencia_2022_03_08.csv" %>%
   here() %>%
   read_csv(col_types = col_defs)
 
@@ -198,19 +198,25 @@ indice <- indice %>% mutate(
 ## Transparência nos tribunais de justiça
 
 ```{r}
-
 cut_orgao <- max(indice$indice_transparencia)
 
 indice %>% 
-  #filter(ano == 2021L) %>% 
+  # filter(orgao == "tjpb" & ano == 2019) %>% glimpse()
   transmute(
     orgao = orgao %>% 
       toupper() %>% 
       str_replace("^TJ", "TJ-"),
+    ano, 
+    mes,
     indice_completude,
     indice_facilidade,
     indice_transparencia
-  ) %>% #arrange(orgao, ano, mes) %>% print(n = Inf)
+  ) %>%
+  complete(orgao, ano, mes, fill = list(
+    indice_completude = 0,
+    indice_facilidade = 0.8,
+    indice_transparencia = 0
+  )) %>% 
   group_by(orgao) %>% 
   summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
   mutate(orgao = if_else(indice_completude == 0.5 & indice_facilidade == 0.8, "Demais órgãos", orgao)) %>%
@@ -293,14 +299,22 @@ indice %>%
 
 ```{r}
 indice %>% 
+  # filter(orgao == "tjpb" & ano == 2019) %>% glimpse()
   transmute(
     orgao = orgao %>% 
       toupper() %>% 
       str_replace("^TJ", "TJ-"),
+    ano, 
+    mes,
     indice_completude,
     indice_facilidade,
     indice_transparencia
-  ) %>% 
+  ) %>%
+  complete(orgao, ano, mes, fill = list(
+    indice_completude = 0,
+    indice_facilidade = 0.8,
+    indice_transparencia = 0
+  )) %>% 
   group_by(orgao) %>% 
   summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
   distinct() %>% 
@@ -402,18 +416,34 @@ indice %>%
 
 ```{r}
 indice %>% 
+  # filter(orgao == "tjpb" & ano == 2019) %>% glimpse()
   transmute(
-    orgao,
+    orgao = orgao %>% 
+      toupper() %>% 
+      str_replace("^TJ", "TJ-"),
+    ano, 
+    mes,
     indice_completude,
     indice_facilidade,
     indice_transparencia
-  ) %>% 
+  ) %>%
+  complete(orgao, ano, mes, fill = list(
+    indice_completude = 0,
+    indice_facilidade = 0.8,
+    indice_transparencia = 0
+  )) %>% 
   group_by(orgao) %>% 
   summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
   pivot_longer(-orgao, names_to = "categoria", values_to = "pontuacao") %>% 
-  mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence() %>% str_replace("Transparencia", "Transparência"),
-         categoria = ordered(categoria, levels = c("Completude", "Facilidade", "Transparência")),
-         orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-")) %>% 
+  mutate(
+    categoria = categoria %>% 
+      str_remove("^indice_") %>% 
+      str_to_sentence() %>%
+      str_replace("Transparencia", "Transparência"),
+     categoria = ordered(categoria, levels = c(
+       "Completude", "Facilidade", "Transparência"
+    ))
+  ) %>% 
   ggplot(aes(
     x = reorder(orgao, pontuacao),
     y = pontuacao,
@@ -440,19 +470,27 @@ plot_indice_barra <- function(df, indice) {
                    indice == "Completude" ~ "indice_completude",
                    indice == "Facilidade" ~  "indice_facilidade")
   
-  df %>% 
+  df %>%
     transmute(
-      orgao,
+      orgao = orgao %>% 
+        toupper() %>% 
+        str_replace("^TJ", "TJ-"),
+      ano, 
+      mes,
       indice_completude,
       indice_facilidade,
       indice_transparencia
-    ) %>% 
+    ) %>%
+    complete(orgao, ano, mes, fill = list(
+      indice_completude = 0,
+      indice_facilidade = 0.8,
+      indice_transparencia = 0
+    )) %>% 
     group_by(orgao) %>% 
     summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
     pivot_longer(-orgao, names_to = "categoria", values_to = "pontuacao") %>% 
     filter(categoria == idx) %>% 
-    mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence(),
-           orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-")) %>% 
+    mutate(categoria = str_remove(categoria, "^indice_") %>% str_to_sentence()) %>% 
     ggplot(aes(
       x = reorder(orgao, pontuacao),
       y = pontuacao,
@@ -490,91 +528,112 @@ indice %>%
 
 ## Valores registrados mês a mês
 
-```{r fig.height=7, fig.width=10}
-indice %>% 
-  #filter(indice_transparencia == 0) %>% glimpse()
-  transmute(
-    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
-    data = dmy(str_glue("01-{mes}-{ano}")),
-    indice_completude = indice_completude != 0,
-    indice_facilidade = indice_facilidade != 0,
-    indice_transparencia = indice_transparencia != 0
-  ) %>%
-  complete(orgao, data, fill = list(
-    indice_completude = F,
-    indice_facilidade = F,
-    indice_transparencia = F
-  )) %>%
-  mutate(
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>% 
-  # filter(orgao == "TJ-AL") %>% 
-  ggplot(aes(
-    x = data,
-    y = reorder(orgao, indice_transparencia),
-    fill = if_else(indice_transparencia, "0,65", "0") %>% 
-      ordered(levels = c("0", "0,65"))
-  )) +
-  geom_tile(color = "gray90") +
-  scale_fill_manual(values = c("0" = cores_dadosjusbr[["cinza_azulado"]], 
-                               "0,65" = cores_dadosjusbr[["cyan"]])) +
-  scale_x_date(expand = c(0, 0)) +
-  labs(
-    title = "Índice de Transparência mês a mês",
-    fill = "Pontuação\nno mês",
-    x = "Cada célula representa 1 mês",
-    y = NULL
-  ) +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.spacing = unit(2, "mm"),
-        strip.text = element_text(face = "bold")) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x", )
+```{r}
+pontuacao_mes_df <- function(df, col_dimensao) {
+  
+  pontos <- case_when(
+    col_dimensao == "indice_completude" ~ c("0", "0,5"),
+    col_dimensao == "indice_facilidade" ~ c("0", "0,8"),
+    col_dimensao == "indice_transparencia" ~ c("0", "0,65")
+  )
+  
+  df %>%
+    rename(dimensao := !!sym(col_dimensao)) %>% 
+    transmute(
+      orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
+      data = dmy(str_glue("01-{mes}-{ano}")),
+      dimensao = dimensao != 0
+    ) %>%
+    complete(orgao, data, fill = list(dimensao = F)) %>% 
+    mutate(
+      mes = month.abb[month(data)],
+      ano = year(data),
+      orgao = reorder(orgao, dimensao),
+      pontuacao_mes = if_else(dimensao, pontos[2], pontos[1]) %>% 
+        ordered(levels = pontos)
+    ) %>% 
+    rename(!!sym(col_dimensao) := dimensao)
+  
+}
+```
+
+```{r}
+pontuacao_mes_plot <- function(df, dimensao) {
+  
+  pal <- c(cores_dadosjusbr[["cinza_azulado"]], cores_indice[[dimensao]]) %>% 
+    set_names(sort(unique(df$pontuacao_mes)))
+  
+  df %>% 
+    ggplot(aes(
+      x = data,
+      y = orgao,
+      fill = pontuacao_mes
+    )) +
+    geom_tile(color = "gray90") +
+    scale_fill_manual(values = pal) +
+    scale_x_date(expand = c(0, 0)) +
+    labs(
+      fill = "Pontuação\nno mês",
+      x = "Cada célula representa 1 mês",
+      y = NULL
+    ) +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.spacing = unit(2, "mm"),
+          strip.text = element_text(face = "bold")) +
+    facet_wrap(ano ~ ., nrow = 1, scales = "free_x", )
+}
 ```
 
 ```{r fig.height=7, fig.width=10}
-indice %>%
-  transmute(
-    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
-    data = dmy(str_glue("01-{mes}-{ano}")),
-    indice_completude = indice_completude != 0,
-    indice_facilidade = indice_facilidade != 0,
-    indice_transparencia = indice_transparencia != 0
-  ) %>%
-  complete(orgao, data, fill = list(
-    indice_completude = F,
-    indice_facilidade = F,
-    indice_transparencia = F
-  )) %>% 
-  mutate(
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>% 
-  # filter(orgao == "TJ-AL") %>% 
-  ggplot(aes(
-    x = data,
-    y = reorder(orgao, indice_completude),
-    fill = if_else(indice_completude, "0,5", "0") %>% 
-      ordered(levels = c("0", "0,5"))
-  )) +
-  geom_tile(color = "gray50") +
-  scale_fill_manual(values = c("0" = cores_dadosjusbr[["cinza_azulado"]], 
-                               "0,5" = cores_dadosjusbr[["laranja"]])) +
-  scale_x_date(expand = c(0, 0)) +
-  labs(
-    title = "Completude dos dados de remuneração",
-    subtitle = "Tribunais de Justiça - mês a mês",
-    fill = "Pontuação\nno mês",
-    x = "Cada célula representa 1 mês",
-    y = NULL
-  ) +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.spacing = unit(2, "mm"),
-        strip.text = element_text(face = "bold")) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+indice %>% 
+  pontuacao_mes_df(col_dimensao = "indice_transparencia") %>% 
+  pontuacao_mes_plot(dimensao = "Transparência") +
+  labs(title = "Índice de Transparência mês a mês")
+
+indice %>% 
+  filter(orgao == "tjpb", ano == 2019, mes == 9) %>% glimpse()
 ```
+
+```{r fig.height=7, fig.width=10}
+indice %>% 
+  pontuacao_mes_df(col_dimensao = "indice_completude") %>% 
+  pontuacao_mes_plot(dimensao = "Completude") +
+  labs(title = "Completude dos dados de remuneração",
+       subtitle = "Tribunais de Justiça = mês a mês")
+```
+
+```{r}
+indice %>% 
+  pontuacao_mes_df(col_dimensao = "indice_completude") %>% 
+  count(orgao, indice_completude, sort = TRUE) %>% 
+  filter(!indice_completude) %>%
+  mutate(
+    rank = str_glue("({row_number()}°) {orgao}"),
+    rank = reorder(rank, -row_number())
+  ) %>% 
+  ggplot(aes(
+   x = rank,
+   y = n
+  )) +
+  geom_col(fill = cores_indice[["Completude"]]) +
+  geom_text(aes(label = n), size = 5.5, fontface = "bold", hjust = 1) +
+  geom_label(aes(
+    x = "(14°) TJ-PB",
+    y = 25,
+    label = str_glue("Total de meses faltantes\n{sum(n)}")
+  ), label.size = NA, size = 6) +
+  coord_flip() +
+  labs(
+    title = "Quantidade de meses em que os órgãos não prestaram contas",
+    subtitle = "Tribunais de Justiça",
+    x = NULL,
+    y = "Quantidade de meses"
+  ) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme(plot.title = element_text(size = 14))
+```
+
 
 ## Completude dos dados
 
@@ -737,6 +796,31 @@ indice %>%
          color = guide_legend(reverse = TRUE))
 ```
 
+```{r}
+indice %>% 
+  transmute(
+    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
+    ano,
+    mes,
+    indice_completude = indice_completude != 0
+  ) %>% 
+  complete(orgao, ano, mes, fill = list(
+    indice_completude = FALSE
+  )) %>% 
+  mutate(mes = ordered(month.abb[mes], levels = month.abb),
+         indice_completude = indice_completude) %>% 
+  add_count(orgao, ano, wt = indice_completude) %>% 
+  select(orgao, ano, indice_completude, n) %>% 
+  distinct() %>% 
+  filter(indice_completude) %>%
+  complete(orgao, ano, fill = list(indice_completude = TRUE, n = 0)) %>%
+  group_by(ano) %>% 
+  summarise(qt_completos = sum(n),
+            qt_incompletos = sum(12 - n)) %>% 
+  pivot_longer(-ano, values_to = "qt", names_to = "status") %>% 
+  count(status, wt = qt)
+```
+
 
 ## Médias anuais do índice de Transparência
 
@@ -886,10 +970,12 @@ contagem_contra_cheques %>%
     title = "Quantidade de contracheques não divulgados",
     y = "Quantidade de contracheques",
     x = NULL
-  )
+  ) +
+  theme(plot.title = element_text(size = 12))
 ```
 
 ```{r fig.height=4, fig.width=5}
+my_lbl_perc <- function(x) scales::percent(x, accuracy = 0.1, decimal.mark = ",", big.mark = ".")
 contagem_contra_cheques %>% 
   fill(qt_contracheques) %>% 
   count(ano = ordered(ano, levels = c(2018, 2019, 2020, 2021)),
@@ -910,13 +996,52 @@ contagem_contra_cheques %>%
   ggplot(aes(x = ano, y = perc, group = '')) +
   geom_line() +
   geom_point() +
-  scale_y_percent() +
+  geom_text(aes(label = my_lbl_perc(perc)), size = 4, vjust = -0, hjust = -.3) +
+  scale_y_percent(limits = c(-0.01, .15)) +
   labs(
     x = NULL,
     y = "%",
     title = "% de contracheques não disponibilizados"
+  ) +
+  theme(plot.title = element_text(size = 12))
+```
+
+```{r}
+my_lbl_qt <- function(x) format(x, big.mark = ".", decimal.mark = ",")
+my_lbl_perc <- function(x) scales::percent(x, accuracy = 0.1, decimal.mark = ",", big.mark = ".")
+
+contagem_contra_cheques %>% 
+  fill(qt_contracheques) %>% 
+  count(tem_dado,
+        wt = qt_contracheques,
+        name = "qt_contracheques") %>% 
+  mutate(perc = qt_contracheques / sum(qt_contracheques)) %>%
+  mutate(ypos = cumsum(perc) - 0.3 * perc) %>% 
+  ggplot(aes(x = "", y = perc, fill = tem_dado)) +
+  geom_bar(stat = "identity", width = 1, color = cores_dadosjusbr[["cinza_azulado"]]) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(
+    label = str_glue("{my_lbl_qt(qt_contracheques)}\n({my_lbl_perc(perc)})"),
+    y = ypos
+  ), size = 4.5, fontface = "bold") +
+  scale_fill_manual(
+    values = c(cores_dadosjusbr[["cinza_azulado"]], cores_dadosjusbr[["laranja"]]),
+    labels = c("Sim", "Não")
+  ) +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank()
+  ) +
+  labs(
+    title = "Quantidade de contra-cheques",
+    fill = "Faltante"
   )
 ```
+
 
 ```{r}
 contagem_contra_cheques %>% 
