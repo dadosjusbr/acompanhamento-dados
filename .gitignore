@@ -3,6 +3,8 @@ reports/*.html
 
 data/raw
 data/ready
+data/load/erros_coleta*
+local-files/*
 .RData
 .Rhistory
 /.Rproj.user

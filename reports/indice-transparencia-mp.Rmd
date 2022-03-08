@@ -125,7 +125,7 @@ Os órgãos abaixo não estão sendo coletados devido a problemas de disponíbil
 
 ### Necessidade de login
 
-**Definição**: A necessidade de fornecimento de informações pessoais e autenticação para acesso dos dados. Requrer é o pior caso.
+**Definição**: A necessidade de fornecimento de informações pessoais e autenticação para acesso dos dados. Requerer é o pior caso.
 
 **Valores**:
 
@@ -967,3 +967,199 @@ indice %>%
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
 ```
+
+## Pontuações agregadas
+
+```{r}
+indice_long <- indice %>% 
+  transmute(
+    orgao,
+    ano,
+    mes,
+    tem_lotacao,
+    tem_cargo,
+    tem_matricula,
+    across(c(receita_base, despesas, outras_receitas), ~ case_when(
+      . == "DETALHADO" ~ 1,
+      . == "SUMARIZADA" ~ 0.5,
+      TRUE ~ 0
+    )),
+    nao_requer_login,
+    nao_requer_captcha,
+    acesso = acesso_i,
+    formato_consistente,
+    estritamente_tabular
+  ) %>% 
+  pivot_longer(-c(orgao, ano, mes), names_to = "criterio", values_to = "pontuacao") %>%
+  complete(orgao, ano, mes, criterio, fill = list(pontuacao = 0)) %>% 
+  mutate(
+    criterio = criterio %>% 
+      str_replace_all("_", " ") %>% 
+      str_to_sentence() %>% 
+      str_replace("matricula", "matrícula") %>% 
+      str_replace("lotacao", "lotação"),
+    dimensao = if_else(criterio %in% c(
+        "Tem cargo", "Tem lotação", "Tem matrícula",
+        "Receita base", "Outras receitas", "Despesas"), "Completude",
+        "Facilidade"
+    )
+  ) 
+
+# indice_long %>% 
+#   group_by(orgao, criterio) %>% 
+#   summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
+#   arrange(dimensao, orgao, criterio) %>% 
+#   googlesheets4::write_sheet(
+#     "1Ke2MhFRh5yWwHRCZBr-WHvuh4y9dzs0JkBI27sFR2Fk",
+#     sheet = "Categorias")
+```
+
+```{r fig.height=10}
+indice_long %>% 
+  filter(dimensao == "Facilidade") %>% 
+  group_by(orgao, ano, criterio) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>%
+  ggplot(aes(
+    x = criterio,
+    y = reorder(orgao, pontuacao, mean),
+    fill = pontuacao
+  )) +
+  coord_flip() +
+  geom_tile(color = "black") +
+  facet_wrap(~ano, ncol = 1, scales = "free") +
+  scale_fill_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, .25, .5, .75, 1),
+    labels = c("0", "0,25", "0,5", "0,75", "1"),
+    colours = rev(c(
+      cores_indice[["Facilidade"]],
+      cores_dadosjusbr[["cinza_azulado"]]
+    ))
+  ) +
+  labs(
+    title = "Pontuação média em critérios de facildade",
+    y = "Órgão (sigla)",
+    x = NULL,
+    fill = "Escala"
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.justification = "left",
+    legend.spacing.x = unit(1, 'mm'),
+    legend.key.width= unit(1, 'cm'),
+    legend.key.height = unit(.35, "cm"),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(
+    title.position="top",
+    title.hjust = 0,
+    label.vjust = -1,
+    label.position = "top"
+  ))
+```
+
+```{r fig.height=10}
+indice_long %>% 
+  filter(dimensao == "Completude") %>% 
+  group_by(orgao, ano, criterio) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>%
+  ggplot(aes(
+    x = criterio,
+    y = reorder(orgao, pontuacao, mean),
+    fill = pontuacao
+  )) +
+  coord_flip() +
+  geom_tile(color = "black") +
+  facet_wrap(~ano, ncol = 1, scales = "free") +
+  scale_fill_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, .25, .5, .75, 1),
+    labels = c("0", "0,25", "0,5", "0,75", "1"),
+    colours = rev(c(
+      cores_indice[["Completude"]],
+      cores_dadosjusbr[["cinza_azulado"]]
+    ))
+  ) +
+  labs(
+    title = "Pontuação média em critérios de Completude",
+    y = "Órgão (sigla)",
+    x = NULL,
+    fill = "Escala"
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.justification = "left",
+    legend.spacing.x = unit(1, 'mm'),
+    legend.key.width= unit(1, 'cm'),
+    legend.key.height = unit(.35, "cm"),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(size = 8, angle = 45, vjust = 1, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(
+    title.position="top",
+    title.hjust = 0,
+    label.vjust = -1,
+    label.position = "top"
+  ))
+```
+
+
+```{r}
+indice_long %>% 
+  filter(dimensao == "Facilidade") %>% 
+  group_by(orgao, ano, dimensao) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
+  ggplot(aes(
+    x = tidytext::reorder_within(orgao, pontuacao, ano),
+    y = pontuacao,
+    fill = dimensao
+  )) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = round(pontuacao, 2)), hjust = 1, color = "black") +
+  tidytext::scale_x_reordered() +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  scale_fill_manual(values = cores_indice["Facilidade"]) +
+  coord_flip() +
+  facet_wrap(~ ano, scales="free_y") +
+  labs(
+    title = "Índice de Facilidade",
+    x = "Órgão (sigla)",
+    y = "Índice"
+  ) +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+```{r}
+indice_long %>% 
+  filter(dimensao == "Completude") %>% 
+  group_by(orgao, ano, dimensao) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
+  ggplot(aes(
+    x = tidytext::reorder_within(orgao, pontuacao, ano),
+    y = pontuacao,
+    fill = dimensao
+  )) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = round(pontuacao, 2)), hjust = 1, color = "black") +
+  tidytext::scale_x_reordered() +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  scale_fill_manual(values = cores_indice["Completude"]) +
+  coord_flip() +
+  facet_wrap(~ ano, scales="free_y") +
+  labs(
+    title = "Índice de Completude",
+    x = "Órgão (sigla)",
+    y = "Índice"
+  ) +
+  theme(strip.text = element_text(face = "bold"))
+```
+
