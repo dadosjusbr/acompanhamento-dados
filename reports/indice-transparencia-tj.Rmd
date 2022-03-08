@@ -751,8 +751,10 @@ indice %>%
   complete(orgao, ano, mes, fill = list(
     indice_completude = FALSE
   )) %>% 
-  mutate(mes = ordered(month.abb[mes], levels = month.abb),
-         indice_completude = indice_completude) %>% 
+  mutate(
+    mes = ordered(month.abb[mes], levels = month.abb),
+    indice_completude = indice_completude
+  ) %>% 
   add_count(orgao, ano, wt = indice_completude) %>% 
   select(orgao, ano, indice_completude, n) %>% 
   distinct() %>% 
@@ -916,6 +918,8 @@ indice %>%
 
 
 ## Contracheques faltantes
+
+Contagem de contracheques
 
 ```{r}
 contagem_contra_cheques <- contra_cheques %>% 
