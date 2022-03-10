@@ -27,6 +27,7 @@ library(ggbeeswarm)
 library(lubridate)
 library(here)
 library(waffle)
+`%notin%` <- function(x, y) !(x %in% y)
 
 # peguei as cores do site e criei um vetor com nomes fáceis de lembrar
 cores_dadosjusbr <- c(
@@ -89,31 +90,81 @@ col_defs <- cols(
     indice_transparencia = col_double()
   )
 
-indice <- "data/load/indice_transparencia_2022_02_11.csv" %>% 
+indice <- "data/load/indice_transparencia_2022_03_08.csv" %>% 
   here() %>%
-  read_csv(col_types = col_defs)
+  read_csv(col_types = col_defs) %>% 
+  filter(str_detect(orgao, "^mp"), indice_transparencia != 0) %>%
+  add_row(
+    orgao = c("mpam", "mppb"),
+    ano = c(2021L, 2021L),
+    mes = c(12L, 12L),
+    tem_lotacao	= c(T, T), 
+    tem_cargo	= c(T, T),
+    tem_matricula	= c(T, T),
+    receita_base = c("DETALHADO",	"DETALHADO"),
+    despesas = c("DETALHADO",	"DETALHADO"),
+    outras_receitas = c("DETALHADO",	"DETALHADO"),
+    nao_requer_login	= c(T, T),
+    nao_requer_captcha = c(T, T),
+    acesso = c("NECESSITA_SIMULACAO_USUARIO", "AMIGAVEL_PARA_RASPAGEM"),
+    formato_consistente = c(T, T),
+    estritamente_tabular = c(F, F),
+    acesso_i = c(0, 0.5),
+    indice_facilidade = (nao_requer_login + nao_requer_captcha + 
+      acesso_i + formato_consistente + estritamente_tabular) / 5,
+    indice_completude = (tem_matricula + tem_lotacao + tem_cargo +
+                           if_else(receita_base == "DETALHADO", 1, 0) +
+                           if_else(despesas == "DETALHADO", 1, 0) +
+                           if_else(outras_receitas == "DETALHADO", 1, 0)
+                           ) / 6,
+    indice_transparencia = 2 * (indice_facilidade * indice_completude) / (indice_facilidade + indice_completude)
+  )
 
 # vamos recalcular os índices
 indice <- indice %>% 
-  # select(-indice_completude,
-  #        -indice_facilidade,
-  #        -indice_transparencia) %>% 
-  filter(str_detect(orgao, "^mp")) %>% 
-  mutate(orgao = toupper(orgao) %>% str_replace("^MP", "MP-"))
+  select(-indice_completude,
+         -indice_facilidade,
+         -indice_transparencia) %>%
+  mutate(orgao = str_replace(toupper(orgao), "^MP", "MP-"))
 ```
 
 ## Órgãos que não estão sendo coletados
 
 Os órgãos abaixo não estão sendo coletados devido a problemas de disponíbilidade e acesso causados pelos próprios órgãos (mudança de formato, alta complexidade para extração, inconsistências, etc.)
 
-- MP-RJ
-- MP-RS
-- MP-PA
-- MP-SC
-- MP-ES
-- MP-MA
-- MP-AC
-- MP-RR
+```{r fig.width=3, fig.height=6}
+url_sheet <- "https://docs.google.com/spreadsheets/d/1sIebyMnsFMwGnUCZiQ6d_dIvPmvLtcFhszZnMU_QSTY"
+
+limite_esforco <- url_sheet %>% 
+  googlesheets4::read_sheet(range = "B:C") %>%
+  janitor::clean_names() %>% 
+  filter(str_detect(orgao, "MP")) %>% 
+  mutate(status = if_else(orgao %in% c("MPSP", "MPRN", "MPSE") | is.na(status),
+                           "Limite de esforço", status),
+         orgao = str_replace(orgao, "^MP", "MP-"))
+
+limite_esforco  %>% 
+  mutate(
+    ord = if_else(status == "Ok", 1, 0),
+    orgao = reorder(orgao, ord)
+  ) %>% 
+  ggplot(aes(y = orgao, x = "", fill = status)) +
+  geom_tile(color = cores_dadosjusbr[["cinza_azulado"]], alpha = .7, show.legend = F) +
+  geom_text(aes(label = status), fontface = "bold") +
+  scale_fill_manual(values = c("Ok" = cores_dadosjusbr[["cyan"]],
+                               "Limite de esforço" = cores_dadosjusbr[["lilas"]])) +
+  scale_x_discrete('', expand = c(0, 0)) +
+  scale_y_discrete('', expand = c(0, 0)) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+```
+
+```{r}
+indice <- indice %>% 
+  mutate(orgao = factor(orgao, levels = limite_esforco$orgao)) %>% 
+  complete(orgao, ano, mes) %>% 
+  left_join(limite_esforco)
+```
 
 ## Índice de Facilidade
 
@@ -133,45 +184,35 @@ Os órgãos abaixo não estão sendo coletados devido a problemas de disponíbil
 - $0,00$: requer login
 
 ```{r fig.height=7}
-indice %>%
+indice %>% 
   transmute(
-    orgao, nao_requer_login,
-    nao_requer_login_status = if_else(
-      nao_requer_login,
-      "Não requer login",
-      "Dado não disponível (Erro status 4)"
+    orgao,
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    status,
+    necessidade_login = case_when(
+      status == "Limite de esforço" ~ status,
+      nao_requer_login ~ "Não requer login",
+      !nao_requer_login ~ "Requer login",
+      TRUE ~ "Órgão não prestou contas"
     ),
-    indice_facilidade,
-    data = dmy(str_glue("01-{mes}-{ano}"))
-  ) %>%
-  complete(
-    orgao, data, fill = list(
-      nao_requer_login_status = "Dado não disponível",
-      nao_requer_login = FALSE
-  )) %>%
-  mutate(
-    nao_requer_login_status = ordered(
-      nao_requer_login_status,
-      levels = c(
-        "Não requer login",
-        "Requer login",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>%
+    ord = case_when(
+      necessidade_login == "Limite de esforço" ~ 0,
+      necessidade_login == "Órgão não prestou contas" ~ 0.1,
+      necessidade_login == "Requer login" ~ 0.5,
+      necessidade_login == "Não requer login" ~ 1
+    )
+  ) %>% 
   ggplot(aes(
     x = data,
-    y = reorder(orgao, nao_requer_login, sum),
-    fill = nao_requer_login_status
+    y = reorder(orgao, ord, sum),
+    fill = necessidade_login
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
     "Não requer login" = cores_dadosjusbr[["cyan"]],
     "Requer login" = cores_dadosjusbr[["lilas"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
@@ -191,7 +232,7 @@ indice %>%
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
 
 ### Necessário Captcha
@@ -204,49 +245,39 @@ indice %>%
 - $0,00$: requer captcha
 
 ```{r fig.height=7}
-indice %>%
+indice %>% 
   transmute(
-    orgao, nao_requer_captcha,
-    nao_requer_captcha_status = if_else(
-      nao_requer_captcha,
-      "Não requer captcha",
-      "Dado não disponível (Erro status 4)"
+    orgao,
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    status,
+    necessidade_captcha = case_when(
+      status == "Limite de esforço" ~ status,
+      nao_requer_captcha ~ "Não requer captcha",
+      !nao_requer_captcha ~ "Requer captcha",
+      TRUE ~ "Órgão não prestou contas"
     ),
-    indice_facilidade,
-    data = dmy(str_glue("01-{mes}-{ano}"))
-  ) %>%
-  complete(
-    orgao, data, fill = list(
-      nao_requer_captcha_status = "Dado não disponível",
-      nao_requer_captcha = FALSE
-  )) %>%
-  mutate(
-    nao_requer_captcha_status = ordered(
-      nao_requer_captcha_status,
-      levels = c(
-        "Não requer captcha",
-        "Requer captcha",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>%
+    ord = case_when(
+      necessidade_captcha == "Limite de esforço" ~ 0,
+      necessidade_captcha == "Órgão não prestou contas" ~ 0.1,
+      necessidade_captcha == "Requer captcha" ~ 0.5,
+      necessidade_captcha == "Não requer captha" ~ 1
+    )
+  ) %>% 
   ggplot(aes(
     x = data,
-    y = reorder(orgao, nao_requer_captcha, sum),
-    fill = nao_requer_captcha_status
+    y = reorder(orgao, ord, sum),
+    fill = necessidade_captcha
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
     "Não requer captcha" = cores_dadosjusbr[["cyan"]],
     "Requer captcha" = cores_dadosjusbr[["lilas"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Requer captcha para acesso aos dados",
+    title = "Requer Captcha para acesso aos dados",
     subtitle = "Ministérios Públicos - mês a mês",
     fill = NULL,
     x = "Cada célula representa 1 mês",
@@ -262,7 +293,7 @@ indice %>%
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
 
 ### Acesso
@@ -277,55 +308,50 @@ indice %>%
 - $0,00$: é **NECESSÁRIO SIMULAÇÃO DE USUÁRIO** para acesso
 
 ```{r fig.height=8}
-acesso <- indice %>% 
-  select(orgao, ano, mes, acesso, indice_facilidade) %>%
-  mutate(
-    pontuacao_acesso = case_when(
-      acesso == "DIRETA" ~ 1,
-      acesso == "AMIGAVEL_PARA_RASPAGEM" ~ 0.5,
-      acesso == "RASPAGEM_DIFICULTADA" ~ 0.25,
-      acesso == "NECESSITA_SIMULACAO_USUARIO" ~ 0
-      ),
-    acesso = acesso %>% 
-      str_to_sentence() %>% 
-      str_replace_all("Amigavel", "Amigável") %>% 
-      str_replace_all("simulacao", "simulação") %>% 
-      str_replace_all("usuario", "de usuário") %>% 
-      str_replace_all("_", " ") %>% 
-      replace_na("Dado indisponível (status 4)")
-  ) %>% 
-  complete(orgao, ano, mes,
-           fill = list(acesso = "Dado indisponível")) %>% 
-  mutate(
-    data = dmy(str_glue("01-{mes}-{ano}")),
-    mes = month.abb[month(data)],
-    acesso = ordered(acesso, levels = c(
-      "Direta",
+indice %>% 
+  transmute(
+    orgao, 
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    status,
+    acesso2 = case_when(
+      status != "Ok" ~ "Limite de esforço",
+      status == "Ok" & acesso == "DIRETA" ~ "Direto",
+      status == "Ok" & acesso == "AMIGAVEL_PARA_RASPAGEM" ~ "Amigável para raspagem",
+      status == "Ok" & acesso == "RASPAGEM_DIFICULTADA" ~ "Raspagem dificultada",
+      status == "Ok" & acesso == "NECESSITA_SIMULACAO_USUARIO" ~ "Necessita simulação de usuário",
+      TRUE ~ "Órgão não prestou conta"
+    ) %>% ordered(levels = c(
+      "Direto",
       "Amigável para raspagem",
       "Raspagem dificultada",
       "Necessita simulação de usuário",
-      "Dado indisponível (status 4)",
-      "Dado indisponível"
-  )))
-```
-
-```{r fig.height=8, fig.width=9}
-acesso %>% 
+      "Órgão não prestou conta",
+      "Limite de esforço"
+    )),
+    ord = case_when(
+      acesso2 == "Direto" ~ 1,
+      acesso2 == "Amigável para raspagem" ~ 0.5,
+      acesso2 == "Raspagem dificultada"~ 0.25,
+      acesso2 == "Necessita simulação de usuário" ~ 0,
+      acesso2 == "Órgão não prestou conta" ~ -.5,
+      acesso2 == "Limite de esforço" ~ -1
+    )
+  ) %>% 
   ggplot(aes(
-    y = reorder(orgao, pontuacao_acesso, sum, na.rm = TRUE),
+    y = reorder(orgao, ord, sum),
     x = data, 
-    fill = acesso
+    fill = acesso2
   )) +
   geom_tile(color = "gray90") +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x") +
   scale_fill_manual(values = c(
     "Direta" = cores_dadosjusbr[["verde"]],
     "Amigável para raspagem" = cores_dadosjusbr[["cyan"]],
     "Raspagem dificultada" = cores_dadosjusbr[["lilas"]],
-    "Necessita simulação de usuário" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado indisponível (status 4)" = "red",
-    "Dado indisponível" = cores_dadosjusbr[["laranja"]]
-  ), drop=FALSE) +
+    "Necessita simulação de usuário" = cores_dadosjusbr[["laranja"]],
+    "Órgão não prestou conta" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
+  ), drop = FALSE) +
   scale_y_discrete() +
   scale_x_date(expand = c(0, 0)) +
   labs(
@@ -337,73 +363,7 @@ acesso %>%
   ) +
   theme(legend.position = "top",
         legend.justification = "left") +
-  guides(fill = guide_legend(ncol = 1, title.position = "top"))
-```
-
-```{r fig.height=10, fig.width=9}
-acesso %>% 
-  select(-data) %>% 
-  na.omit() %>% 
-  group_by(orgao, ano) %>% 
-  summarise(across(where(is.double), mean, na.rm = TRUE), .groups = "drop") %>%
-  pivot_longer(-c(orgao, ano), names_to = "indice", values_to = "valor") %>% 
-  mutate(ord = if_else(indice == "indice_facilidade", valor, NA_real_)) %>% 
-  fill(ord, .direction = "down") %>% 
-  mutate(
-    indice = if_else(indice == "indice_facilidade",
-                     "Índice de Facilidade", 
-                     "Pontuação Acesso")
-  ) %>% 
-  ggplot(aes(
-    x = tidytext::reorder_within(orgao, ord, ano, sum),
-    y = valor,
-    color = indice,
-    group = orgao
-  )) +
-  coord_flip() +
-  scale_color_manual(values = c(
-    "Índice de Facilidade" = cores_dadosjusbr[["lilas"]],
-    "Pontuação Acesso" = cores_dadosjusbr[["cinza_azulado"]]
-  ), guide = guide_legend(reverse = TRUE)) +
-  scale_size_manual(values = c(3, 1),
-                    guide = guide_legend(reverse = TRUE)) +
-  facet_wrap(~ ano, scales = "free") +
-  geom_line(color = "gray80", size = 1.5) +
-  geom_point(aes(size = indice)) +
-  # geom_text(
-  #   data = . %>% filter(indice == "Índice de Facilidade"),
-  #   aes(label = orgao),
-  #   color = "black",
-  #   hjust = -0.3,
-  #   size = 3
-  # ) +
-  scale_y_continuous(limits = c(0, 1)) +
-  tidytext::scale_x_reordered() +
-  labs(x = "Órgão",
-       y = "Pontuação",
-       color = NULL,
-       size = NULL,
-       title = "Índice de Facilidade vs Pontuação de Acesso (2018-2021)",
-       subtitle = "Média anual por órgão",
-       caption = str_glue("Classificações quanto ao acesso:\n",
-                          "Direto: 1p\n",
-                          "Amigável para raspagem: 0,5p\n",
-                          "Não é amigável para raspagem: 0,25\n",
-                          "Necessário simulação de usuário: 0,p")
-       ) +
-  theme(
-    legend.position = "top",
-    plot.caption = element_text(hjust = 0),
-    axis.text.y = element_text(size = 9),
-    panel.grid.minor.x = element_blank(),
-    axis.ticks.x = element_blank(), 
-    legend.justification = "left",
-    strip.text = element_text(face = "bold"),
-    legend.background = element_rect(
-      fill = "gray95", color = "transparent"
-    ),
-    axis.text.x = element_text(size = 9)
-  )
+  guides(fill = guide_legend(ncol = 2, title.position = "top"))
 ```
 
 ### Manteve consistência do formato
@@ -417,49 +377,38 @@ acesso %>%
 
 
 ```{r fig.height=7}
-indice %>%
-  #filter(orgao == "MP-PB", ano == 2021, mes == 12) %>% glimpse()
+indice %>% 
   transmute(
-    orgao, formato_consistente,
-    formato_consistente_status = case_when(
-      formato_consistente & !is.na(acesso) ~ "Consistente",
-      !formato_consistente & is.na(acesso) ~ "Dado não disponível (Erro status 4)",
-      TRUE ~ "Inconsistente"
+    orgao,
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    consistencia = case_when(
+      status == "Limite de esforço" ~ status,
+      formato_consistente ~ "Manteve consistência no formato",
+      !formato_consistente ~ "Não manteve consistência no formato",
+      TRUE ~ "Órgão não prestou contas"
     ),
-    data = dmy(str_glue("01-{mes}-{ano}"))
-  ) %>%
-  complete(
-    orgao, data, fill = list(
-      formato_consistente_status = "Dado não disponível",
-      formato_consistente = FALSE
-  )) %>%
-  mutate(
-    formato_consistente_status = ordered(
-      formato_consistente_status,
-      levels = c(
-        "Consistente",
-        "Inconsistente",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>%
+    ord = case_when(
+      consistencia == "Limite de esforço" ~ 0,
+      consistencia == "Órgão não prestou contas" ~ 1,
+      consistencia == "Não manteve consistencia no formato" ~ 2,
+      consistencia == "Manteve consistência no formato" ~ 3
+    )
+  ) %>% 
   ggplot(aes(
     x = data,
-    y = reorder(orgao, formato_consistente, sum),
-    fill = formato_consistente_status
+    y = reorder(orgao, ord, sum),
+    fill = consistencia
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
-    "Consistente" = cores_dadosjusbr[["cyan"]],
-    "Inconsistente" = cores_dadosjusbr[["lilas"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Manteve consistência no formato" = cores_dadosjusbr[["cyan"]],
+    "Não manteve consistência no formato" = cores_dadosjusbr[["lilas"]],
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Manteve consistência do formato",
+    title = "Consistência no formato dos dados",
     subtitle = "Ministérios Públicos - mês a mês",
     fill = NULL,
     x = "Cada célula representa 1 mês",
@@ -475,7 +424,7 @@ indice %>%
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
 
 ### Formato estritamente tabular
@@ -488,49 +437,38 @@ indice %>%
 - $0,00$: quando o formato não é estritamente tabular
 
 ```{r fig.height=7}
-indice %>%
-  #filter(orgao == "MP-PB", ano == 2021, mes == 12) %>% glimpse()
+indice %>% 
   transmute(
-    orgao, estritamente_tabular,
-    estritamente_tabular_status = case_when(
-      estritamente_tabular & !is.na(acesso) ~ "Estritamente tabular",
-      !estritamente_tabular & is.na(acesso) ~ "Dado não disponível (Erro status 4)",
-      TRUE ~ "Não tabular"
+    orgao,
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    tabularidade = case_when(
+      status == "Limite de esforço" ~ status,
+      estritamente_tabular ~ "Dados estritamente tabulares",
+      !estritamente_tabular ~ "Dados não tabulares",
+      TRUE ~ "Órgão não prestou contas"
     ),
-    data = dmy(str_glue("01-{mes}-{ano}"))
-  ) %>%
-  complete(
-    orgao, data, fill = list(
-      estritamente_tabular_status = "Dado não disponível",
-      estritamente_tabular = FALSE
-  )) %>%
-  mutate(
-    estritamente_tabular_status = ordered(
-      estritamente_tabular_status,
-      levels = c(
-        "Estritamente tabular",
-        "Não tabular",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>%
+    ord = case_when(
+      tabularidade == "Limite de esforço" ~ 0,
+      tabularidade == "Órgão não prestou contas" ~ 1,
+      tabularidade == "Dados não tabulares" ~ 2,
+      tabularidade == "Dados estritamente tabulares" ~ 3
+    )
+  ) %>% 
   ggplot(aes(
     x = data,
-    y = reorder(orgao, estritamente_tabular, sum),
-    fill = estritamente_tabular_status
+    y = reorder(orgao, ord, sum),
+    fill = tabularidade
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
-    "Estritamente tabular" = cores_dadosjusbr[["cyan"]],
-    "Não tabular" = cores_dadosjusbr[["lilas"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Dados estritamente tabulares" = cores_dadosjusbr[["cyan"]],
+    "Dados não tabulares" = cores_dadosjusbr[["lilas"]],
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Formato estritamente tabular",
+    title = "Tabularidade dos dados",
     subtitle = "Ministérios Públicos - mês a mês",
     fill = NULL,
     x = "Cada célula representa 1 mês",
@@ -546,7 +484,7 @@ indice %>%
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
 
 ## Índice de Completude
@@ -568,48 +506,38 @@ indice %>%
 - $0,00$: não possui um dos atributos 
 
 ```{r}
-indice %>% #glimpse()
+indice %>% 
   transmute(
-    orgao, tem_matricula,
-    tem_matricula_status = case_when(
-      tem_matricula ~ "Possui nome e matrícula", 
-      !tem_matricula & !is.na(acesso) ~ "Não possui nome e matrícula",
-      TRUE ~ "Dado não disponível (Erro status 4)"
+    orgao,
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    nome_matricula = case_when(
+      status == "Limite de esforço" ~ status,
+      tem_matricula ~ "Possui nome e matrícula",
+      !tem_matricula ~ "Não possui nome e matrícula",
+      TRUE ~ "Órgão não prestou contas"
     ),
-    data = dmy(str_glue("01-{mes}-{ano}"))
+    ord = case_when(
+      nome_matricula == "Limite de esforço" ~ 0,
+      nome_matricula == "Órgão não prestou contas" ~ 1,
+      nome_matricula == "Não possui nome e matrícula" ~ 2,
+      nome_matricula == "Possui nome e matrícula" ~ 3
+    )
   ) %>% 
-  complete(
-    orgao, data, fill = list(
-      tem_matricula_status = "Dado não disponível",
-      tem_matricula = FALSE
-  )) %>%
-  mutate(
-    tem_matricula_status = ordered(
-      tem_matricula_status,
-      levels = c(
-        "Possui nome e matrícula",
-        "Não possui nome e matrícula",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>%
   ggplot(aes(
     x = data,
-    y = reorder(orgao, tem_matricula, sum),
-    fill = tem_matricula_status
+    y = reorder(orgao, ord, sum),
+    fill = nome_matricula
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
     "Possui nome e matrícula" = cores_dadosjusbr[["cyan"]],
     "Não possui nome e matrícula" = cores_dadosjusbr[["lilas"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Possui nome e matrícula",
+    title = "Nome e matrícula",
     subtitle = "Ministérios Públicos - mês a mês",
     fill = NULL,
     x = "Cada célula representa 1 mês",
@@ -625,7 +553,7 @@ indice %>% #glimpse()
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
 
 ### Lotação
@@ -638,48 +566,38 @@ indice %>% #glimpse()
 - $0,00$: não possui o atributo lotação 
 
 ```{r}
-indice %>% #glimpse()
+indice %>% 
   transmute(
-    orgao, tem_lotacao,
-    tem_lotacao_status = case_when(
-      tem_lotacao ~ "Possui lotação", 
-      !tem_lotacao & !is.na(acesso) ~ "Não possui lotação",
-      TRUE ~ "Dado não disponível (Erro status 4)"
+    orgao,
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    lotacao = case_when(
+      status == "Limite de esforço" ~ status,
+      tem_lotacao ~ "Possui o atributo lotação",
+      !tem_lotacao ~ "Não possui o atributo lotação",
+      TRUE ~ "Órgão não prestou contas"
     ),
-    data = dmy(str_glue("01-{mes}-{ano}"))
+    ord = case_when(
+      lotacao == "Limite de esforço" ~ 0,
+      lotacao == "Órgão não prestou contas" ~ 1,
+      lotacao == "Não possui o atributo lotação" ~ 2,
+      lotacao == "Possui o atributo lotação" ~ 3
+    )
   ) %>% 
-  complete(
-    orgao, data, fill = list(
-      tem_lotacao_status = "Dado não disponível",
-      tem_lotacao = FALSE
-  )) %>%
-  mutate(
-    tem_lotacao_status = ordered(
-      tem_lotacao_status,
-      levels = c(
-        "Possui lotação",
-        "Não possui lotação",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>%
   ggplot(aes(
     x = data,
-    y = reorder(orgao, tem_lotacao, sum),
-    fill = tem_lotacao_status
+    y = reorder(orgao, ord, sum),
+    fill = lotacao
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
-    "Possui lotação" = cores_dadosjusbr[["cyan"]],
-    "Não possui lotação" = cores_dadosjusbr[["lilas"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Possui o atributo lotação" = cores_dadosjusbr[["cyan"]],
+    "Não possui o atributo lotação" = cores_dadosjusbr[["lilas"]],
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Possui lotação",
+    title = "Lotação",
     subtitle = "Ministérios Públicos - mês a mês",
     fill = NULL,
     x = "Cada célula representa 1 mês",
@@ -695,7 +613,7 @@ indice %>% #glimpse()
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
 
 ### Cargo
@@ -708,48 +626,38 @@ indice %>% #glimpse()
 - $0,00$: não possui o atributo cargo 
 
 ```{r}
-indice %>% #glimpse()
+indice %>% 
   transmute(
-    orgao, tem_cargo,
-    tem_cargo_status = case_when(
-      tem_cargo ~ "Possui atributo cargo", 
-      !tem_cargo & !is.na(acesso) ~ "Não possui atributo cargo",
-      TRUE ~ "Dado não disponível (Erro status 4)"
+    orgao,
+    data = as.Date(str_glue("{ano}-{mes}-01")),
+    cargo = case_when(
+      status == "Limite de esforço" ~ status,
+      tem_cargo ~ "Possui o atributo cargo",
+      !tem_cargo ~ "Não possui o atributo cargo",
+      TRUE ~ "Órgão não prestou contas"
     ),
-    data = dmy(str_glue("01-{mes}-{ano}"))
+    ord = case_when(
+      cargo == "Limite de esforço" ~ 0,
+      cargo == "Órgão não prestou contas" ~ 1,
+      cargo == "Não possui o atributo cargo" ~ 2,
+      cargo == "Possui o atributo cargo" ~ 3
+    )
   ) %>% 
-  complete(
-    orgao, data, fill = list(
-      tem_cargo_status = "Dado não disponível",
-      tem_cargo = FALSE
-  )) %>%
-  mutate(
-    tem_cargo_status = ordered(
-      tem_cargo_status,
-      levels = c(
-        "Possui atributo cargo",
-        "Não possui atributo cargo",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data)
-  ) %>%
   ggplot(aes(
     x = data,
-    y = reorder(orgao, tem_cargo, sum),
-    fill = tem_cargo_status
+    y = reorder(orgao, ord, sum),
+    fill = cargo
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
-    "Possui atributo cargo" = cores_dadosjusbr[["cyan"]],
-    "Não possui atributo cargo" = cores_dadosjusbr[["lilas"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Possui o atributo cargo" = cores_dadosjusbr[["cyan"]],
+    "Não possui o atributo cargo" = cores_dadosjusbr[["lilas"]],
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Possui atributo Cargo",
+    title = "Cargo",
     subtitle = "Ministérios Públicos - mês a mês",
     fill = NULL,
     x = "Cada célula representa 1 mês",
@@ -765,7 +673,7 @@ indice %>% #glimpse()
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
 
 ### Remuneração básica
@@ -779,177 +687,38 @@ indice %>% #glimpse()
 - $0,00$: não apresenta remuneração básica
 
 ```{r}
-pecunias <- function(df, my_colname) {
-  
-  newcolname <- glue::glue("{my_colname}_pontos")
-  colname_complete <- str_remove(my_colname, "_pontos")
-                                 
-  pecunia <- case_when(
-    newcolname == "despesas_pontos" ~ "despesas",
-    newcolname == "receita_base_pontos" ~ "remuneração básica",
-    newcolname == "outras_receitas_pontos" ~ "remunerações eventuais/temporárias"
-  )
-  
-  df %>% 
-    transmute(
-      orgao, 
-      data = dmy(str_glue("01-{mes}-{ano}")),
-      !!sym(my_colname) := replace_na(!! sym(my_colname), "Dado não disponível (erro status 4)"),
-      !!newcolname := case_when(
-        !!sym(my_colname) == "DETALHADO" ~ 1,
-        !!sym(my_colname) == "SUMARIZADO" ~ 0.5,
-        TRUE ~ NA_real_
-    )) %>% 
-    complete(orgao, data) %>% 
-    mutate(
-      !!sym(my_colname) := replace_na(!!sym(my_colname), "Dado não disponível"),
-      !!sym(newcolname) := replace_na(!!sym(newcolname), 0),
-      !!sym(my_colname) := ordered(!!sym(my_colname), levels = c(
-        "DETALHADO",
-        "SUMARIZADO",
-        "Dado não disponível",
-        "Dado não disponível (erro status 4)"
-      )),
-      mes = month.abb[month(data)],
-      ano = year(data)
-    ) %>%
-    ggplot(aes(
-      x = data,
-      y = reorder(orgao, !!sym(newcolname), sum),
-      fill := !!sym(my_colname)
-    )) +
-    geom_tile(color = "gray90") +
-    scale_fill_manual(values = c(
-      "DETALHADO" = cores_dadosjusbr[["cyan"]],
-      "SUMARIZADO" = cores_dadosjusbr[["lilas"]],
-      "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-      "Dado não disponível (erro status 4)" = "red"
-    )) +
-    scale_x_date(expand = c(0, 0)) +
-    labs(
-      title = glue::glue("Detalhamento de {pecunia}"),
-      subtitle = "Ministérios Públicos - mês a mês",
-      fill = NULL,
-      x = "Cada célula representa 1 mês",
-      y = NULL
-    ) +
-    theme(
-      legend.position = "top",
-      legend.direction = "vertical",
-      legend.justification = "left",
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      panel.spacing = unit(2, "mm"),
-      strip.text = element_text(face = "bold")
-    ) +
-    guides(fill = guide_legend(ncol = 2)) +
-    facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
-  
-}
-
-pecunias(indice, "receita_base")
-```
-
-### Despesas
-
-**Definição**: valor correspondentes a descontos obrigatórios como: Contribuição Previdenciária, Imposto de Renda e Retenção por Teto Constitucional
-
-**Valores**: 
-
-- $1,00$: apresenta despesas **detalhadas**
-- $0,50$: apresenta despesas **sumarizadas**
-- $0,00$: não apresenta despesas
-
-```{r}
-pecunias(indice, "despesas")
-```
-
-### Outras remunerações
-
-**Despesas**: ínclui remuneração eventual ou temporária, tais como: função de confiança ou cargo em comissão, gratificação natalina, férias constitucionais, abono permanência, insalubridade, bem como as indenizações, por exemplo: pecúnias ou auxílios como: alimentação, saúde, creche, moradia, natalidade.
-
-**Valores**: 
-
-- $1,00$: apresenta outras receitas **detalhadas**
-- $0,50$: apresenta outras receitas **sumarizadas**
-- $0,00$: não apresenta outras receitas
-
-```{r}
-pecunias(indice, "outras_receitas")
-```
-
-### Detalhamento de remunerações em conjunto
-
-```{r}
 indice %>% 
   transmute(
     orgao, 
-    receita_base,
-    outras_receitas,
-    despesas,
     data = dmy(str_glue("01-{mes}-{ano}")),
-    remuneracoes = case_when(
-      receita_base == "DETALHADO" & 
-        outras_receitas == "DETALHADO" &
-        despesas == "DETALHADO" ~ "Todas as remunerações e despess detalhadas",
-      receita_base == "DETALHADO" & 
-        outras_receitas == "DETALHADO" &
-        despesas != "DETALHADO" ~ "Remunerações detalhadas, despesas sumarizadas",
-      receita_base == "DETALHADO" & 
-        despesas == "DETALHADO" &
-        outras_receitas != "DETALHADO" ~ "Remunerações básicas e despesas detalhadas,\nremunerações eventuais/temporárias sumarizadas",
-      TRUE ~ "Dado não disponível (Erro status 4)"
-  )) %>% 
-  complete(
-    orgao, data, fill = list(
-      receita_base = NA,
-      outras_receitas = NA,
-      despesas = NA,
-      remuneracoes = "Dado não disponível"
-  )) %>% 
-  mutate(
-    remuneracoes = ordered(
-      remuneracoes,
-      levels = c(
-        "Todas as remunerações e despess detalhadas",
-        "Remunerações detalhadas, despesas sumarizadas",
-        "Remunerações básicas e despesas detalhadas,\nremunerações eventuais/temporárias sumarizadas",
-        "Dado não disponível",
-        "Dado não disponível (Erro status 4)"
-      )),
-    mes = month.abb[month(data)],
-    ano = year(data),
-    receita_base = case_when(
-      receita_base == "DETALHADO" ~ 1,
-      receita_base == "SUMARIZADO" ~ 0.5,
-      TRUE ~ 0),
-    outras_receitas = case_when(
-      outras_receitas == "DETALHADO" ~ 1,
-      outras_receitas == "SUMARIZADO" ~ 0.5,
-      TRUE ~ 0),
-    despesas = case_when(
-      despesas == "DETALHADO" ~ 1,
-      despesas == "SUMARIZADO" ~ 0.5,
-      TRUE ~ 0),
-    remuneracao_pontos = receita_base + outras_receitas + despesas
+    remuneracao = case_when(
+      status != "Ok" ~ "Limite de esforço",
+      status == "Ok" & receita_base == "DETALHADO" ~ "Detalhado",
+      status == "Ok" & receita_base == "SUMARIZADO" ~ "Sumarizado",
+      TRUE ~ "Órgão não prestou contas"
+    ),
+    ord = case_when(
+      remuneracao == "Limite de esforço" ~ 0,
+      remuneracao == "Órgão não prestou contas" ~ 1,
+      remuneracao == "Sumarizado" ~ 2,
+      remuneracao == "Detalhado" ~ 3
+    )
   ) %>% 
   ggplot(aes(
-    x = data,
-    y = reorder(orgao, remuneracao_pontos, sum),
-    fill = remuneracoes
+    x = data, 
+    y = reorder(orgao, ord),
+    fill = remuneracao
   )) +
   geom_tile(color = "gray90") +
   scale_fill_manual(values = c(
-    "Todas as remunerações e despess detalhadas" = cores_dadosjusbr[["cyan"]],
-    "Remunerações detalhadas, despesas sumarizadas" = cores_dadosjusbr[["lilas"]],
-    "Remunerações básicas e despesas detalhadas,\nremunerações eventuais/temporárias sumarizadas" =
-      cores_dadosjusbr[["laranja"]],
-    "Dado não disponível" = cores_dadosjusbr[["cinza_azulado"]],
-    "Dado não disponível (Erro status 4)" = "red"
+    "Detalhado" = cores_dadosjusbr[["cyan"]],
+    "Sumarizado" = cores_dadosjusbr[["lilas"]],
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
   )) +
   scale_x_date(expand = c(0, 0)) +
   labs(
-    title = "Detalhamento de remunerações e despesas",
+    title = "Detalhamento de remuneração base",
     subtitle = "Ministérios Públicos - mês a mês",
     fill = NULL,
     x = "Cada célula representa 1 mês",
@@ -965,13 +734,138 @@ indice %>%
     strip.text = element_text(face = "bold")
   ) +
   guides(fill = guide_legend(ncol = 2)) +
-  facet_wrap(ano ~ ., nrow = 1, scales = "free_x")
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
+
+### Despesas
+
+**Definição**: valor correspondentes a descontos obrigatórios como: Contribuição Previdenciária, Imposto de Renda e Retenção por Teto Constitucional
+
+**Valores**: 
+
+- $1,00$: apresenta despesas **detalhadas**
+- $0,50$: apresenta despesas **sumarizadas**
+- $0,00$: não apresenta despesas
+
+```{r}
+indice %>% 
+  transmute(
+    orgao, 
+    data = dmy(str_glue("01-{mes}-{ano}")),
+    despesas = case_when(
+      status != "Ok" ~ "Limite de esforço",
+      status == "Ok" & despesas == "DETALHADO" ~ "Detalhado",
+      status == "Ok" & despesas == "SUMARIZADO" ~ "Sumarizado",
+      TRUE ~ "Órgão não prestou contas"
+    ),
+    ord = case_when(
+      despesas == "Limite de esforço" ~ 0,
+      despesas == "Órgão não prestou contas" ~ 1,
+      despesas == "Sumarizado" ~ 2,
+      despesas == "Detalhado" ~ 3
+    )
+  ) %>% 
+  ggplot(aes(
+    x = data, 
+    y = reorder(orgao, ord),
+    fill = despesas
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Detalhado" = cores_dadosjusbr[["cyan"]],
+    "Sumarizado" = cores_dadosjusbr[["lilas"]],
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Detalhamento de despesas",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
+```
+
+### Outras remunerações
+
+**Definição**: ínclui remuneração eventual ou temporária, tais como: função de confiança ou cargo em comissão, gratificação natalina, férias constitucionais, abono permanência, insalubridade, bem como as indenizações, por exemplo: pecúnias ou auxílios como: alimentação, saúde, creche, moradia, natalidade.
+
+**Valores**: 
+
+- $1,00$: apresenta outras receitas **detalhadas**
+- $0,50$: apresenta outras receitas **sumarizadas**
+- $0,00$: não apresenta outras receitas
+
+```{r}
+indice %>% 
+  transmute(
+    orgao, 
+    data = dmy(str_glue("01-{mes}-{ano}")),
+    remuneracao_adic = case_when(
+      status != "Ok" ~ "Limite de esforço",
+      status == "Ok" & outras_receitas == "DETALHADO" ~ "Detalhado",
+      status == "Ok" & outras_receitas == "SUMARIZADO" ~ "Sumarizado",
+      TRUE ~ "Órgão não prestou contas"
+    ),
+    ord = case_when(
+      remuneracao_adic == "Limite de esforço" ~ 0,
+      remuneracao_adic == "Órgão não prestou contas" ~ 1,
+      remuneracao_adic == "Sumarizado" ~ 2,
+      remuneracao_adic == "Detalhado" ~ 3
+    )
+  ) %>% 
+  ggplot(aes(
+    x = data, 
+    y = reorder(orgao, ord),
+    fill = remuneracao_adic
+  )) +
+  geom_tile(color = "gray90") +
+  scale_fill_manual(values = c(
+    "Detalhado" = cores_dadosjusbr[["cyan"]],
+    "Sumarizado" = cores_dadosjusbr[["lilas"]],
+    "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+    "Limite de esforço" = "gray"
+  )) +
+  scale_x_date(expand = c(0, 0)) +
+  labs(
+    title = "Detalhamento das outras receitas",
+    subtitle = "Ministérios Públicos - mês a mês",
+    fill = NULL,
+    x = "Cada célula representa 1 mês",
+    y = NULL
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "vertical",
+    legend.justification = "left",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(2, "mm"),
+    strip.text = element_text(face = "bold")
+  ) +
+  guides(fill = guide_legend(ncol = 2)) +
+  facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
+
+```
+
 
 ## Pontuações agregadas
 
 ```{r}
-indice_long <- indice %>% 
+indice_long <- indice %>%
+  filter(status == "Ok") %>% 
   transmute(
     orgao,
     ano,
@@ -979,19 +873,19 @@ indice_long <- indice %>%
     tem_lotacao,
     tem_cargo,
     tem_matricula,
-    across(c(receita_base, despesas, outras_receitas), ~ case_when(
-      . == "DETALHADO" ~ 1,
-      . == "SUMARIZADA" ~ 0.5,
-      TRUE ~ 0
+    across(c(receita_base, despesas, outras_receitas),
+      ~ case_when(
+        . == "DETALHADO" ~ 1,
+        . == "SUMARIZADO" ~ 0,
+        TRUE ~ NA_real_
     )),
     nao_requer_login,
     nao_requer_captcha,
     acesso = acesso_i,
     formato_consistente,
     estritamente_tabular
-  ) %>% 
+  ) %>%  
   pivot_longer(-c(orgao, ano, mes), names_to = "criterio", values_to = "pontuacao") %>%
-  complete(orgao, ano, mes, criterio, fill = list(pontuacao = 0)) %>% 
   mutate(
     criterio = criterio %>% 
       str_replace_all("_", " ") %>% 
@@ -1000,23 +894,27 @@ indice_long <- indice %>%
       str_replace("lotacao", "lotação"),
     dimensao = if_else(criterio %in% c(
         "Tem cargo", "Tem lotação", "Tem matrícula",
-        "Receita base", "Outras receitas", "Despesas"), "Completude",
-        "Facilidade"
+        "Receita base", "Outras receitas", "Despesas"), 
+        "Completude", "Facilidade"
     )
-  ) 
+  ) %>%
+  mutate(status = if_else(is.na(pontuacao), "Órgão não prestou contas", "Ok")) %>%
+  mutate(pontuacao = replace_na(pontuacao, 0))
 
-# indice_long %>% 
-#   group_by(orgao, criterio) %>% 
-#   summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
-#   arrange(dimensao, orgao, criterio) %>% 
-#   googlesheets4::write_sheet(
-#     "1Ke2MhFRh5yWwHRCZBr-WHvuh4y9dzs0JkBI27sFR2Fk",
-#     sheet = "Categorias")
+# library(googlesheets4)
+# indice_long %>%
+#   group_by(orgao, criterio, dimensao, status) %>%
+#   summarise(pontuacao = mean(pontuacao), .groups = "drop") %>%
+#   arrange(dimensao, orgao, criterio, dimensao, status) %>%
+#   write_sheet("1Ke2MhFRh5yWwHRCZBr-WHvuh4y9dzs0JkBI27sFR2Fk", sheet = "Categorias")
 ```
+
+### Pontuação média - Facilidade (2018-2021)
 
 ```{r fig.height=10}
 indice_long %>% 
   filter(dimensao == "Facilidade") %>% 
+  filter(status == "Ok") %>% 
   group_by(orgao, ano, criterio) %>% 
   summarise(pontuacao = mean(pontuacao), .groups = "drop") %>%
   ggplot(aes(
@@ -1063,9 +961,37 @@ indice_long %>%
   ))
 ```
 
+```{r}
+indice_long %>% 
+  filter(dimensao == "Facilidade") %>% 
+  group_by(orgao, ano, dimensao) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
+  ggplot(aes(
+    x = tidytext::reorder_within(orgao, pontuacao, ano),
+    y = pontuacao,
+    fill = dimensao
+  )) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = round(pontuacao, 2)), hjust = 1, color = "black") +
+  tidytext::scale_x_reordered() +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  scale_fill_manual(values = cores_indice["Facilidade"]) +
+  coord_flip() +
+  facet_wrap(~ ano, scales="free_y") +
+  labs(
+    title = "Índice de Facilidade",
+    x = "Órgão (sigla)",
+    y = "Índice"
+  ) +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+### Pontuação média - Completude (2018-2021)
+
 ```{r fig.height=10}
 indice_long %>% 
   filter(dimensao == "Completude") %>% 
+  filter(status == "Ok") %>% 
   group_by(orgao, ano, criterio) %>% 
   summarise(pontuacao = mean(pontuacao), .groups = "drop") %>%
   ggplot(aes(
@@ -1112,32 +1038,6 @@ indice_long %>%
   ))
 ```
 
-
-```{r}
-indice_long %>% 
-  filter(dimensao == "Facilidade") %>% 
-  group_by(orgao, ano, dimensao) %>% 
-  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
-  ggplot(aes(
-    x = tidytext::reorder_within(orgao, pontuacao, ano),
-    y = pontuacao,
-    fill = dimensao
-  )) +
-  geom_col(show.legend = F) +
-  geom_text(aes(label = round(pontuacao, 2)), hjust = 1, color = "black") +
-  tidytext::scale_x_reordered() +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_fill_manual(values = cores_indice["Facilidade"]) +
-  coord_flip() +
-  facet_wrap(~ ano, scales="free_y") +
-  labs(
-    title = "Índice de Facilidade",
-    x = "Órgão (sigla)",
-    y = "Índice"
-  ) +
-  theme(strip.text = element_text(face = "bold"))
-```
-
 ```{r}
 indice_long %>% 
   filter(dimensao == "Completude") %>% 
@@ -1161,5 +1061,270 @@ indice_long %>%
     y = "Índice"
   ) +
   theme(strip.text = element_text(face = "bold"))
+```
+
+### Pontuação média - índice de Transparência
+
+```{r fig.height=12, fig.width=9}
+media_harmonica <- function(x, y) 2 * (x * y) / (x + y)
+
+indice_calculado_mes <- indice_long %>% 
+  group_by(orgao, ano, mes, dimensao) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
+  pivot_wider(names_from = dimensao, values_from = pontuacao, 
+              values_fn = list) %>% 
+  unnest(c(Completude, Facilidade)) %>% 
+  mutate(Transparência = if_else(Completude + Facilidade == 0,
+                                 0, media_harmonica(Completude, Facilidade))) %>% 
+  pivot_longer(-c(orgao, ano, mes), names_to = "indice", values_to = "pontuacao")
+
+plot_indice_calculado_mes <- function(df, idx) {
+  
+  df %>%
+    filter(indice == idx) %>% 
+    mutate(data = as.Date(str_glue("{ano}-{mes}-01"))) %>% 
+    ggplot(aes(x = data, y = reorder(orgao, pontuacao), fill = pontuacao)) +
+    geom_tile(color = "gray30") +#cores_dadosjusbr[["cinza_azulado"]]) +
+    scale_x_date(expand = c(0, 0)) +
+    scale_fill_gradientn(
+      limits = c(0, 1),
+      breaks = c(0, .25, .5, .75, 1),
+      labels = c("0", "0,25", "0,5", "0,75", "1"),
+      colours = c(
+        "black",
+        "gray15",
+        cores_dadosjusbr[["cinza_azulado"]],
+        cores_indice[[idx]]
+      )
+    ) +
+    facet_grid(indice ~  ano, scales = "free") +
+    theme(
+      legend.position = "top",
+      legend.direction = "horizontal",
+      legend.justification = "left",
+      legend.spacing.x = unit(1, 'mm'),
+      legend.key.width= unit(1, 'cm'),
+      legend.key.height = unit(.35, "cm"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.spacing = unit(2, "mm"),
+      strip.text = element_text(face = "bold", size = 10)
+    )  +
+    guides(fill = guide_legend(
+      title.position="top",
+      title.hjust = 0,
+      label.vjust = -1,
+      label.position = "top"
+    )) +
+    labs(
+      title = NULL,
+      subtitle = NULL,
+      fill = NULL,
+      x = NULL,
+      y = NULL
+    )
+}
+
+library(patchwork)
+c("Transparência", "Completude", "Facilidade") %>% 
+  map(plot_indice_calculado_mes, df = indice_calculado_mes) %>% 
+  reduce(`/`) +
+  plot_annotation(
+    title = "Monitoramento dos índices mês a mês"
+  ) &
+  theme(plot.margin = margin(t = 0, r = 0, l = 0, b = 0))
+```
+
+```{r}
+media_harmonica <- function(x, y) 2 * (x * y) / (x + y)
+
+indice_calculado_ano <- indice_long %>% 
+  group_by(orgao, ano, dimensao) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
+  pivot_wider(names_from = dimensao, values_from = pontuacao, 
+              values_fn = list) %>% 
+  unnest(c(Completude, Facilidade)) %>% 
+  mutate(Transparência = if_else(Completude + Facilidade == 0,
+                                 0, media_harmonica(Completude, Facilidade))) %>% 
+  pivot_longer(-c(orgao, ano), names_to = "indice", values_to = "pontuacao")
+
+plot_indice_calculado_ano <- function(df, idx) {
+  
+  pal <- c("black", "gray15", cores_dadosjusbr[["cinza_azulado"]], cores_indice[[idx]])
+  #pal <- switch(idx, "Transparência" = c(pal[3], "#248c71", cores_indice[[idx]], "#d5e8e3"), pal)
+  
+  df %>%
+    mutate(ord = if_else(indice == "Transparência", pontuacao, NA_real_)) %>% 
+    group_by(orgao, ano) %>% 
+    fill(ord, .direction = "up") %>% 
+    ungroup() %>% 
+    mutate(
+      orgao_ord = tidytext::reorder_within(orgao, ord, ano)
+    ) %>% 
+    filter(indice == idx) %>% 
+    ggplot(aes(x = indice, y = orgao_ord, fill = pontuacao)) +
+    geom_tile(color = "gray30") +#cores_dadosjusbr[["cinza_azulado"]]) +
+    scale_x_discrete(expand = c(0, 0)) +
+    tidytext::scale_y_reordered() +
+    scale_fill_gradientn(
+      limits = c(0, 1),
+      breaks = c(0, .25, .5, .75, 1),
+      labels = c("0", "0,25", "0,5", "0,75", "1"),
+      colours = pal
+    ) +
+    facet_wrap(ano ~ ., ncol = 1, scales = "free_y") +
+    theme(
+      plot.title = element_blank(),
+      legend.position = "top",
+      legend.direction = "horizontal",
+      legend.justification = "center",
+      legend.spacing.x = unit(.6, 'mm'),
+      legend.key.width= unit(.6, 'cm'),
+      legend.key.height = unit(.25, "cm"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.spacing = unit(1, "mm"),
+      axis.text.x = element_text(face = "bold"),
+      axis.text.y = switch(idx,
+        "Transparência" = element_text(size = 10),
+        element_text(size = 10, color = "transparent")
+      ),
+      strip.text = switch(idx,
+        "Transparência" = element_text(face = "bold"),
+        element_text(face = "bold", color = "transparent")
+      )
+    )  +
+    guides(fill = guide_legend(
+      title.position="top",
+      title.hjust = 0,
+      label.vjust = -1,
+      label.position = "top"
+    )) +
+    labs(
+      title = idx,
+      subtitle = NULL,
+      fill = NULL,
+      x = NULL,
+      y = NULL
+    )
+}
+
+library(patchwork)
+c("Transparência", "Completude", "Facilidade") %>% 
+  map(plot_indice_calculado_ano, df = indice_calculado_ano) %>% 
+  reduce(`+`) +
+  plot_annotation(
+    title = "Monitoramento dos índices (média anual)"
+  ) &
+  theme(plot.margin = margin(t = 0, r = 1, l = 1, b = 5))
+
+```
+
+### Pontuação média de todos os índices por órgão
+
+```{r}
+media_harmonica <- function(x, y) 2 * (x * y) / (x + y)
+
+indice_calculado <- indice_long %>% 
+  group_by(orgao, ano, dimensao) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop") %>% 
+  pivot_wider(names_from = dimensao, values_from = pontuacao, 
+              values_fn = list) %>% 
+  unnest(c(Completude, Facilidade)) %>% 
+  mutate(Transparência = if_else(Completude + Facilidade == 0,
+                                 0, media_harmonica(Completude, Facilidade))) %>% 
+  pivot_longer(-c(orgao, ano), names_to = "indice", values_to = "pontuacao") %>%
+  group_by(orgao, indice) %>% 
+  summarise(pontuacao = mean(pontuacao), .groups = "drop")
+
+cut_orgao <- indice_calculado %>% 
+  filter(indice == "Transparência", orgao == "MP-RO")
+
+indice_calculado %>% 
+  ggplot(aes(
+    y = reorder(orgao, pontuacao, sum),
+    x = pontuacao
+  )) +
+  geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
+  geom_point(
+    data = . %>% filter(indice != "Transparência") %>% 
+      rename(dimensao = indice),
+    aes(size = dimensao, fill = dimensao),
+    shape = 21,
+    size = 3.5
+  ) +
+  geom_point(
+    data = . %>% filter(indice == "Transparência") %>% 
+      mutate(indice = "Índice de Transparência"),
+    size = .25
+  ) +
+  geom_point(
+    data = . %>% filter(indice == "Transparência") %>% 
+      mutate(indice = "Índice de Transparência"),
+    aes(color = indice),
+    size = 6, 
+    alpha = .7
+  ) +
+  scale_x_continuous(
+    limits = c(-.01, 1.1),
+    breaks = c(0, .25, .5, .75, 1), 
+    minor_breaks = c(.25, .75),
+    expand = c(0.001, 0)
+  ) +
+  scale_fill_manual(values = c(
+    "Completude" = cores_dadosjusbr[["laranja"]],
+    "Facilidade" = cores_dadosjusbr[["lilas"]]
+  )) +
+  scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
+  geom_curve(
+    aes(x = .5,
+        xend = cut_orgao$pontuacao,
+        y = cut_orgao$orgao,
+        yend = cut_orgao$orgao),
+    color = cores_dadosjusbr[["cinza_azulado"]],
+    size = .3,
+    arrow = arrow(length = unit(2, "mm")),
+    curvature = -0.2
+  ) +
+  geom_label(
+    aes(x = .5,
+        y = "MP-RO",
+        label = str_glue(
+          "O índice de\nTransparência é uma\nmédia harmônica\ndas pontuações\n",
+          "obtidas nas dimensões\nCompletude e Facilidade")),
+    size = 3,
+    label.r = unit(0.3, "lines"),
+    fontface = "bold",
+    lineheight = 1.1
+  ) +
+  labs(
+    title = "Índice de Transparência DadosJusBr (2018-2021)\nMinistérios Públicos",
+    x = "Pontuação",
+    y = NULL,
+    fill = "Dimensões:",
+    color = ""
+  ) +
+  theme(
+    plot.title = element_text(size = 15),
+    axis.title.x = element_text(vjust = -5),
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_text(vjust = -.2),
+    #panel.grid.major.y = element_blank(),
+    legend.position = "top",
+    legend.justification = "left",
+    legend.background = element_rect(
+      fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
+      color = "transparent"
+    )) +
+  guides(
+    fill  = guide_legend(
+      order = 2,
+      label.theme = element_text(size = 10),
+      title.theme = element_text(size = 10)
+    ),
+    color = guide_legend(
+      order = 1,
+      label.theme = element_text(size = 12))
+    )
 ```
 
