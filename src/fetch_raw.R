@@ -65,7 +65,7 @@ cols_metadados <- cols(
 
 contra_cheque <- list.files(path = alvo$data_dir,
                             pattern = "contra_cheque",
-                            full.names = T)[1] %>%
+                            full.names = T) %>%
   map_df(~ read_csv(.x, col_types = cols_contra_cheque)) %>% 
   filter(!str_detect(chave_coleta, "chave")) %>% 
   mutate(ativo = if_else(ativo == "true", TRUE, FALSE))
@@ -102,7 +102,7 @@ incomes = remuneracoes %>%
   mutate(
     natureza = if_else(natureza == "D", "Desconto", "Recebimento")
   )
-
+rm(remuneracoes)
 diretorio = dir.create(here::here("data/ready"), recursive = T)
 incomes %>% 
   write.csv(here::here("data/ready/remuneracoes-contracheques.csv"))
