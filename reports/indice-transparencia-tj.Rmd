@@ -84,22 +84,23 @@ col_defs <- cols(
     acesso = col_character(),
     formato_consistente = col_logical(),
     estritamente_tabular = col_logical(),
-    acesso_i = col_double(),
+    #acesso_i = col_double(),
     indice_completude = col_double(),
     indice_facilidade = col_double(),
     indice_transparencia = col_double()
   )
 
-indice <- "data/load/indice_transparencia_2022_03_08.csv" %>%
+indice <- "data/load/indice_transparencia_2022_03_11.csv" %>%
   here() %>%
-  read_csv(col_types = col_defs)
+  read_csv(col_types = col_defs) %>% 
+  filter(str_detect(orgao, "^tj")) %>% 
+  filter(ano != 2022)
 
 # vamos recalcular os índices
 indice <- indice %>% 
   select(-indice_completude,
          -indice_facilidade,
-         -indice_transparencia) %>% 
-  filter(str_detect(orgao, "^tj"))
+         -indice_transparencia)
 
 contra_cheques <- read_csv(
   here::here("data/ready/contra-cheque.csv"),
@@ -218,8 +219,9 @@ indice %>%
     indice_transparencia = 0
   )) %>% 
   group_by(orgao) %>% 
-  summarise(across(starts_with("indice"), mean), .groups = "drop") %>% 
-  mutate(orgao = if_else(indice_completude == 0.5 & indice_facilidade == 0.8, "Demais órgãos", orgao)) %>%
+  summarise(across(starts_with("indice"), mean), .groups = "drop") %>%
+  #arrange(-indice_transparencia)
+  mutate(orgao = if_else(indice_transparencia == max(indice_transparencia), "Demais órgãos", orgao)) %>% 
   distinct() %>% 
   pivot_longer(-orgao, values_to = "pontuacao", names_to = "indice") %>%
   mutate(
@@ -261,10 +263,10 @@ indice %>%
     "Facilidade" = cores_dadosjusbr[["lilas"]]
   )) +
   scale_color_manual(values = cores_dadosjusbr[["cyan"]]) +
-  geom_curve(aes(x = 1.1, xend = cut_orgao, y = "TJ-RS", yend = "TJ-RS"),
+  geom_curve(aes(x = 1.1, xend = cut_orgao, y = "Demais órgãos", yend = "Demais órgãos"),
              color = cores_dadosjusbr[["cinza_azulado"]],
              arrow = arrow(length = unit(2, "mm")), curvature = -0.2
-             ) + 
+             ) +
   geom_label(
     aes(x = 1.1, y = "Demais órgãos",
         label = str_glue("O índice de Transparência\né uma média harmônica\ndas pontuações\n",
@@ -590,9 +592,6 @@ indice %>%
   pontuacao_mes_df(col_dimensao = "indice_transparencia") %>% 
   pontuacao_mes_plot(dimensao = "Transparência") +
   labs(title = "Índice de Transparência mês a mês")
-
-indice %>% 
-  filter(orgao == "tjpb", ano == 2019, mes == 9) %>% glimpse()
 ```
 
 ```{r fig.height=7, fig.width=10}
@@ -619,7 +618,7 @@ indice %>%
   geom_col(fill = cores_indice[["Completude"]]) +
   geom_text(aes(label = n), size = 5.5, fontface = "bold", hjust = 1) +
   geom_label(aes(
-    x = "(14°) TJ-PB",
+    x = "(13°) TJ-PB",
     y = 25,
     label = str_glue("Total de meses faltantes\n{sum(n)}")
   ), label.size = NA, size = 6) +
@@ -797,32 +796,6 @@ indice %>%
   guides(fill = guide_legend(reverse = TRUE),
          color = guide_legend(reverse = TRUE))
 ```
-
-```{r}
-indice %>% 
-  transmute(
-    orgao = orgao %>% toupper() %>% str_replace("^TJ", "TJ-"),
-    ano,
-    mes,
-    indice_completude = indice_completude != 0
-  ) %>% 
-  complete(orgao, ano, mes, fill = list(
-    indice_completude = FALSE
-  )) %>% 
-  mutate(mes = ordered(month.abb[mes], levels = month.abb),
-         indice_completude = indice_completude) %>% 
-  add_count(orgao, ano, wt = indice_completude) %>% 
-  select(orgao, ano, indice_completude, n) %>% 
-  distinct() %>% 
-  filter(indice_completude) %>%
-  complete(orgao, ano, fill = list(indice_completude = TRUE, n = 0)) %>%
-  group_by(ano) %>% 
-  summarise(qt_completos = sum(n),
-            qt_incompletos = sum(12 - n)) %>% 
-  pivot_longer(-ano, values_to = "qt", names_to = "status") %>% 
-  count(status, wt = qt)
-```
-
 
 ## Médias anuais do índice de Transparência
 
