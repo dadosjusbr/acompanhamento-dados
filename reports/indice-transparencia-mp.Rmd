@@ -66,6 +66,17 @@ theme_set(
 )
 
 update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]])
+
+theme_adjust_waffle = theme(
+  legend.position = "top",
+  legend.direction = "vertical",
+  legend.justification = "left",
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.spacing = unit(2, "mm"),
+  strip.text = element_text(face = "bold")
+)
+
 ```
 
 ```{r}
@@ -161,9 +172,32 @@ limite_esforco  %>%
 
 ```{r}
 indice <- indice %>% 
-  mutate(orgao = factor(orgao, levels = limite_esforco$orgao)) %>% 
+  mutate(
+    orgao = factor(orgao, levels = limite_esforco$orgao), 
+    data = ym(str_glue("{ano}-{mes}"))
+  ) %>% 
   complete(orgao, ano, mes) %>% 
-  left_join(limite_esforco)
+  left_join(limite_esforco) %>% 
+  mutate(
+    necessidade_login = case_when(
+      status == "Limite de esforço" ~ status,
+      nao_requer_login ~ "Não requer login",
+      !nao_requer_login ~ "Requer login",
+      TRUE ~ "Órgão não prestou contas"
+    ), 
+    ord = case_when(
+      necessidade_login == "Limite de esforço" ~ 0,
+      necessidade_login == "Órgão não prestou contas" ~ 0.1,
+      necessidade_login == "Requer login" ~ 0.5,
+      necessidade_login == "Não requer login" ~ 1
+    ), 
+    necessidade_captcha = case_when(
+      status == "Limite de esforço" ~ status,
+      nao_requer_captcha ~ "Não requer captcha",
+      !nao_requer_captcha ~ "Requer captcha",
+      TRUE ~ "Órgão não prestou contas"
+    )
+  )
 ```
 
 ## Índice de Facilidade
@@ -185,23 +219,6 @@ indice <- indice %>%
 
 ```{r fig.height=7}
 indice %>% 
-  transmute(
-    orgao,
-    data = as.Date(str_glue("{ano}-{mes}-01")),
-    status,
-    necessidade_login = case_when(
-      status == "Limite de esforço" ~ status,
-      nao_requer_login ~ "Não requer login",
-      !nao_requer_login ~ "Requer login",
-      TRUE ~ "Órgão não prestou contas"
-    ),
-    ord = case_when(
-      necessidade_login == "Limite de esforço" ~ 0,
-      necessidade_login == "Órgão não prestou contas" ~ 0.1,
-      necessidade_login == "Requer login" ~ 0.5,
-      necessidade_login == "Não requer login" ~ 1
-    )
-  ) %>% 
   ggplot(aes(
     x = data,
     y = reorder(orgao, ord, sum),
@@ -222,15 +239,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -246,23 +255,6 @@ indice %>%
 
 ```{r fig.height=7}
 indice %>% 
-  transmute(
-    orgao,
-    data = as.Date(str_glue("{ano}-{mes}-01")),
-    status,
-    necessidade_captcha = case_when(
-      status == "Limite de esforço" ~ status,
-      nao_requer_captcha ~ "Não requer captcha",
-      !nao_requer_captcha ~ "Requer captcha",
-      TRUE ~ "Órgão não prestou contas"
-    ),
-    ord = case_when(
-      necessidade_captcha == "Limite de esforço" ~ 0,
-      necessidade_captcha == "Órgão não prestou contas" ~ 0.1,
-      necessidade_captcha == "Requer captcha" ~ 0.5,
-      necessidade_captcha == "Não requer captha" ~ 1
-    )
-  ) %>% 
   ggplot(aes(
     x = data,
     y = reorder(orgao, ord, sum),
@@ -283,15 +275,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -311,7 +295,7 @@ indice %>%
 indice %>% 
   transmute(
     orgao, 
-    data = as.Date(str_glue("{ano}-{mes}-01")),
+    data,
     status,
     acesso2 = case_when(
       status != "Ok" ~ "Limite de esforço",
@@ -380,7 +364,7 @@ indice %>%
 indice %>% 
   transmute(
     orgao,
-    data = as.Date(str_glue("{ano}-{mes}-01")),
+    data,
     consistencia = case_when(
       status == "Limite de esforço" ~ status,
       formato_consistente ~ "Manteve consistência no formato",
@@ -440,7 +424,7 @@ indice %>%
 indice %>% 
   transmute(
     orgao,
-    data = as.Date(str_glue("{ano}-{mes}-01")),
+    data,
     tabularidade = case_when(
       status == "Limite de esforço" ~ status,
       estritamente_tabular ~ "Dados estritamente tabulares",
@@ -509,7 +493,7 @@ indice %>%
 indice %>% 
   transmute(
     orgao,
-    data = as.Date(str_glue("{ano}-{mes}-01")),
+    data,
     nome_matricula = case_when(
       status == "Limite de esforço" ~ status,
       tem_matricula ~ "Possui nome e matrícula",
@@ -569,7 +553,7 @@ indice %>%
 indice %>% 
   transmute(
     orgao,
-    data = as.Date(str_glue("{ano}-{mes}-01")),
+    data,
     lotacao = case_when(
       status == "Limite de esforço" ~ status,
       tem_lotacao ~ "Possui o atributo lotação",
@@ -629,7 +613,7 @@ indice %>%
 indice %>% 
   transmute(
     orgao,
-    data = as.Date(str_glue("{ano}-{mes}-01")),
+    data,
     cargo = case_when(
       status == "Limite de esforço" ~ status,
       tem_cargo ~ "Possui o atributo cargo",
