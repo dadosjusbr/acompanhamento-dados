@@ -1,6 +1,9 @@
 ---
 title: "Gráficos para o relatório"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
 editor_options:
   chunk_output_type: console
 ---
@@ -906,7 +909,7 @@ indice %>%
       remuneracao == "Detalhado" ~ 3
     )
   ) %>%
-  filter(ord != 0) %>% 
+  filter(ord != 0) %>%
   ggplot(aes(
     x = data,
     y = reorder(orgao, ord),
