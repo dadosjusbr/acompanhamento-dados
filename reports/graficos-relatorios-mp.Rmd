@@ -64,6 +64,16 @@ theme_set(
 )
 
 hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]])
+
+theme_adjust_waffle = theme(
+  legend.position = "top",
+  legend.direction = "vertical",
+  legend.justification = "left",
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.spacing = unit(2, "mm"),
+  strip.text = element_text(face = "bold")
+)
 ```
 
 # Índices
@@ -342,21 +352,27 @@ monitoramento_mes <- function(df, idx) {
 }
 ```
 
-```{r monitoramento_mes-transparencia, fig.height=7, fig.width=12, echo=FALSE}
+### Transparência
+
+```{r monitoramento_mes-transparencia, fig.height=7, fig.width=9, echo=FALSE}
 monitoramento_mes(indice, idx = "Transparência")
 ```
 
-```{r monitoramento_mes-completude, fig.height=7, fig.width=12, echo=FALSE}
-monitoramento_mes(indice, idx = "Completude")
+### Facilidade
+
+```{r monitoramento_mes-facilidade, fig.height=7, fig.width=9, echo=FALSE}
+monitoramento_mes(indice, idx = "Facilidade")
 ```
 
-```{r monitoramento_mes-facilidade, fig.height=7, fig.width=12, echo=FALSE}
-monitoramento_mes(indice, idx = "Facilidade")
+### Completude
+
+```{r monitoramento_mes-completude, fig.height=7, fig.width=9, echo=FALSE}
+monitoramento_mes(indice, idx = "Completude")
 ```
 
 ## Média mensal entre todos os órgãos
 
-```{r media-mes-geral}
+```{r media-mes-geral, fig.height=5, fig.width=9}
 indice %>%
   mutate(data = as.Date(str_glue("{ano}-{mes}-01"))) %>%
   group_by(data) %>%
@@ -380,11 +396,20 @@ indice %>%
     "Facilidade" = 2
   )) +
   scale_y_continuous(limits = c(0, 1)) +
-    labs(
-      title = "Pontuação média monitoramento do índice de transparência mês a mês",
-      x = NULL, y = "Pontuação média",
-      size = "Índice", color = "Índice"
-    )
+  guides(
+    color = guide_legend(title.position = "top")
+  ) +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.justification = "center",
+    legend.title = element_text(face = "bold", hjust = .5)
+  ) +
+  labs(
+    title = "Pontuação média monitoramento do índice de transparência mês a mês",
+    x = NULL, y = "Pontuação média",
+    size = "Índice", color = "Índice"
+  )
 ```
 
 # Índice de Facilidade
@@ -507,7 +532,7 @@ indice <- indice %>%
 - $0,25$: o acesso **NÃO É AMIGAVEL PARA RASPAGEM**
 - $0,00$: é **NECESSÁRIO SIMULAÇÃO DE USUÁRIO** para acesso
 
-```{r formato-de-acesso, fig.height=8}
+```{r formato-de-acesso, fig.height=7, fig.width=9, echo=FALSE}
 indice %>%
   transmute(
     orgao,
@@ -562,9 +587,8 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(legend.position = "top",
-        legend.justification = "left") +
-  guides(fill = guide_legend(ncol = 2, title.position = "top"))
+  theme_adjust_waffle +
+  guides(fill = guide_legend(ncol = 3, title.position = "top"))
 ```
 
 ## Manteve consistência do formato
@@ -577,7 +601,7 @@ indice %>%
 - $0,00$: quando o formato não é consistente
 
 
-```{r consistencia, fig.height=7}
+```{r consistencia, fig.height=7, fig.width=9}
 indice %>%
   transmute(
     orgao,
@@ -616,15 +640,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -638,7 +654,7 @@ indice %>%
 - $1,00$: quando o formato é estritamente tabular
 - $0,00$: quando o formato não é estritamente tabular
 
-```{r tabularidade, fig.height=7}
+```{r tabularidade, fig.height=7, fig.width=9}
 indice %>%
   transmute(
     orgao,
@@ -677,15 +693,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -708,7 +716,7 @@ indice %>%
 - $1,00$: possui ambos os atributos
 - $0,00$: não possui um dos atributos
 
-```{r nome-e-matricula}
+```{r nome-e-matricula, fig.width=9, fig.height=7}
 indice %>%
   transmute(
     orgao,
@@ -747,15 +755,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -769,7 +769,7 @@ indice %>%
 - $1,00$: possui o atributo lotação
 - $0,00$: não possui o atributo lotação
 
-```{r lotacao}
+```{r lotacao, fig.width=9, fig.height=7}
 indice %>%
   transmute(
     orgao,
@@ -808,15 +808,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -830,7 +822,7 @@ indice %>%
 - $1,00$: possui o atributo cargo
 - $0,00$: não possui o atributo cargo
 
-```{r cargo}
+```{r cargo, fig.width=9, fig.height=7}
 indice %>%
   transmute(
     orgao,
@@ -869,15 +861,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -892,7 +876,7 @@ indice %>%
 - $0,50$: apresenta remuneração básica **sumarizada**
 - $0,00$: não apresenta remuneração básica
 
-```{r remuneracao-basica}
+```{r remuneracao-basica, fig.width=9, fig.height=7}
 indice %>%
   transmute(
     orgao,
@@ -931,15 +915,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -954,7 +930,7 @@ indice %>%
 - $0,50$: apresenta despesas **sumarizadas**
 - $0,00$: não apresenta despesas
 
-```{r despesas}
+```{r despesas, fig.width=9, fig.height=7}
 indice %>%
   transmute(
     orgao,
@@ -993,15 +969,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
@@ -1016,7 +984,7 @@ indice %>%
 - $0,50$: apresenta outras receitas **sumarizadas**
 - $0,00$: não apresenta outras receitas
 
-```{r outras-remuneracoes}
+```{r outras-remuneracoes, fig.width=9, fig.height=7}
 indice %>%
   transmute(
     orgao,
@@ -1055,15 +1023,7 @@ indice %>%
     x = "Cada célula representa 1 mês",
     y = NULL
   ) +
-  theme(
-    legend.position = "top",
-    legend.direction = "vertical",
-    legend.justification = "left",
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.spacing = unit(2, "mm"),
-    strip.text = element_text(face = "bold")
-  ) +
+  theme_adjust_waffle +
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
