@@ -1,6 +1,10 @@
 ---
 title: "Gráficos para o relatório"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    float: true
 editor_options:
   chunk_output_type: console
 ---
@@ -299,7 +303,7 @@ monitoramento_mes <- function(df, idx) {
     scale_fill_gradientn(
       limits = c(0, 1),
       breaks = c(0, .25, .5, .75, 1),
-      labels = c("0", "0,25", "0,5", "0,75", "1"),
+      labels = c("sem\ndado", "\n0,25", "\n0,5", "\n0,75", "\n1"),
       colours = c(
         "black",
         "gray15",
@@ -906,7 +910,7 @@ indice %>%
       remuneracao == "Detalhado" ~ 3
     )
   ) %>%
-  filter(ord != 0) %>% 
+  filter(ord != 0) %>%
   ggplot(aes(
     x = data,
     y = reorder(orgao, ord),
