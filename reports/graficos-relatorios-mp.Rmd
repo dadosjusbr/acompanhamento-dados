@@ -1027,3 +1027,47 @@ indice %>%
   guides(fill = guide_legend(ncol = 2)) +
   facet_wrap(lubridate::year(data) ~ ., nrow = 1, scales = "free_x")
 ```
+
+# Planilhas de contra cheques mensais consolidadas
+
+Número de planilhas processadas:
+
+```{r}
+indice <- indice_long %>%
+  group_by(mes, ano, orgao, dimensao) %>%
+  summarise(indice = mean(pontuacao), .groups = "drop") %>%
+  pivot_wider(names_from = dimensao, values_from = indice) %>% 
+  mutate(Transparência = media_harmonica(Completude, Facilidade))
+
+indice %>% 
+  mutate(planilha_consolidada = if_else(Transparência != 0, "Sim", "Não")) %>%
+  count(planilha_consolidada) %>% 
+  ggplot(aes(x = planilha_consolidada, y = n, fill = planilha_consolidada)) +
+  geom_col() +
+  geom_text(aes(label = n), size = 6) +
+  scale_fill_manual(values = c("Não" = cores_dadosjusbr[["lilas"]],
+                               "Sim" = cores_dadosjusbr[["cyan"]])) +
+  labs(
+    x = "Planilhas consolidadas",
+    y = "Quantidade",
+    fill = "",
+    title = "Quantidade de planilhas consolidadas - total"
+  )
+```
+
+Número de planilhas processadaas por órgão:
+
+```{r}
+indice %>% 
+  filter(Transparência != 0) %>% 
+  count(orgao) %>% 
+  ggplot(aes(x = n, y = reorder(orgao, n))) +
+  geom_col() +
+  geom_text(aes(label = n), hjust = 0) +
+  labs(
+    title = "Número de planilhas processadas por órgão",
+    x = "Quantidade de planilhas processadas",
+    y = NULL
+  )
+```
+
