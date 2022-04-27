@@ -142,7 +142,7 @@ cut_orgao <- indice_media_geral %>%
 
 indice_media_geral %>%
   pivot_longer(-orgao, names_to = "dimensao", values_to = "pontuacao") %>%
-  mutate(orgao = reorder(orgao, pontuacao, sum)) %>%
+  mutate(orgao = reorder(orgao, pontuacao, sum)) %>% 
   ggplot(aes(
     y = orgao,
     x = pontuacao
@@ -214,6 +214,28 @@ indice_media_geral %>%
     color = guide_legend(order = 1, label.theme = element_text(size = 12))
   )
 ```
+
+```{r}
+indice_media_geral %>%
+  pivot_longer(-orgao, names_to = "dimensao", values_to = "pontuacao") %>%
+  mutate(orgao = reorder(orgao, pontuacao, sum),
+         dimensao = ordered(dimensao, levels = c(
+           "Transparência",
+           "Completude",
+           "Facilidade"
+  ))) %>% 
+  ggplot(aes(y = orgao, x = pontuacao, fill = dimensao)) +
+  geom_col(show.legend = F) +
+  facet_wrap(~dimensao, scales = "free_y") +
+  geom_text(aes(label = format(round(pontuacao, 2), digits = 2L)), hjust = 1) +
+  scale_fill_manual(values = cores_indice) +
+  labs(
+    title = "Pontuação dos índices de Transparência, Facilidade e Completude",
+    y = NULL,
+    x = "Pontuação"
+  )
+```
+
 
 ## Demonstração do cálculo da média geral: estado do Amazonas
 
