@@ -349,7 +349,7 @@ monitoramento_mes <- function(df, idx) {
       legend.direction = "horizontal",
       legend.justification = "left",
       legend.spacing.x = unit(1, 'mm'),
-      legend.key.width= unit(1, 'cm'),
+      legend.key.width = unit(1, 'cm'),
       legend.key.height = unit(.35, "cm"),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
@@ -357,7 +357,7 @@ monitoramento_mes <- function(df, idx) {
       strip.text = element_text(face = "bold", size = 10)
     )  +
     guides(fill = guide_legend(
-      title.position="top",
+      title.position = "top",
       title.hjust = 0,
       label.vjust = -1,
       label.position = "top"
