@@ -393,9 +393,7 @@ indice_mps %>%
     fill = NULL
   ) +
   guides(fill = guide_legend(ncol = 2))
-
 ```
-
 
 ### Cargo
 
@@ -589,11 +587,9 @@ indice_mps %>%
 ## Índice de Transparência
 
 ```{r indice-long-mp}
-
-criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Receita base", "Outras receitas", "Despesas")
+criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
 
 indice_mps_long <- indice_mps %>%
-  filter(data < dmy("01-04-2022")) %>% 
   select(-extensao) %>% 
   mutate(
     # Atribui pontuação para acesso
@@ -614,11 +610,20 @@ indice_mps_long <- indice_mps %>%
   ) %>% 
   pivot_longer(-c(aid, ano, mes, data), names_to = "criterio", values_to = "pontuacao") %>% 
   mutate(
-    criterio = criterio %>%
-      str_replace_all("_", " ") %>%
-      str_to_sentence() %>%
-      str_replace("matricula", "matrícula") %>%
-      str_replace("lotacao", "lotação"),
+    criterio = case_when(
+      criterio == "login_nao_necessario" ~ "Login não necessário",
+      criterio == "captcha_nao_necessario" ~ "Captcha não necessário",
+      criterio == "acesso" ~ "Acesso",
+      criterio == "dados_estritamente_tabulares" ~ "Dados estritamente tabulares",
+      criterio == "manteve_consistencia_no_formato" ~ "Manteve consistência no formato",
+      criterio == "remuneracao_basica" ~ "Remuneração básica",
+      criterio == "outras_receitas" ~ "Outras receitas",
+      criterio == "despesas" ~ "Despesas",
+      criterio == "tem_matricula" ~ "Tem matrícula",
+      criterio == "tem_lotacao" ~ "Tem lotação",
+      criterio == "tem_cargo" ~ "Tem cargo",
+      TRUE ~ criterio
+    ),
     dimensao = if_else(criterio %in% criterios, "Completude", "Facilidade"),
     status = if_else(is.na(pontuacao), "Órgão não prestou contas", "Ok"),
     pontuacao = replace_na(pontuacao, 0)
@@ -768,12 +773,15 @@ indice_tjs = dados_tjs %>%
     dados_estritamente_tabulares = replace_na(
       dados_estritamente_tabulares, FALSE
   )) %>% 
+  # completa dados com meses onde orgaos nao prestaram contas, criterios 
+  # ficarão missing values (exceto na dimensão de facilidade para TJs, para
+  # refletir a usabilidade da plataforma do CNJ)
   complete(mes, ano, aid) %>%
   mutate(
     data = my(str_glue("{mes}-{ano}")),
     tem_matricula = if_else(is.na(acesso), NA, FALSE),
     tem_lotacao = if_else(is.na(acesso), NA, FALSE),
-    tem_cargo = if_else(is.na(acesso), NA, FALSE),
+    tem_cargo = if_else(is.na(acesso), NA, FALSE)
   )
 ```
 
@@ -1039,7 +1047,6 @@ indice_tjs %>%
 
 ```
 
-
 ### Lotação
 
 ```{r lotacao-tj}
@@ -1075,10 +1082,9 @@ indice_tjs %>%
     fill = NULL
   ) +
   guides(fill = guide_legend(ncol = 2))
-
 ```
 
-### Lotação
+### Cargo
 
 ```{r cargo-tj}
 indice_tjs %>% 
@@ -1229,15 +1235,13 @@ indice_tjs %>%
   guides(fill = guide_legend(ncol = 3))
 ```
 
-
 ## Índice de Transparência
 
 ```{r indice-long-tj}
 
-criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Receita base", "Outras receitas", "Despesas")
+criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
 
-indice_tjs_long <- indice_tjs %>%
-  filter(data < dmy("01-04-2022")) %>% 
+indice_tjs_long <- indice_tjs %>% 
   select(-extensao) %>% 
   mutate(
     # Atribui pontuação para acesso
@@ -1256,16 +1260,34 @@ indice_tjs_long <- indice_tjs %>%
         TRUE ~ NA_real_
     ))
   ) %>% 
-  pivot_longer(-c(aid, ano, mes, data), names_to = "criterio", values_to = "pontuacao") %>% 
+  pivot_longer(-c(aid, ano, mes, data), names_to = "criterio", values_to = "pontuacao") %>%
   mutate(
-    criterio = criterio %>%
-      str_replace_all("_", " ") %>%
-      str_to_sentence() %>%
-      str_replace("matricula", "matrícula") %>%
-      str_replace("lotacao", "lotação"),
+    criterio = case_when(
+      criterio == "login_nao_necessario" ~ "Login não necessário",
+      criterio == "captcha_nao_necessario" ~ "Captcha não necessário",
+      criterio == "acesso" ~ "Acesso",
+      criterio == "dados_estritamente_tabulares" ~ "Dados estritamente tabulares",
+      criterio == "manteve_consistencia_no_formato" ~ "Manteve consistência no formato",
+      criterio == "remuneracao_basica" ~ "Remuneração básica",
+      criterio == "outras_receitas" ~ "Outras receitas",
+      criterio == "despesas" ~ "Despesas",
+      criterio == "tem_matricula" ~ "Tem matrícula",
+      criterio == "tem_lotacao" ~ "Tem lotação",
+      criterio == "tem_cargo" ~ "Tem cargo",
+      TRUE ~ criterio
+    ),
     dimensao = if_else(criterio %in% criterios, "Completude", "Facilidade"),
     status = if_else(is.na(pontuacao), "Órgão não prestou contas", "Ok"),
-    pontuacao = replace_na(pontuacao, 0)
+    pontuacao = replace_na(pontuacao, 0),
+    # correção para critérios de facilidade nos TJ devem refletir a plataforma do CNJ
+    pontuacao = case_when(
+      criterio == "Login não necessário" & status != "Ok" ~ 1,
+      criterio == "Captcha não necessário" & status != "Ok" ~ 1,
+      criterio == "Acesso" & status != "Ok" ~ 0,
+        criterio == "Dados estritamente tabulares" & status != "Ok" ~ 1,
+      criterio == "Manteve consistência no formato" & status != "Ok" ~ 1,
+      TRUE ~ pontuacao
+    )
   )
 
 # Função que faz o cálculo da média harmônica em `indice`
@@ -1376,5 +1398,4 @@ ragg::agg_png(pngfile, width = 800, height = 1000, res = 100)
 plot_tj
 invisible(dev.off())
 knitr::include_graphics(pngfile)
-
 ```
