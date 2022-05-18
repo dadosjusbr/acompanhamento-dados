@@ -1242,6 +1242,7 @@ indice_tjs %>%
 criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
 
 indice_tjs_long <- indice_tjs %>% 
+  # filter(data < dmy("01-01-2022")) %>% 
   select(-extensao) %>% 
   mutate(
     # Atribui pontuação para acesso
@@ -1369,7 +1370,7 @@ plot_tj <- indice_tjs_media_geral %>%
     aes(x = center, y = aid, label = lbl), fontface = "bold"
   ) +
   labs(
-    title = "Índice de Transparência DadosJusBr (2018-2021)\nMinistérios Públicos",
+    title = "Índice de Transparência DadosJusBr (2018-2021)\nTribunais de Justiça",
     x = "Pontuação", y = NULL, fill = "Dimensões", color = ""
   ) +
   theme(
