@@ -14,3 +14,4 @@ Temos no repositório:
 - [Índice de Transparência - Tribunais de Justiça](https://dadosjusbr.github.io/acompanhamento-dados/indice-transparencia-tj.html)
 - [Índice de Transparência - Ministérios Públicos](https://dadosjusbr.github.io/acompanhamento-dados/indice-transparencia-mp.html)
 - [Gráficos para o relatório - Ministérios Públicos](https://dadosjusbr.github.io/acompanhamento-dados/graficos-relatorios-mp.html)
+- [Gráficos para a página inicial do DadosJusBr](https://dadosjusbr.github.io/acompanhamento-dados/indice-de-transparencia-plots-front.html)
