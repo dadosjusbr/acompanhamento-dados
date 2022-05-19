@@ -111,4 +111,3 @@ metadados %>%
   left_join(coletas, by = "chave_coleta") %>% 
   write_csv(here::here("data/ready/metadados.csv"))
 
-  
