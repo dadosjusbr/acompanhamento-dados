@@ -1,0 +1,205 @@
+---
+title: "Tribunal de Justiça de Santa Catarina"
+format:
+ html:
+  toc: true
+  code-fold: true
+  code-tools: true
+  code-link: true
+  code-summary: "Código"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, collapse = TRUE, comment = "#>",
+                      fig.width = 8, fig.height = 6)
+```
+
+## Bibliotecas
+
+```{r}
+library(tidyverse)
+library(frictionless)
+library(here)
+```
+
+```{r echo = FALSE}
+# peguei as cores do site e criei um vetor com nomes fáceis de lembrar
+cores_dadosjusbr <- c(
+  lilas = "#B361C6",
+  cyan = "#2FBB96",
+  cinza_azulado = "#3e5363",
+  verde = "#96ba2f",
+  laranja = "#F2C94C",
+  cinza_claro = "#F5F5F5"
+)
+
+hrbrthemes::import_roboto_condensed()
+extrafont::loadfonts()
+
+theme_set(
+  hrbrthemes::theme_ipsum_rc() +
+    theme(
+      axis.ticks.x = element_line(),
+      plot.title = element_text(color = "black", face = "bold", size = 13),
+      plot.subtitle = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+      plot.background = element_rect(fill = cores_dadosjusbr[["cinza_claro"]], color = "transparent"),
+      axis.text.x = element_text(color = cores_dadosjusbr[["cinza_azulado"]], size = 8, face = "bold"),
+      axis.text.y = element_text(color = cores_dadosjusbr[["cinza_azulado"]], face = "bold"),
+      axis.title.x = element_text(color = "black", face = "bold"),
+      axis.title.y = element_text(color = "black", face = "bold"),
+      legend.text = element_text(color = "black", face = "bold"),
+      legend.title = element_text(color = "black", face = "bold"),
+      strip.text = element_text(color = cores_dadosjusbr[["cinza_azulado"]], face = "bold"),
+      panel.background = element_blank(),
+      text = element_text(family = "Roboto Condensed")
+    )
+)
+
+hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]], 
+                                      family = "Roboto Condensed")
+```
+
+## Leitura do pacote de dados
+
+A leitura dos dados é feita com `frictionless::read_package`
+
+```{r  warning = TRUE, message = TRUE}
+# read from zip
+read_dadosjus <- function(pkgURL, myDir) {
+  
+    pkgDest <- str_extract(pkgURL, "(?<=datapackage\\/).*") 
+    pkgDir <- str_remove(pkgDest, "\\/.*$")
+
+    pkgDest <- here(myDir, pkgDest)
+    pkgDir <- here(myDir, pkgDir)
+
+    dir.create(pkgDir, recursive = TRUE)
+
+    message(str_glue("get {pkgURL}\n\n"))
+    download.file(pkgURL, mode = "wb", destfile = pkgDest)
+    Sys.sleep(2)
+
+    message(str_glue("unzip {pkgDest} to {pkgDir}\n\n"))
+    unzip(pkgDest, exdir = pkgDir)
+    Sys.sleep(2)
+
+    # leitura do pacote
+    message("read DadosJusBr datapackage\n")
+    package <- frictionless::read_package(here(pkgDir, 'datapackage.json'))
+
+    unlink(here("R/data"), recursive = TRUE)
+
+    return(package)
+
+}
+
+# URL package
+pkgURL <- "https://dadosjusbr.org/download/datapackage/tjsc/tjsc-2021.zip"
+
+# read datapackage
+datapackage_tjsc <- read_dadosjus(pkgURL = pkgURL, myDir = "data/pacotes")
+```
+
+inspeciona listando data resources
+
+```{r}
+# List resources
+frictionless::resources(datapackage_tjsc)
+```
+
+## dataset de remunerações
+
+Para extrair o dataset de remunerações basta ler o data resource com `frictionless::read_resource("remuneracao")`
+```{r}
+remuneracao <- datapackage_tjsc %>% 
+  frictionless::read_resource("remuneracao") %>% 
+  filter(!is.na(valor))
+```
+
+## dataset de contra-cheques
+
+Para extrair o dataset de contra-cheques basta ler o data resource com `frictionless::read_resource("rcontra_cheque")`
+```{r}
+contra_cheque <- datapackage_tjsc %>% 
+  frictionless::read_resource("contra_cheque") %>% 
+  filter(!is.na(ativo))
+```
+
+## join contra-cheques com remuneração
+
+```{r message = TRUE}
+left_join <- tidylog::left_join
+base_tjsc <- left_join(remuneracao, contra_cheque) %>% 
+  mutate(data = lubridate::dmy(str_replace(chave_coleta, "tjsc", "01"))) %>% 
+  select(data, natureza, categoria, item, nome, valor)
+```
+
+Estamos procurando por [Joana Ribeiro Zimmer](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml), responsável por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma [matéria do The Intercept Brasil](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/). 
+
+```{r}
+# filtrando por magistradas que contenham "JOANA" no primeiro nome
+base_tjsc %>% 
+  filter(str_detect(nome, "JOANA")) %>% 
+  distinct(nome)
+```
+
+## Rendimentos dos membros do TJSC
+
+Média dos rendimentos mensais
+
+```{r}
+base_tjsc %>%
+  count(data, categoria, nome, wt = valor, name = "valor") %>% 
+  group_by(categoria, nome) %>%
+  summarise(valor = mean(valor), .groups = "drop") %>%
+  mutate(is_joana_ribeiro_zimmer = if_else(nome == "JOANA RIBEIRO", "JOANA RIBEIRO", "Demais magistrados (TJSC)"),
+         categoria = str_to_title(categoria)) %>% 
+  ggplot(aes(y = reorder(categoria, valor), x = valor, color = is_joana_ribeiro_zimmer)) +
+  ggbeeswarm::geom_quasirandom(groupOnX = FALSE, size = 3) +
+  scale_color_manual(values = cores_dadosjusbr[["lilas"]]) +
+  gghighlight::gghighlight(
+    is_joana_ribeiro_zimmer == "JOANA RIBEIRO",
+    unhighlighted_colour = alpha(cores_dadosjusbr[["cyan"]], .15),
+    label_params = list(size = 3, 
+                        label.padding = unit(0.01, "lines"),
+                        label.size = NA, fill = "transparent",  hjust = 0.5, vjust = 0, color = cores_dadosjusbr[["cinza_azulado"]])
+  ) +
+  scale_x_continuous(label = scales::number) +
+  labs(
+    title = "Média dos rendimentos mensais dos membros do TJSC - 2021",
+    x = "Valor em R$",
+    y = NULL,
+    caption = "Cada ponto é a média de pagamentos mensais feito para um membro em 2021"
+  )
+```
+
+Rendimentos mensais
+
+```{r}
+base_tjsc %>%
+  count(data, categoria, nome, wt = valor, name = "valor") %>% 
+  group_by(data, categoria, nome) %>%
+  summarise(valor = mean(valor), .groups = "drop") %>%
+  mutate(is_joana_ribeiro_zimmer = if_else(nome == "JOANA RIBEIRO", "JOANA RIBEIRO", "Demais magistrados (TJSC)"),
+         categoria = str_to_title(categoria)) %>% 
+  ggplot(aes(y = reorder(categoria, valor), x = valor, color = is_joana_ribeiro_zimmer)) +
+  ggbeeswarm::geom_quasirandom(groupOnX = FALSE, size = 2) +
+  scale_color_manual(values = cores_dadosjusbr[["lilas"]]) +
+  gghighlight::gghighlight(
+    is_joana_ribeiro_zimmer == "JOANA RIBEIRO",
+    unhighlighted_colour = alpha(cores_dadosjusbr[["cyan"]], .15),
+    label_params = list(size = 3, 
+                        label.padding = unit(0.01, "lines"),
+                        label.size = NA, fill = "transparent",  hjust = 0.5, vjust = 0, color = cores_dadosjusbr[["cinza_azulado"]])
+  ) +
+  geom_text(data = . %>% filter(categoria == "Direitos-Eventuais", lubridate::month(data) == 11),
+            color = cores_dadosjusbr[["cinza_azulado"]],
+            aes(label = nome), size = 2.5, vjust = 1) +
+  scale_x_continuous(label = scales::number) +
+  labs(
+    title = "Rendimentos mensais dos membros do TJSC - 2021",
+    x = "Valor em R$",
+    y = NULL,
+    caption = "Cada ponto é um pagamento mensal feito para um membro em 2021"
+  )
+```
