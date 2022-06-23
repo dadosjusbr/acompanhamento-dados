@@ -1,5 +1,5 @@
 ---
-title: "Tribunal de Justiça de Santa Catarina"
+title: "Quanto ganha a juíza de SC que impediu uma criança de realizar um procedimento de aborto legal?"
 format:
  html:
   toc: true
@@ -7,6 +7,7 @@ format:
   code-tools: true
   code-link: true
   code-summary: "Código"
+  toc-title: "Índice"
 ---
 
 ```{r setup, include=FALSE}
@@ -14,19 +15,12 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, collapse = 
                       fig.width = 8, fig.height = 6)
 ```
 
-## Bibliotecas
-
 ```{r}
 #| label: libs
 library(tidyverse)
 library(frictionless)
 library(here)
-```
 
-## Estilização de gráficos
-
-```{r}
-#| label: style
 # peguei as cores do site e criei um vetor com nomes fáceis de lembrar
 cores_dadosjusbr <- c(
   lilas = "#B361C6",
@@ -61,14 +55,7 @@ theme_set(
 
 hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]], 
                                       family = "Roboto Condensed")
-```
 
-## Leitura do pacote de dados
-
-A leitura dos dados é feita com `frictionless::read_package`
-
-```{r  warning = TRUE, message = TRUE}
-#| label: read-data
 # read from zip
 read_dadosjus <- function(pkgURL, myDir) {
   
@@ -103,40 +90,18 @@ pkgURL <- "https://dadosjusbr.org/download/datapackage/tjsc/tjsc-2021.zip"
 
 # read datapackage
 datapackage_tjsc <- read_dadosjus(pkgURL = pkgURL, myDir = "data/pacotes")
-```
 
-inspeciona listando data resources
-
-```{r}
-#| label: inspec-resources
-# List resources
-frictionless::resources(datapackage_tjsc)
-```
-
-### dataset de remunerações
-
-Para extrair o dataset de remunerações basta ler o data resource com `frictionless::read_resource("remuneracao")`
-```{r}
-#| label: read-remuneracao
+# read-remuneracao
 remuneracao <- datapackage_tjsc %>% 
   frictionless::read_resource("remuneracao") %>% 
   filter(!is.na(valor))
-```
 
-### dataset de contra-cheques
-
-Para extrair o dataset de contra-cheques basta ler o data resource com `frictionless::read_resource("rcontra_cheque")`
-```{r}
-#| label: read-contra_cheque
+# read-contra_cheque
 contra_cheque <- datapackage_tjsc %>% 
   frictionless::read_resource("contra_cheque") %>% 
   filter(!is.na(ativo))
-```
 
-### join contra-cheques com remuneração
-
-```{r message = TRUE}
-#| label: read-base_tjsc
+# read-base_tjsc
 left_join <- tidylog::left_join
 base_tjsc <- left_join(remuneracao, contra_cheque) %>% 
   mutate(data = lubridate::dmy(str_replace(chave_coleta, "tjsc", "01"))) %>% 
@@ -145,7 +110,16 @@ base_tjsc <- left_join(remuneracao, contra_cheque) %>%
 
 ### Objetivo da análise
 
-Comparar os rendimentos da juíza [Joana Ribeiro Zimmer](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml) com o rendimento dos demais magistrados do TJSC. A juíza ficou conhecida por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma [matéria do The Intercept Brasil](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/).
+O objetivo desta análise é fazer um levantamento dos rendimentos da juíza [Joana Ribeiro Zimmer](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml) do Tribunal de Justiça de Santa Catarina. A juíza ficou conhecida por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma [matéria do The Intercept Brasil](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/).
+
+### Dados
+
+Os dados são do próprio TJSC e foram disponibilizados de forma estruturada para análise pelo projeto 
+[DadosJusBr](https://dadosjusbr.org/), que é realizado pela Transparência Brasil em parceria com o Instituto Federal de Alagoas e a Universidade Federal de Campina Grande.
+
+O [DadosJusBr](https://dadosjusbr.org/) é uma plataforma que recupera, padroniza e publica como dado aberto continuamente os dados dos órgãos do sistema de justiça brasileiro. Até maio de 2022 foram publicados dados mensais de salários, indenizações, gratificações e diárias de 54 órgãos. Para essa análise foram extraídos os [dados do **Tribunal de Justiça de Santa Catarina** para o ano de 2021](https://dadosjusbr.org/download/datapackage/tjsc/tjsc-2021.zip).
+
+Como o TJSC não disponibiliza dados de matrícula, a busca pelos dados da Joana Ribeiro Zimmer foi feita pelo seu nome, especificado nos dados como `JOANA RIBEIRO`. A relação completa dos nomes dos magistrados está [disponível no final deste relatório](http://localhost:7034/?capabilities=1&host=http%3A%2F%2F127.0.0.1%3A63588#rela%C3%A7%C3%A3o-de-nomes-de-magistrados-do-tjsc)
 
 ```{r}
 #| label: detect-joana-ribeiro-zimmer
@@ -155,9 +129,134 @@ base_tjsc %>%
   distinct(nome)
 ```
 
-## Análise
+### Rendimentos líquidos 
 
-### Distribuição dos rendimentos dos membros do TJSC por categoria
+Em média, a juíza recebebeu R\$ 43.249,32. Valor acima do teto remuneratório de R\$ 39.293,32.
+
+```{r}
+reais_mil <- function(x) scales::dollar(x/1e3, decimal.mark = ",", big.mark = " ", prefix = "R$ ", suffix = "\nmil")
+reais <- function(x) scales::dollar(x, decimal.mark = ",", big.mark = " ", prefix = "R$ ")
+
+base_tjsc %>% 
+  filter(nome == "JOANA RIBEIRO") %>% 
+  group_by(data) %>% 
+  summarise(valor = sum(valor), .groups = "drop") %>%
+  group_by() %>% 
+  mutate(valor_medio = mean(valor)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = data, y = valor)) +
+  geom_label(
+    aes(y = valor_medio, x = as.Date("2021-12-01"), label = "Média"),
+    vjust = .5, hjust = -3, size = 3.5, label.size = NA, fill = cores_dadosjusbr[["cinza_claro"]]
+  ) +
+  geom_col(fill = cores_dadosjusbr[["lilas"]]) +
+  geom_text(aes(label = reais_mil(valor)), 
+            fontface = "bold",
+            size = 2.3,
+            vjust = 1,
+            color = cores_dadosjusbr[["cinza_claro"]]) +
+  scale_y_continuous(expand = c(0, 0), breaks = c(0, 39293.32, 43249.32, 6e4),
+                     labels = c("R$ 0,00", "Teto remuneratório\nR$ 39,2mil", "Média\nR$ 43,2mil", "R$ 60 000")) +
+  scale_x_date(date_breaks = "month", date_labels = "%b") +
+  labs(
+    title = "Recebimento líquido de Joana Ribeiro Zimmer no TJSC (2021)",
+    y = NULL,
+    x = NULL,
+    caption = "Valores com dedução de Imposto de Renda, Previdência, e outros descontos na folha de pagamento."
+  ) +
+  theme(axis.text.y = element_text(size = 8, vjust = .7),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank())
+```
+
+### Rendimentos e descontos por categorias
+
+O salário-base da juíza é fixado em R$32 mil reais. No grupo de indenizações, os ganhos são relativos ao auxílio saúde (R\$1.556 por mês) e ao auxílio alimentação (R\$1.160 por mês). 
+
+Na rubrica de direitos eventuais, os ganhos com gratificação natalina (incluíndo antecipação) somaram R\$ 54.527 e foram pagos em uma parcela de R\$ 17.722 em abril e R\$36.805 em novembro de 2021.
+
+```{r}
+diarias <- "Diárias"
+direitos_eventuais <-  "Direitos eventuais\n(Pagamentos retroativos, férias,\nLicença prêmio, gratificação natalina,\nantecipação de gratificação natalina,\nsubstituição)"
+indenizacoes <- "Indenizações\n(Auxílio saúde e alimentação)"
+contracheque <- "Salário base\n(contracheque)"
+descontos <- "Descontos\n(IR e Previdência)"
+
+lbls <- c(diarias, direitos_eventuais, indenizacoes, contracheque, descontos)
+
+paleta <- c(cores_dadosjusbr[["cyan"]],
+  cores_dadosjusbr[["lilas"]],
+  cores_dadosjusbr[["cinza_azulado"]],
+  cores_dadosjusbr[["verde"]],
+  cores_dadosjusbr[["laranja"]]
+)
+
+names(paleta) <- lbls
+
+base_tjsc %>% 
+  filter(nome == "JOANA RIBEIRO") %>%
+  filter(categoria != "direitos-pessoais") %>% 
+  mutate(
+    catg = case_when(
+      natureza == "D" ~ descontos,
+      item == "Diárias" ~ diarias,
+      categoria == "indenizações" ~ indenizacoes,
+      categoria == "direitos-eventuais" ~ direitos_eventuais,
+      TRUE ~ contracheque
+    ) %>% ordered(levels = lbls)) %>% 
+  ggplot(aes(y = valor, x = data, fill = catg)) +
+  geom_col() +
+  geom_hline(yintercept = 0) +
+  theme(
+    axis.text.y = element_text(size = 8, vjust = .7),
+    axis.text.x = element_text(size = 8, vjust = 60),
+    axis.ticks.x = element_blank(),
+    legend.key.width = unit(.7, "cm"),
+    legend.key.height = unit(.8, "cm"),
+    legend.text = element_text(size = 7.5),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+  ) +
+  scale_fill_manual(
+    values = paleta,
+    guide = guide_legend(ncol = 1)
+  ) +
+  scale_y_continuous(expand = c(0, 0), label = reais_mil, breaks = c(-15e3, 0, 3e4, 6e4, 9e4), limits = c(-4e4, 1e5)) +
+  scale_x_date(date_breaks = "month", date_labels = "%b") +
+  labs(
+    title = "Folha de pagamento da juíza Joana Ribeiro Zimmer",
+    fill = "Categoria",
+    y = "Valor em milhares de R$",
+    x = NULL
+  )
+```
+
+Outra rubrica que garantiu altos ganhos para a magistrada foi a referente aos pagamentos retroativos, da catgoria de direitos eventuais:
+
+```{r}
+base_tjsc %>% 
+  filter(nome == "JOANA RIBEIRO") %>%
+  filter(item == "Pagamentos retroativos") %>% 
+  group_by(data, item) %>% 
+  summarise(valor = sum(valor)) %>% 
+  ggplot(aes(x = data, y = valor, fill = item)) +
+  geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
+  geom_area(fill = cores_dadosjusbr[["cyan"]], alpha = .7) +
+  geom_text(aes(label = reais_mil(valor)), color = cores_dadosjusbr[["cinza_azulado"]], fontface = "bold", vjust = -.1) +
+  scale_y_continuous(labels = reais_mil) +
+  scale_x_date(date_breaks = "month", date_labels = "%b") + 
+  labs(
+    title = "Pagamentos retroativos - direitos eventuais",
+    subtitle = "Juíza Joana Ribeiro Zimmer (TJSC)",
+    y = "Valor em R$",
+    x = NULL
+  ) +
+  theme(
+    panel.grid.minor.x = element_blank()
+  )
+```
 
 #### Média dos rendimentos mensais
 
@@ -291,3 +390,8 @@ plot_rendimentos(base_tjsc, "Contracheque")
 plot_rendimentos(base_tjsc, "Indenizações")
 ```
 
+### Relação de nomes de magistrados do TJSC
+
+```{r}
+base_tjsc %>% distinct(nome) %>% DT::datatable()
+```
