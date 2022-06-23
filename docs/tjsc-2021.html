@@ -85,11 +85,26 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
    
   <ul>
 <li><a href="#bibliotecas" id="toc-bibliotecas" class="nav-link active" data-scroll-target="#bibliotecas">Bibliotecas</a></li>
-  <li><a href="#leitura-do-pacote-de-dados" id="toc-leitura-do-pacote-de-dados" class="nav-link" data-scroll-target="#leitura-do-pacote-de-dados">Leitura do pacote de dados</a></li>
-  <li><a href="#dataset-de-remunera%C3%A7%C3%B5es" id="toc-dataset-de-remunerações" class="nav-link" data-scroll-target="#dataset-de-remunera%C3%A7%C3%B5es">dataset de remunerações</a></li>
+  <li><a href="#estiliza%C3%A7%C3%A3o-de-gr%C3%A1ficos" id="toc-estilização-de-gráficos" class="nav-link" data-scroll-target="#estiliza%C3%A7%C3%A3o-de-gr%C3%A1ficos">Estilização de gráficos</a></li>
+  <li>
+<a href="#leitura-do-pacote-de-dados" id="toc-leitura-do-pacote-de-dados" class="nav-link" data-scroll-target="#leitura-do-pacote-de-dados">Leitura do pacote de dados</a>
+  <ul class="collapse">
+<li><a href="#dataset-de-remunera%C3%A7%C3%B5es" id="toc-dataset-de-remunerações" class="nav-link" data-scroll-target="#dataset-de-remunera%C3%A7%C3%B5es">dataset de remunerações</a></li>
   <li><a href="#dataset-de-contra-cheques" id="toc-dataset-de-contra-cheques" class="nav-link" data-scroll-target="#dataset-de-contra-cheques">dataset de contra-cheques</a></li>
   <li><a href="#join-contra-cheques-com-remunera%C3%A7%C3%A3o" id="toc-join-contra-cheques-com-remuneração" class="nav-link" data-scroll-target="#join-contra-cheques-com-remunera%C3%A7%C3%A3o">join contra-cheques com remuneração</a></li>
-  <li><a href="#rendimentos-dos-membros-do-tjsc" id="toc-rendimentos-dos-membros-do-tjsc" class="nav-link" data-scroll-target="#rendimentos-dos-membros-do-tjsc">Rendimentos dos membros do TJSC</a></li>
+  <li><a href="#objetivo-da-an%C3%A1lise" id="toc-objetivo-da-análise" class="nav-link" data-scroll-target="#objetivo-da-an%C3%A1lise">Objetivo da análise</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#an%C3%A1lise" id="toc-análise" class="nav-link" data-scroll-target="#an%C3%A1lise">Análise</a>
+  <ul class="collapse">
+<li><a href="#distribui%C3%A7%C3%A3o-dos-rendimentos-dos-membros-do-tjsc-por-categoria" id="toc-distribuição-dos-rendimentos-dos-membros-do-tjsc-por-categoria" class="nav-link" data-scroll-target="#distribui%C3%A7%C3%A3o-dos-rendimentos-dos-membros-do-tjsc-por-categoria">Distribuição dos rendimentos dos membros do TJSC por categoria</a></li>
+  <li><a href="#distribui%C3%A7%C3%A3o-dos-rendimentos-dos-membros-do-tjsc-por-item-da-categoria" id="toc-distribuição-dos-rendimentos-dos-membros-do-tjsc-por-item-da-categoria" class="nav-link" data-scroll-target="#distribui%C3%A7%C3%A3o-dos-rendimentos-dos-membros-do-tjsc-por-item-da-categoria">Distribuição dos rendimentos dos membros do TJSC por item da categoria</a></li>
+  <li><a href="#direitos-eventuais" id="toc-direitos-eventuais" class="nav-link" data-scroll-target="#direitos-eventuais">Direitos eventuais</a></li>
+  <li><a href="#contracheque" id="toc-contracheque" class="nav-link" data-scroll-target="#contracheque">Contracheque</a></li>
+  <li><a href="#indeniza%C3%A7%C3%B5es" id="toc-indenizações" class="nav-link" data-scroll-target="#indeniza%C3%A7%C3%B5es">Indenizações</a></li>
+  </ul>
+</li>
   </ul></nav>
 </div>
 <main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
@@ -112,13 +127,48 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://here.r-lib.org/">here</a></span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+</section><section id="estilização-de-gráficos" class="level2"><h2 class="anchored" data-anchor-id="estilização-de-gráficos">Estilização de gráficos</h2>
 <div class="cell">
+<details><summary>Código</summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># peguei as cores do site e criei um vetor com nomes fáceis de lembrar</span>
+<span class="va">cores_dadosjusbr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>
+  lilas <span class="op">=</span> <span class="st">"#B361C6"</span>,
+  cyan <span class="op">=</span> <span class="st">"#2FBB96"</span>,
+  cinza_azulado <span class="op">=</span> <span class="st">"#3e5363"</span>,
+  verde <span class="op">=</span> <span class="st">"#96ba2f"</span>,
+  laranja <span class="op">=</span> <span class="st">"#F2C94C"</span>,
+  cinza_claro <span class="op">=</span> <span class="st">"#F5F5F5"</span>
+<span class="op">)</span>
 
+<span class="fu">hrbrthemes</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/hrbrthemes/man/import_roboto_condensed.html">import_roboto_condensed</a></span><span class="op">(</span><span class="op">)</span>
+<span class="fu">extrafont</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/extrafont/man/loadfonts.html">loadfonts</a></span><span class="op">(</span><span class="op">)</span>
+
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span><span class="op">(</span>
+  <span class="fu">hrbrthemes</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/hrbrthemes/man/theme_ipsum_rc.html">theme_ipsum_rc</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>
+      axis.ticks.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_line</a></span><span class="op">(</span><span class="op">)</span>,
+      plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, face <span class="op">=</span> <span class="st">"bold"</span>, size <span class="op">=</span> <span class="fl">13</span><span class="op">)</span>,
+      plot.subtitle <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_azulado"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>,
+      plot.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_rect</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_claro"</span><span class="op">]</span><span class="op">]</span>, color <span class="op">=</span> <span class="st">"transparent"</span><span class="op">)</span>,
+      axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_azulado"</span><span class="op">]</span><span class="op">]</span>, size <span class="op">=</span> <span class="fl">8</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,
+      axis.text.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_azulado"</span><span class="op">]</span><span class="op">]</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,
+      axis.title.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,
+      axis.title.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,
+      legend.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,
+      legend.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,
+      strip.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_azulado"</span><span class="op">]</span><span class="op">]</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,
+      panel.background <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_blank</a></span><span class="op">(</span><span class="op">)</span>,
+      text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>family <span class="op">=</span> <span class="st">"Roboto Condensed"</span><span class="op">)</span>
+    <span class="op">)</span>
+<span class="op">)</span>
+
+<span class="fu">hrbrthemes</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/hrbrthemes/man/update_geom_font_defaults.html">update_geom_font_defaults</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_azulado"</span><span class="op">]</span><span class="op">]</span>, 
+                                      family <span class="op">=</span> <span class="st">"Roboto Condensed"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section><section id="leitura-do-pacote-de-dados" class="level2"><h2 class="anchored" data-anchor-id="leitura-do-pacote-de-dados">Leitura do pacote de dados</h2>
 <p>A leitura dos dados é feita com <code><a href="https://docs.ropensci.org/frictionless/reference/read_package.html">frictionless::read_package</a></code></p>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># read from zip</span>
+<details><summary>Código</summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># read from zip</span>
 <span class="va">read_dadosjus</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">pkgURL</span>, <span class="va">myDir</span><span class="op">)</span> <span class="op">{</span>
   
     <span class="va">pkgDest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_extract.html">str_extract</a></span><span class="op">(</span><span class="va">pkgURL</span>, <span class="st">"(?&lt;=datapackage\\/).*"</span><span class="op">)</span> 
@@ -163,30 +213,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <p>inspeciona listando data resources</p>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># List resources</span>
+<details><summary>Código</summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># List resources</span>
 <span class="fu">frictionless</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/frictionless/reference/resources.html">resources</a></span><span class="op">(</span><span class="va">datapackage_tjsc</span><span class="op">)</span>
 <span class="co">#&gt; [1] "coleta"        "contra_cheque" "remuneracao"   "metadados"</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section><section id="dataset-de-remunerações" class="level2"><h2 class="anchored" data-anchor-id="dataset-de-remunerações">dataset de remunerações</h2>
+<section id="dataset-de-remunerações" class="level3"><h3 class="anchored" data-anchor-id="dataset-de-remunerações">dataset de remunerações</h3>
 <p>Para extrair o dataset de remunerações basta ler o data resource com <code>frictionless::read_resource("remuneracao")</code></p>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">remuneracao</span> <span class="op">&lt;-</span> <span class="va">datapackage_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
+<details><summary>Código</summary><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">remuneracao</span> <span class="op">&lt;-</span> <span class="va">datapackage_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu">frictionless</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/frictionless/reference/read_resource.html">read_resource</a></span><span class="op">(</span><span class="st">"remuneracao"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">valor</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section><section id="dataset-de-contra-cheques" class="level2"><h2 class="anchored" data-anchor-id="dataset-de-contra-cheques">dataset de contra-cheques</h2>
+</section><section id="dataset-de-contra-cheques" class="level3"><h3 class="anchored" data-anchor-id="dataset-de-contra-cheques">dataset de contra-cheques</h3>
 <p>Para extrair o dataset de contra-cheques basta ler o data resource com <code>frictionless::read_resource("rcontra_cheque")</code></p>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">contra_cheque</span> <span class="op">&lt;-</span> <span class="va">datapackage_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
+<details><summary>Código</summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">contra_cheque</span> <span class="op">&lt;-</span> <span class="va">datapackage_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu">frictionless</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/frictionless/reference/read_resource.html">read_resource</a></span><span class="op">(</span><span class="st">"contra_cheque"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">ativo</span><span class="op">)</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section><section id="join-contra-cheques-com-remuneração" class="level2"><h2 class="anchored" data-anchor-id="join-contra-cheques-com-remuneração">join contra-cheques com remuneração</h2>
+</section><section id="join-contra-cheques-com-remuneração" class="level3"><h3 class="anchored" data-anchor-id="join-contra-cheques-com-remuneração">join contra-cheques com remuneração</h3>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">left_join</span> <span class="op">&lt;-</span> <span class="fu">tidylog</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/tidylog/man/left_join.html">left_join</a></span>
+<details><summary>Código</summary><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">left_join</span> <span class="op">&lt;-</span> <span class="fu">tidylog</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/tidylog/man/left_join.html">left_join</a></span>
 <span class="va">base_tjsc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">left_join</a></span><span class="op">(</span><span class="va">remuneracao</span>, <span class="va">contra_cheque</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu">lubridate</span><span class="fu">::</span><span class="fu"><a href="https://lubridate.tidyverse.org/reference/ymd.html">dmy</a></span><span class="op">(</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html">str_replace</a></span><span class="op">(</span><span class="va">chave_coleta</span>, <span class="st">"tjsc"</span>, <span class="st">"01"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">natureza</span>, <span class="va">categoria</span>, <span class="va">item</span>, <span class="va">nome</span>, <span class="va">valor</span><span class="op">)</span>
@@ -199,9 +249,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="co">#&gt; &gt; rows total 203,366</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Estamos procurando por <a href="https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml">Joana Ribeiro Zimmer</a>, responsável por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma <a href="https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/">matéria do The Intercept Brasil</a>.</p>
+</section><section id="objetivo-da-análise" class="level3"><h3 class="anchored" data-anchor-id="objetivo-da-análise">Objetivo da análise</h3>
+<p>Comparar os rendimentos da juíza <a href="https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml">Joana Ribeiro Zimmer</a> com o rendimento dos demais magistrados do TJSC. A juíza ficou conhecida por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma <a href="https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/">matéria do The Intercept Brasil</a>.</p>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># filtrando por magistradas que contenham "JOANA" no primeiro nome</span>
+<details><summary>Código</summary><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="co"># filtrando por magistradas que contenham "JOANA" no primeiro nome</span>
 <span class="va">base_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_detect.html">str_detect</a></span><span class="op">(</span><span class="va">nome</span>, <span class="st">"JOANA"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html">distinct</a></span><span class="op">(</span><span class="va">nome</span><span class="op">)</span>
@@ -211,10 +262,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="co">#&gt; 1 JOANA RIBEIRO</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section><section id="rendimentos-dos-membros-do-tjsc" class="level2"><h2 class="anchored" data-anchor-id="rendimentos-dos-membros-do-tjsc">Rendimentos dos membros do TJSC</h2>
-<p>Média dos rendimentos mensais</p>
+</section></section><section id="análise" class="level2"><h2 class="anchored" data-anchor-id="análise">Análise</h2>
+<section id="distribuição-dos-rendimentos-dos-membros-do-tjsc-por-categoria" class="level3"><h3 class="anchored" data-anchor-id="distribuição-dos-rendimentos-dos-membros-do-tjsc-por-categoria">Distribuição dos rendimentos dos membros do TJSC por categoria</h3>
+<section id="média-dos-rendimentos-mensais" class="level4"><h4 class="anchored" data-anchor-id="média-dos-rendimentos-mensais">Média dos rendimentos mensais</h4>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">base_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
+<details><summary>Código</summary><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">base_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html">count</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">categoria</span>, <span class="va">nome</span>, wt <span class="op">=</span> <span class="va">valor</span>, name <span class="op">=</span> <span class="st">"valor"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">categoria</span>, <span class="va">nome</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarise</a></span><span class="op">(</span>valor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">valor</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
@@ -241,9 +293,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><img src="tjsc-2021_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="768"></p>
 </div>
 </div>
-<p>Rendimentos mensais</p>
+</section><section id="rendimentos-mensais" class="level4"><h4 class="anchored" data-anchor-id="rendimentos-mensais">Rendimentos mensais</h4>
 <div class="cell">
-<details><summary>Código</summary><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">base_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
+<details><summary>Código</summary><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">base_tjsc</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html">count</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">categoria</span>, <span class="va">nome</span>, wt <span class="op">=</span> <span class="va">valor</span>, name <span class="op">=</span> <span class="st">"valor"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">categoria</span>, <span class="va">nome</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarise</a></span><span class="op">(</span>valor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">valor</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
@@ -273,9 +325,80 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><img src="tjsc-2021_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="768"></p>
 </div>
 </div>
+</section></section><section id="distribuição-dos-rendimentos-dos-membros-do-tjsc-por-item-da-categoria" class="level3"><h3 class="anchored" data-anchor-id="distribuição-dos-rendimentos-dos-membros-do-tjsc-por-item-da-categoria">Distribuição dos rendimentos dos membros do TJSC por item da categoria</h3>
+<div class="cell">
+<details><summary>Código</summary><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="va">plot_rendimentos</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">df</span>, <span class="va">categ</span><span class="op">)</span> <span class="op">{</span>
+  
+  <span class="va">cor_pontos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html">case_when</a></span><span class="op">(</span>
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Direitos-Eventuais"</span> <span class="op">~</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cyan"</span><span class="op">]</span><span class="op">]</span>,
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Indenizações"</span> <span class="op">~</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"laranja"</span><span class="op">]</span><span class="op">]</span>,
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Contracheque"</span> <span class="op">~</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"verde"</span><span class="op">]</span><span class="op">]</span>,
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Direitos-Pessoais"</span> <span class="op">~</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_azulado"</span><span class="op">]</span><span class="op">]</span>
+  <span class="op">)</span>
+  
+  <span class="va">size_categ</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html">case_when</a></span><span class="op">(</span>
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Direitos-Eventuais"</span> <span class="op">~</span> <span class="fl">1.5</span>,
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Indenizações"</span> <span class="op">~</span> <span class="fl">2</span>,
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Contracheque"</span> <span class="op">~</span> <span class="fl">1.7</span>,
+    <span class="va">categ</span> <span class="op">==</span> <span class="st">"Direitos-Pessoais"</span> <span class="op">~</span> <span class="fl">2</span>
+  <span class="op">)</span>
+  
+  <span class="va">df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>categoria <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/case.html">str_to_title</a></span><span class="op">(</span><span class="va">categoria</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">categoria</span> <span class="op">==</span> <span class="va">categ</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html">count</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">categoria</span>, <span class="va">item</span>, <span class="va">nome</span>, wt <span class="op">=</span> <span class="va">valor</span>, name <span class="op">=</span> <span class="st">"valor"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">categoria</span>, <span class="va">item</span>, <span class="va">nome</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarise</a></span><span class="op">(</span>valor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">valor</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>is_joana_ribeiro_zimmer <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html">if_else</a></span><span class="op">(</span><span class="va">nome</span> <span class="op">==</span> <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"Demais magistrados (TJSC)"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/reorder.factor.html">reorder</a></span><span class="op">(</span><span class="va">item</span>, <span class="va">valor</span><span class="op">)</span>, x <span class="op">=</span> <span class="va">valor</span>, color <span class="op">=</span> <span class="va">is_joana_ribeiro_zimmer</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu">ggbeeswarm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggbeeswarm/man/geom_quasirandom.html">geom_quasirandom</a></span><span class="op">(</span>groupOnX <span class="op">=</span> <span class="cn">FALSE</span>, size <span class="op">=</span> <span class="va">size_categ</span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"lilas"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu">gghighlight</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gghighlight/man/gghighlight.html">gghighlight</a></span><span class="op">(</span>
+      <span class="va">is_joana_ribeiro_zimmer</span> <span class="op">==</span> <span class="st">"JOANA RIBEIRO"</span>,
+      unhighlighted_colour <span class="op">=</span> <span class="fu"><a href="https://scales.r-lib.org/reference/alpha.html">alpha</a></span><span class="op">(</span><span class="va">cor_pontos</span>, <span class="fl">.15</span><span class="op">)</span>, use_direct_label <span class="op">=</span> <span class="cn">FALSE</span>,
+      label_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, 
+                          label.padding <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html">unit</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="st">"lines"</span><span class="op">)</span>,
+                          label.size <span class="op">=</span> <span class="cn">NA</span>, fill <span class="op">=</span> <span class="st">"transparent"</span>,  hjust <span class="op">=</span> <span class="fl">0.5</span>, vjust <span class="op">=</span> <span class="fl">0</span>,
+                          color <span class="op">=</span> <span class="va">cores_dadosjusbr</span><span class="op">[[</span><span class="st">"cinza_azulado"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
+    <span class="op">)</span> <span class="op">+</span>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_x_continuous</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="va"><a href="https://scales.r-lib.org/reference/number.html">number</a></span><span class="op">)</span> <span class="op">+</span>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>
+      title <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_glue.html">str_glue</a></span><span class="op">(</span><span class="st">"Rendimentos mensais na categoria {categ}"</span><span class="op">)</span>,
+      subtitle <span class="op">=</span> <span class="st">"Membros do TJSC - 2021"</span>,
+      x <span class="op">=</span> <span class="st">"Valor em R$"</span>,
+      y <span class="op">=</span> <span class="cn">NULL</span>,
+      caption <span class="op">=</span> <span class="st">"Cada ponto é um pagamento mensal feito para um membro em 2021"</span>,
+      color <span class="op">=</span> <span class="cn">NULL</span>
+    <span class="op">)</span> <span class="op">+</span>
+    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span>, legend.justification <span class="op">=</span> <span class="st">"right"</span><span class="op">)</span>
+  
+<span class="op">}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section><section id="direitos-eventuais" class="level3"><h3 class="anchored" data-anchor-id="direitos-eventuais">Direitos eventuais</h3>
+<div class="cell">
+<details><summary>Código</summary><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">plot_rendimentos</span><span class="op">(</span><span class="va">base_tjsc</span>, <span class="st">"Direitos-Eventuais"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output-display">
+<p><img src="tjsc-2021_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</section><section id="contracheque" class="level3"><h3 class="anchored" data-anchor-id="contracheque">Contracheque</h3>
+<div class="cell">
+<details><summary>Código</summary><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">plot_rendimentos</span><span class="op">(</span><span class="va">base_tjsc</span>, <span class="st">"Contracheque"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output-display">
+<p><img src="tjsc-2021_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
+</section><section id="indenizações" class="level3"><h3 class="anchored" data-anchor-id="indenizações">Indenizações</h3>
+<div class="cell">
+<details><summary>Código</summary><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span class="fu">plot_rendimentos</span><span class="op">(</span><span class="va">base_tjsc</span>, <span class="st">"Indenizações"</span><span class="op">)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details><div class="cell-output-display">
+<p><img src="tjsc-2021_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="768"></p>
+</div>
+</div>
 <!-- -->
 
-</section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
+</section></section></main><!-- /main column --><script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const icon = "";
   const anchorJS = new window.AnchorJS();
@@ -405,211 +528,298 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb10" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Tribunal de Justiça de Santa Catarina"</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"> html:</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">  toc: true</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">  code-fold: true</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">  code-tools: true</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">  code-link: true</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">  code-summary: "Código"</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">warning =</span> <span class="cn">FALSE</span>, <span class="at">message =</span> <span class="cn">FALSE</span>, <span class="at">collapse =</span> <span class="cn">TRUE</span>, <span class="at">comment =</span> <span class="st">"#&gt;"</span>,</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fig.width =</span> <span class="dv">8</span>, <span class="at">fig.height =</span> <span class="dv">6</span>)</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## Bibliotecas</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(frictionless)</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="in">```{r echo = FALSE}</span></span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="co"># peguei as cores do site e criei um vetor com nomes fáceis de lembrar</span></span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>cores_dadosjusbr <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">lilas =</span> <span class="st">"#B361C6"</span>,</span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">cyan =</span> <span class="st">"#2FBB96"</span>,</span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">cinza_azulado =</span> <span class="st">"#3e5363"</span>,</span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">verde =</span> <span class="st">"#96ba2f"</span>,</span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">laranja =</span> <span class="st">"#F2C94C"</span>,</span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">cinza_claro =</span> <span class="st">"#F5F5F5"</span></span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>hrbrthemes<span class="sc">::</span><span class="fu">import_roboto_condensed</span>()</span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>extrafont<span class="sc">::</span><span class="fu">loadfonts</span>()</span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  hrbrthemes<span class="sc">::</span><span class="fu">theme_ipsum_rc</span>() <span class="sc">+</span></span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.ticks.x =</span> <span class="fu">element_line</span>(),</span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">13</span>),</span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]]),</span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> cores_dadosjusbr[[<span class="st">"cinza_claro"</span>]], <span class="at">color =</span> <span class="st">"transparent"</span>),</span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], <span class="at">size =</span> <span class="dv">8</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.title.x =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.title.y =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>      <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], <span class="at">face =</span> <span class="st">"bold"</span>),</span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>      <span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">family =</span> <span class="st">"Roboto Condensed"</span>)</span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>hrbrthemes<span class="sc">::</span><span class="fu">update_geom_font_defaults</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], </span>
-<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">family =</span> <span class="st">"Roboto Condensed"</span>)</span>
-<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a><span class="fu">## Leitura do pacote de dados</span></span>
-<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>A leitura dos dados é feita com <span class="in">`frictionless::read_package`</span></span>
-<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a><span class="in">```{r  warning = TRUE, message = TRUE}</span></span>
-<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a><span class="co"># read from zip</span></span>
-<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>read_dadosjus <span class="ot">&lt;-</span> <span class="cf">function</span>(pkgURL, myDir) {</span>
-<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>    pkgDest <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(pkgURL, <span class="st">"(?&lt;=datapackage</span><span class="sc">\\</span><span class="st">/).*"</span>) </span>
-<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>    pkgDir <span class="ot">&lt;-</span> <span class="fu">str_remove</span>(pkgDest, <span class="st">"</span><span class="sc">\\</span><span class="st">/.*$"</span>)</span>
-<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>    pkgDest <span class="ot">&lt;-</span> <span class="fu">here</span>(myDir, pkgDest)</span>
-<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>    pkgDir <span class="ot">&lt;-</span> <span class="fu">here</span>(myDir, pkgDir)</span>
-<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dir.create</span>(pkgDir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="fu">str_glue</span>(<span class="st">"get {pkgURL}</span><span class="sc">\n\n</span><span class="st">"</span>))</span>
-<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(pkgURL, <span class="at">mode =</span> <span class="st">"wb"</span>, <span class="at">destfile =</span> pkgDest)</span>
-<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">2</span>)</span>
-<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="fu">str_glue</span>(<span class="st">"unzip {pkgDest} to {pkgDir}</span><span class="sc">\n\n</span><span class="st">"</span>))</span>
-<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unzip</span>(pkgDest, <span class="at">exdir =</span> pkgDir)</span>
-<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">2</span>)</span>
-<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>    <span class="co"># leitura do pacote</span></span>
-<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"read DadosJusBr datapackage</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>    package <span class="ot">&lt;-</span> frictionless<span class="sc">::</span><span class="fu">read_package</span>(<span class="fu">here</span>(pkgDir, <span class="st">'datapackage.json'</span>))</span>
-<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unlink</span>(<span class="fu">here</span>(<span class="st">"R/data"</span>), <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(package)</span>
-<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a><span class="co"># URL package</span></span>
-<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a>pkgURL <span class="ot">&lt;-</span> <span class="st">"https://dadosjusbr.org/download/datapackage/tjsc/tjsc-2021.zip"</span></span>
-<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a><span class="co"># read datapackage</span></span>
-<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>datapackage_tjsc <span class="ot">&lt;-</span> <span class="fu">read_dadosjus</span>(<span class="at">pkgURL =</span> pkgURL, <span class="at">myDir =</span> <span class="st">"data/pacotes"</span>)</span>
-<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a>inspeciona listando data resources</span>
-<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a><span class="co"># List resources</span></span>
-<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a>frictionless<span class="sc">::</span><span class="fu">resources</span>(datapackage_tjsc)</span>
-<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a><span class="fu">## dataset de remunerações</span></span>
-<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a>Para extrair o dataset de remunerações basta ler o data resource com <span class="in">`frictionless::read_resource("remuneracao")`</span></span>
-<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a>remuneracao <span class="ot">&lt;-</span> datapackage_tjsc <span class="sc">%&gt;%</span> </span>
-<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a>  frictionless<span class="sc">::</span><span class="fu">read_resource</span>(<span class="st">"remuneracao"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(valor))</span>
-<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a><span class="fu">## dataset de contra-cheques</span></span>
-<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a>Para extrair o dataset de contra-cheques basta ler o data resource com <span class="in">`frictionless::read_resource("rcontra_cheque")`</span></span>
-<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a>contra_cheque <span class="ot">&lt;-</span> datapackage_tjsc <span class="sc">%&gt;%</span> </span>
-<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a>  frictionless<span class="sc">::</span><span class="fu">read_resource</span>(<span class="st">"contra_cheque"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ativo))</span>
-<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## join contra-cheques com remuneração</span></span>
-<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a><span class="in">```{r message = TRUE}</span></span>
-<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a>left_join <span class="ot">&lt;-</span> tidylog<span class="sc">::</span>left_join</span>
-<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="ot">&lt;-</span> <span class="fu">left_join</span>(remuneracao, contra_cheque) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">data =</span> lubridate<span class="sc">::</span><span class="fu">dmy</span>(<span class="fu">str_replace</span>(chave_coleta, <span class="st">"tjsc"</span>, <span class="st">"01"</span>))) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, natureza, categoria, item, nome, valor)</span>
-<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a>Estamos procurando por <span class="co">[</span><span class="ot">Joana Ribeiro Zimmer</span><span class="co">](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml)</span>, responsável por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma <span class="co">[</span><span class="ot">matéria do The Intercept Brasil</span><span class="co">](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/)</span>. </span>
-<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a><span class="co"># filtrando por magistradas que contenham "JOANA" no primeiro nome</span></span>
-<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="sc">%&gt;%</span> </span>
-<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(nome, <span class="st">"JOANA"</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(nome)</span>
-<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a><span class="fu">## Rendimentos dos membros do TJSC</span></span>
-<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>Média dos rendimentos mensais</span>
-<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="sc">%&gt;%</span></span>
-<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(data, categoria, nome, <span class="at">wt =</span> valor, <span class="at">name =</span> <span class="st">"valor"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(categoria, nome) <span class="sc">%&gt;%</span></span>
-<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">valor =</span> <span class="fu">mean</span>(valor), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">is_joana_ribeiro_zimmer =</span> <span class="fu">if_else</span>(nome <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"Demais magistrados (TJSC)"</span>),</span>
-<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a>         <span class="at">categoria =</span> <span class="fu">str_to_title</span>(categoria)) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">reorder</span>(categoria, valor), <span class="at">x =</span> valor, <span class="at">color =</span> is_joana_ribeiro_zimmer)) <span class="sc">+</span></span>
-<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a>  ggbeeswarm<span class="sc">::</span><span class="fu">geom_quasirandom</span>(<span class="at">groupOnX =</span> <span class="cn">FALSE</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> cores_dadosjusbr[[<span class="st">"lilas"</span>]]) <span class="sc">+</span></span>
-<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a>  gghighlight<span class="sc">::</span><span class="fu">gghighlight</span>(</span>
-<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a>    is_joana_ribeiro_zimmer <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>,</span>
-<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>    <span class="at">unhighlighted_colour =</span> <span class="fu">alpha</span>(cores_dadosjusbr[[<span class="st">"cyan"</span>]], .<span class="dv">15</span>),</span>
-<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a>    <span class="at">label_params =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">3</span>, </span>
-<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.padding =</span> <span class="fu">unit</span>(<span class="fl">0.01</span>, <span class="st">"lines"</span>),</span>
-<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.size =</span> <span class="cn">NA</span>, <span class="at">fill =</span> <span class="st">"transparent"</span>,  <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">vjust =</span> <span class="dv">0</span>, <span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]])</span>
-<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">label =</span> scales<span class="sc">::</span>number) <span class="sc">+</span></span>
-<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Média dos rendimentos mensais dos membros do TJSC - 2021"</span>,</span>
-<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Valor em R$"</span>,</span>
-<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span>,</span>
-<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Cada ponto é a média de pagamentos mensais feito para um membro em 2021"</span></span>
-<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a>Rendimentos mensais</span>
-<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="sc">%&gt;%</span></span>
-<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(data, categoria, nome, <span class="at">wt =</span> valor, <span class="at">name =</span> <span class="st">"valor"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(data, categoria, nome) <span class="sc">%&gt;%</span></span>
-<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">valor =</span> <span class="fu">mean</span>(valor), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">is_joana_ribeiro_zimmer =</span> <span class="fu">if_else</span>(nome <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"Demais magistrados (TJSC)"</span>),</span>
-<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a>         <span class="at">categoria =</span> <span class="fu">str_to_title</span>(categoria)) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">reorder</span>(categoria, valor), <span class="at">x =</span> valor, <span class="at">color =</span> is_joana_ribeiro_zimmer)) <span class="sc">+</span></span>
-<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a>  ggbeeswarm<span class="sc">::</span><span class="fu">geom_quasirandom</span>(<span class="at">groupOnX =</span> <span class="cn">FALSE</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> cores_dadosjusbr[[<span class="st">"lilas"</span>]]) <span class="sc">+</span></span>
-<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a>  gghighlight<span class="sc">::</span><span class="fu">gghighlight</span>(</span>
-<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a>    is_joana_ribeiro_zimmer <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>,</span>
-<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a>    <span class="at">unhighlighted_colour =</span> <span class="fu">alpha</span>(cores_dadosjusbr[[<span class="st">"cyan"</span>]], .<span class="dv">15</span>),</span>
-<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a>    <span class="at">label_params =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">3</span>, </span>
-<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.padding =</span> <span class="fu">unit</span>(<span class="fl">0.01</span>, <span class="st">"lines"</span>),</span>
-<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.size =</span> <span class="cn">NA</span>, <span class="at">fill =</span> <span class="st">"transparent"</span>,  <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">vjust =</span> <span class="dv">0</span>, <span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]])</span>
-<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">data =</span> . <span class="sc">%&gt;%</span> <span class="fu">filter</span>(categoria <span class="sc">==</span> <span class="st">"Direitos-Eventuais"</span>, lubridate<span class="sc">::</span><span class="fu">month</span>(data) <span class="sc">==</span> <span class="dv">11</span>),</span>
-<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a>            <span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]],</span>
-<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">label =</span> nome), <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">vjust =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">label =</span> scales<span class="sc">::</span>number) <span class="sc">+</span></span>
-<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Rendimentos mensais dos membros do TJSC - 2021"</span>,</span>
-<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Valor em R$"</span>,</span>
-<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span>,</span>
-<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Cada ponto é um pagamento mensal feito para um membro em 2021"</span></span>
-<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<div class="sourceCode" id="cb15" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Tribunal de Justiça de Santa Catarina"</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"> html:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">  toc: true</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">  code-fold: true</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">  code-tools: true</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">  code-link: true</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">  code-summary: "Código"</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup, include=FALSE}</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(<span class="at">echo =</span> <span class="cn">TRUE</span>, <span class="at">warning =</span> <span class="cn">FALSE</span>, <span class="at">message =</span> <span class="cn">FALSE</span>, <span class="at">collapse =</span> <span class="cn">TRUE</span>, <span class="at">comment =</span> <span class="st">"#&gt;"</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fig.width =</span> <span class="dv">8</span>, <span class="at">fig.height =</span> <span class="dv">6</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## Bibliotecas</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: libs</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(frictionless)</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="fu">## Estilização de gráficos</span></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: style</span></span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a><span class="co"># peguei as cores do site e criei um vetor com nomes fáceis de lembrar</span></span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>cores_dadosjusbr <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">lilas =</span> <span class="st">"#B361C6"</span>,</span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">cyan =</span> <span class="st">"#2FBB96"</span>,</span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">cinza_azulado =</span> <span class="st">"#3e5363"</span>,</span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">verde =</span> <span class="st">"#96ba2f"</span>,</span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">laranja =</span> <span class="st">"#F2C94C"</span>,</span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">cinza_claro =</span> <span class="st">"#F5F5F5"</span></span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>hrbrthemes<span class="sc">::</span><span class="fu">import_roboto_condensed</span>()</span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>extrafont<span class="sc">::</span><span class="fu">loadfonts</span>()</span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>  hrbrthemes<span class="sc">::</span><span class="fu">theme_ipsum_rc</span>() <span class="sc">+</span></span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.ticks.x =</span> <span class="fu">element_line</span>(),</span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">13</span>),</span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]]),</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> cores_dadosjusbr[[<span class="st">"cinza_claro"</span>]], <span class="at">color =</span> <span class="st">"transparent"</span>),</span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], <span class="at">size =</span> <span class="dv">8</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text.y =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.title.x =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.title.y =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb15-58"><a href="#cb15-58" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.text =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb15-59"><a href="#cb15-59" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.title =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb15-60"><a href="#cb15-60" aria-hidden="true" tabindex="-1"></a>      <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb15-61"><a href="#cb15-61" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb15-62"><a href="#cb15-62" aria-hidden="true" tabindex="-1"></a>      <span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">family =</span> <span class="st">"Roboto Condensed"</span>)</span>
+<span id="cb15-63"><a href="#cb15-63" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-64"><a href="#cb15-64" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-65"><a href="#cb15-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-66"><a href="#cb15-66" aria-hidden="true" tabindex="-1"></a>hrbrthemes<span class="sc">::</span><span class="fu">update_geom_font_defaults</span>(<span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]], </span>
+<span id="cb15-67"><a href="#cb15-67" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">family =</span> <span class="st">"Roboto Condensed"</span>)</span>
+<span id="cb15-68"><a href="#cb15-68" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-69"><a href="#cb15-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-70"><a href="#cb15-70" aria-hidden="true" tabindex="-1"></a><span class="fu">## Leitura do pacote de dados</span></span>
+<span id="cb15-71"><a href="#cb15-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-72"><a href="#cb15-72" aria-hidden="true" tabindex="-1"></a>A leitura dos dados é feita com <span class="in">`frictionless::read_package`</span></span>
+<span id="cb15-73"><a href="#cb15-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-74"><a href="#cb15-74" aria-hidden="true" tabindex="-1"></a><span class="in">```{r  warning = TRUE, message = TRUE}</span></span>
+<span id="cb15-75"><a href="#cb15-75" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: read-data</span></span>
+<span id="cb15-76"><a href="#cb15-76" aria-hidden="true" tabindex="-1"></a><span class="co"># read from zip</span></span>
+<span id="cb15-77"><a href="#cb15-77" aria-hidden="true" tabindex="-1"></a>read_dadosjus <span class="ot">&lt;-</span> <span class="cf">function</span>(pkgURL, myDir) {</span>
+<span id="cb15-78"><a href="#cb15-78" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-79"><a href="#cb15-79" aria-hidden="true" tabindex="-1"></a>    pkgDest <span class="ot">&lt;-</span> <span class="fu">str_extract</span>(pkgURL, <span class="st">"(?&lt;=datapackage</span><span class="sc">\\</span><span class="st">/).*"</span>) </span>
+<span id="cb15-80"><a href="#cb15-80" aria-hidden="true" tabindex="-1"></a>    pkgDir <span class="ot">&lt;-</span> <span class="fu">str_remove</span>(pkgDest, <span class="st">"</span><span class="sc">\\</span><span class="st">/.*$"</span>)</span>
+<span id="cb15-81"><a href="#cb15-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-82"><a href="#cb15-82" aria-hidden="true" tabindex="-1"></a>    pkgDest <span class="ot">&lt;-</span> <span class="fu">here</span>(myDir, pkgDest)</span>
+<span id="cb15-83"><a href="#cb15-83" aria-hidden="true" tabindex="-1"></a>    pkgDir <span class="ot">&lt;-</span> <span class="fu">here</span>(myDir, pkgDir)</span>
+<span id="cb15-84"><a href="#cb15-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-85"><a href="#cb15-85" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dir.create</span>(pkgDir, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-86"><a href="#cb15-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-87"><a href="#cb15-87" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="fu">str_glue</span>(<span class="st">"get {pkgURL}</span><span class="sc">\n\n</span><span class="st">"</span>))</span>
+<span id="cb15-88"><a href="#cb15-88" aria-hidden="true" tabindex="-1"></a>    <span class="fu">download.file</span>(pkgURL, <span class="at">mode =</span> <span class="st">"wb"</span>, <span class="at">destfile =</span> pkgDest)</span>
+<span id="cb15-89"><a href="#cb15-89" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">2</span>)</span>
+<span id="cb15-90"><a href="#cb15-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-91"><a href="#cb15-91" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="fu">str_glue</span>(<span class="st">"unzip {pkgDest} to {pkgDir}</span><span class="sc">\n\n</span><span class="st">"</span>))</span>
+<span id="cb15-92"><a href="#cb15-92" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unzip</span>(pkgDest, <span class="at">exdir =</span> pkgDir)</span>
+<span id="cb15-93"><a href="#cb15-93" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Sys.sleep</span>(<span class="dv">2</span>)</span>
+<span id="cb15-94"><a href="#cb15-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-95"><a href="#cb15-95" aria-hidden="true" tabindex="-1"></a>    <span class="co"># leitura do pacote</span></span>
+<span id="cb15-96"><a href="#cb15-96" aria-hidden="true" tabindex="-1"></a>    <span class="fu">message</span>(<span class="st">"read DadosJusBr datapackage</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb15-97"><a href="#cb15-97" aria-hidden="true" tabindex="-1"></a>    package <span class="ot">&lt;-</span> frictionless<span class="sc">::</span><span class="fu">read_package</span>(<span class="fu">here</span>(pkgDir, <span class="st">'datapackage.json'</span>))</span>
+<span id="cb15-98"><a href="#cb15-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-99"><a href="#cb15-99" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unlink</span>(<span class="fu">here</span>(<span class="st">"R/data"</span>), <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-100"><a href="#cb15-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-101"><a href="#cb15-101" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(package)</span>
+<span id="cb15-102"><a href="#cb15-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-103"><a href="#cb15-103" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-104"><a href="#cb15-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-105"><a href="#cb15-105" aria-hidden="true" tabindex="-1"></a><span class="co"># URL package</span></span>
+<span id="cb15-106"><a href="#cb15-106" aria-hidden="true" tabindex="-1"></a>pkgURL <span class="ot">&lt;-</span> <span class="st">"https://dadosjusbr.org/download/datapackage/tjsc/tjsc-2021.zip"</span></span>
+<span id="cb15-107"><a href="#cb15-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-108"><a href="#cb15-108" aria-hidden="true" tabindex="-1"></a><span class="co"># read datapackage</span></span>
+<span id="cb15-109"><a href="#cb15-109" aria-hidden="true" tabindex="-1"></a>datapackage_tjsc <span class="ot">&lt;-</span> <span class="fu">read_dadosjus</span>(<span class="at">pkgURL =</span> pkgURL, <span class="at">myDir =</span> <span class="st">"data/pacotes"</span>)</span>
+<span id="cb15-110"><a href="#cb15-110" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-111"><a href="#cb15-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-112"><a href="#cb15-112" aria-hidden="true" tabindex="-1"></a>inspeciona listando data resources</span>
+<span id="cb15-113"><a href="#cb15-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-116"><a href="#cb15-116" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-117"><a href="#cb15-117" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: inspec-resources</span></span>
+<span id="cb15-118"><a href="#cb15-118" aria-hidden="true" tabindex="-1"></a><span class="co"># List resources</span></span>
+<span id="cb15-119"><a href="#cb15-119" aria-hidden="true" tabindex="-1"></a>frictionless<span class="sc">::</span><span class="fu">resources</span>(datapackage_tjsc)</span>
+<span id="cb15-120"><a href="#cb15-120" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-121"><a href="#cb15-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-122"><a href="#cb15-122" aria-hidden="true" tabindex="-1"></a><span class="fu">### dataset de remunerações</span></span>
+<span id="cb15-123"><a href="#cb15-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-124"><a href="#cb15-124" aria-hidden="true" tabindex="-1"></a>Para extrair o dataset de remunerações basta ler o data resource com <span class="in">`frictionless::read_resource("remuneracao")`</span></span>
+<span id="cb15-127"><a href="#cb15-127" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-128"><a href="#cb15-128" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: read-remuneracao</span></span>
+<span id="cb15-129"><a href="#cb15-129" aria-hidden="true" tabindex="-1"></a>remuneracao <span class="ot">&lt;-</span> datapackage_tjsc <span class="sc">%&gt;%</span> </span>
+<span id="cb15-130"><a href="#cb15-130" aria-hidden="true" tabindex="-1"></a>  frictionless<span class="sc">::</span><span class="fu">read_resource</span>(<span class="st">"remuneracao"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-131"><a href="#cb15-131" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(valor))</span>
+<span id="cb15-132"><a href="#cb15-132" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-133"><a href="#cb15-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-134"><a href="#cb15-134" aria-hidden="true" tabindex="-1"></a><span class="fu">### dataset de contra-cheques</span></span>
+<span id="cb15-135"><a href="#cb15-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-136"><a href="#cb15-136" aria-hidden="true" tabindex="-1"></a>Para extrair o dataset de contra-cheques basta ler o data resource com <span class="in">`frictionless::read_resource("rcontra_cheque")`</span></span>
+<span id="cb15-139"><a href="#cb15-139" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-140"><a href="#cb15-140" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: read-contra_cheque</span></span>
+<span id="cb15-141"><a href="#cb15-141" aria-hidden="true" tabindex="-1"></a>contra_cheque <span class="ot">&lt;-</span> datapackage_tjsc <span class="sc">%&gt;%</span> </span>
+<span id="cb15-142"><a href="#cb15-142" aria-hidden="true" tabindex="-1"></a>  frictionless<span class="sc">::</span><span class="fu">read_resource</span>(<span class="st">"contra_cheque"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-143"><a href="#cb15-143" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(ativo))</span>
+<span id="cb15-144"><a href="#cb15-144" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-145"><a href="#cb15-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-146"><a href="#cb15-146" aria-hidden="true" tabindex="-1"></a><span class="fu">### join contra-cheques com remuneração</span></span>
+<span id="cb15-147"><a href="#cb15-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-148"><a href="#cb15-148" aria-hidden="true" tabindex="-1"></a><span class="in">```{r message = TRUE}</span></span>
+<span id="cb15-149"><a href="#cb15-149" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: read-base_tjsc</span></span>
+<span id="cb15-150"><a href="#cb15-150" aria-hidden="true" tabindex="-1"></a>left_join <span class="ot">&lt;-</span> tidylog<span class="sc">::</span>left_join</span>
+<span id="cb15-151"><a href="#cb15-151" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="ot">&lt;-</span> <span class="fu">left_join</span>(remuneracao, contra_cheque) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-152"><a href="#cb15-152" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">data =</span> lubridate<span class="sc">::</span><span class="fu">dmy</span>(<span class="fu">str_replace</span>(chave_coleta, <span class="st">"tjsc"</span>, <span class="st">"01"</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-153"><a href="#cb15-153" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, natureza, categoria, item, nome, valor)</span>
+<span id="cb15-154"><a href="#cb15-154" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-155"><a href="#cb15-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-156"><a href="#cb15-156" aria-hidden="true" tabindex="-1"></a><span class="fu">### Objetivo da análise</span></span>
+<span id="cb15-157"><a href="#cb15-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-158"><a href="#cb15-158" aria-hidden="true" tabindex="-1"></a>Comparar os rendimentos da juíza <span class="co">[</span><span class="ot">Joana Ribeiro Zimmer</span><span class="co">](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml)</span> com o rendimento dos demais magistrados do TJSC. A juíza ficou conhecida por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma <span class="co">[</span><span class="ot">matéria do The Intercept Brasil</span><span class="co">](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/)</span>.</span>
+<span id="cb15-159"><a href="#cb15-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-162"><a href="#cb15-162" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-163"><a href="#cb15-163" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: detect-joana-ribeiro-zimmer</span></span>
+<span id="cb15-164"><a href="#cb15-164" aria-hidden="true" tabindex="-1"></a><span class="co"># filtrando por magistradas que contenham "JOANA" no primeiro nome</span></span>
+<span id="cb15-165"><a href="#cb15-165" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="sc">%&gt;%</span> </span>
+<span id="cb15-166"><a href="#cb15-166" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(nome, <span class="st">"JOANA"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-167"><a href="#cb15-167" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(nome)</span>
+<span id="cb15-168"><a href="#cb15-168" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-169"><a href="#cb15-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-170"><a href="#cb15-170" aria-hidden="true" tabindex="-1"></a><span class="fu">## Análise</span></span>
+<span id="cb15-171"><a href="#cb15-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-172"><a href="#cb15-172" aria-hidden="true" tabindex="-1"></a><span class="fu">### Distribuição dos rendimentos dos membros do TJSC por categoria</span></span>
+<span id="cb15-173"><a href="#cb15-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-174"><a href="#cb15-174" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Média dos rendimentos mensais</span></span>
+<span id="cb15-175"><a href="#cb15-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-178"><a href="#cb15-178" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-179"><a href="#cb15-179" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="sc">%&gt;%</span></span>
+<span id="cb15-180"><a href="#cb15-180" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(data, categoria, nome, <span class="at">wt =</span> valor, <span class="at">name =</span> <span class="st">"valor"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-181"><a href="#cb15-181" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(categoria, nome) <span class="sc">%&gt;%</span></span>
+<span id="cb15-182"><a href="#cb15-182" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">valor =</span> <span class="fu">mean</span>(valor), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-183"><a href="#cb15-183" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">is_joana_ribeiro_zimmer =</span> <span class="fu">if_else</span>(nome <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"Demais magistrados (TJSC)"</span>),</span>
+<span id="cb15-184"><a href="#cb15-184" aria-hidden="true" tabindex="-1"></a>         <span class="at">categoria =</span> <span class="fu">str_to_title</span>(categoria)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-185"><a href="#cb15-185" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">reorder</span>(categoria, valor), <span class="at">x =</span> valor, <span class="at">color =</span> is_joana_ribeiro_zimmer)) <span class="sc">+</span></span>
+<span id="cb15-186"><a href="#cb15-186" aria-hidden="true" tabindex="-1"></a>  ggbeeswarm<span class="sc">::</span><span class="fu">geom_quasirandom</span>(<span class="at">groupOnX =</span> <span class="cn">FALSE</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb15-187"><a href="#cb15-187" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> cores_dadosjusbr[[<span class="st">"lilas"</span>]]) <span class="sc">+</span></span>
+<span id="cb15-188"><a href="#cb15-188" aria-hidden="true" tabindex="-1"></a>  gghighlight<span class="sc">::</span><span class="fu">gghighlight</span>(</span>
+<span id="cb15-189"><a href="#cb15-189" aria-hidden="true" tabindex="-1"></a>    is_joana_ribeiro_zimmer <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>,</span>
+<span id="cb15-190"><a href="#cb15-190" aria-hidden="true" tabindex="-1"></a>    <span class="at">unhighlighted_colour =</span> <span class="fu">alpha</span>(cores_dadosjusbr[[<span class="st">"cyan"</span>]], .<span class="dv">15</span>),</span>
+<span id="cb15-191"><a href="#cb15-191" aria-hidden="true" tabindex="-1"></a>    <span class="at">label_params =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">3</span>, </span>
+<span id="cb15-192"><a href="#cb15-192" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.padding =</span> <span class="fu">unit</span>(<span class="fl">0.01</span>, <span class="st">"lines"</span>),</span>
+<span id="cb15-193"><a href="#cb15-193" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.size =</span> <span class="cn">NA</span>, <span class="at">fill =</span> <span class="st">"transparent"</span>,  <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">vjust =</span> <span class="dv">0</span>, <span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]])</span>
+<span id="cb15-194"><a href="#cb15-194" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-195"><a href="#cb15-195" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">label =</span> scales<span class="sc">::</span>number) <span class="sc">+</span></span>
+<span id="cb15-196"><a href="#cb15-196" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb15-197"><a href="#cb15-197" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Média dos rendimentos mensais dos membros do TJSC - 2021"</span>,</span>
+<span id="cb15-198"><a href="#cb15-198" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Valor em R$"</span>,</span>
+<span id="cb15-199"><a href="#cb15-199" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span>,</span>
+<span id="cb15-200"><a href="#cb15-200" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Cada ponto é a média de pagamentos mensais feito para um membro em 2021"</span></span>
+<span id="cb15-201"><a href="#cb15-201" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-202"><a href="#cb15-202" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-203"><a href="#cb15-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-204"><a href="#cb15-204" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Rendimentos mensais</span></span>
+<span id="cb15-205"><a href="#cb15-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-208"><a href="#cb15-208" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-209"><a href="#cb15-209" aria-hidden="true" tabindex="-1"></a>base_tjsc <span class="sc">%&gt;%</span></span>
+<span id="cb15-210"><a href="#cb15-210" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(data, categoria, nome, <span class="at">wt =</span> valor, <span class="at">name =</span> <span class="st">"valor"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-211"><a href="#cb15-211" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(data, categoria, nome) <span class="sc">%&gt;%</span></span>
+<span id="cb15-212"><a href="#cb15-212" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">valor =</span> <span class="fu">mean</span>(valor), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-213"><a href="#cb15-213" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">is_joana_ribeiro_zimmer =</span> <span class="fu">if_else</span>(nome <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"Demais magistrados (TJSC)"</span>),</span>
+<span id="cb15-214"><a href="#cb15-214" aria-hidden="true" tabindex="-1"></a>         <span class="at">categoria =</span> <span class="fu">str_to_title</span>(categoria)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-215"><a href="#cb15-215" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">reorder</span>(categoria, valor), <span class="at">x =</span> valor, <span class="at">color =</span> is_joana_ribeiro_zimmer)) <span class="sc">+</span></span>
+<span id="cb15-216"><a href="#cb15-216" aria-hidden="true" tabindex="-1"></a>  ggbeeswarm<span class="sc">::</span><span class="fu">geom_quasirandom</span>(<span class="at">groupOnX =</span> <span class="cn">FALSE</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb15-217"><a href="#cb15-217" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> cores_dadosjusbr[[<span class="st">"lilas"</span>]]) <span class="sc">+</span></span>
+<span id="cb15-218"><a href="#cb15-218" aria-hidden="true" tabindex="-1"></a>  gghighlight<span class="sc">::</span><span class="fu">gghighlight</span>(</span>
+<span id="cb15-219"><a href="#cb15-219" aria-hidden="true" tabindex="-1"></a>    is_joana_ribeiro_zimmer <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>,</span>
+<span id="cb15-220"><a href="#cb15-220" aria-hidden="true" tabindex="-1"></a>    <span class="at">unhighlighted_colour =</span> <span class="fu">alpha</span>(cores_dadosjusbr[[<span class="st">"cyan"</span>]], .<span class="dv">15</span>),</span>
+<span id="cb15-221"><a href="#cb15-221" aria-hidden="true" tabindex="-1"></a>    <span class="at">label_params =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">3</span>, </span>
+<span id="cb15-222"><a href="#cb15-222" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.padding =</span> <span class="fu">unit</span>(<span class="fl">0.01</span>, <span class="st">"lines"</span>),</span>
+<span id="cb15-223"><a href="#cb15-223" aria-hidden="true" tabindex="-1"></a>                        <span class="at">label.size =</span> <span class="cn">NA</span>, <span class="at">fill =</span> <span class="st">"transparent"</span>,  <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">vjust =</span> <span class="dv">0</span>, <span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]])</span>
+<span id="cb15-224"><a href="#cb15-224" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-225"><a href="#cb15-225" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="at">data =</span> . <span class="sc">%&gt;%</span> <span class="fu">filter</span>(categoria <span class="sc">==</span> <span class="st">"Direitos-Eventuais"</span>, lubridate<span class="sc">::</span><span class="fu">month</span>(data) <span class="sc">==</span> <span class="dv">11</span>),</span>
+<span id="cb15-226"><a href="#cb15-226" aria-hidden="true" tabindex="-1"></a>            <span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]],</span>
+<span id="cb15-227"><a href="#cb15-227" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">label =</span> nome), <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">vjust =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb15-228"><a href="#cb15-228" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">label =</span> scales<span class="sc">::</span>number) <span class="sc">+</span></span>
+<span id="cb15-229"><a href="#cb15-229" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb15-230"><a href="#cb15-230" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Rendimentos mensais dos membros do TJSC - 2021"</span>,</span>
+<span id="cb15-231"><a href="#cb15-231" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Valor em R$"</span>,</span>
+<span id="cb15-232"><a href="#cb15-232" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span>,</span>
+<span id="cb15-233"><a href="#cb15-233" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Cada ponto é um pagamento mensal feito para um membro em 2021"</span></span>
+<span id="cb15-234"><a href="#cb15-234" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-235"><a href="#cb15-235" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-236"><a href="#cb15-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-237"><a href="#cb15-237" aria-hidden="true" tabindex="-1"></a><span class="fu">### Distribuição dos rendimentos dos membros do TJSC por item da categoria</span></span>
+<span id="cb15-238"><a href="#cb15-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-241"><a href="#cb15-241" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-242"><a href="#cb15-242" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: plot-rendimentos</span></span>
+<span id="cb15-243"><a href="#cb15-243" aria-hidden="true" tabindex="-1"></a>plot_rendimentos <span class="ot">&lt;-</span> <span class="cf">function</span>(df, categ) {</span>
+<span id="cb15-244"><a href="#cb15-244" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-245"><a href="#cb15-245" aria-hidden="true" tabindex="-1"></a>  cor_pontos <span class="ot">&lt;-</span> <span class="fu">case_when</span>(</span>
+<span id="cb15-246"><a href="#cb15-246" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Direitos-Eventuais"</span> <span class="sc">~</span> cores_dadosjusbr[[<span class="st">"cyan"</span>]],</span>
+<span id="cb15-247"><a href="#cb15-247" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Indenizações"</span> <span class="sc">~</span> cores_dadosjusbr[[<span class="st">"laranja"</span>]],</span>
+<span id="cb15-248"><a href="#cb15-248" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Contracheque"</span> <span class="sc">~</span> cores_dadosjusbr[[<span class="st">"verde"</span>]],</span>
+<span id="cb15-249"><a href="#cb15-249" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Direitos-Pessoais"</span> <span class="sc">~</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]]</span>
+<span id="cb15-250"><a href="#cb15-250" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-251"><a href="#cb15-251" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-252"><a href="#cb15-252" aria-hidden="true" tabindex="-1"></a>  size_categ <span class="ot">&lt;-</span> <span class="fu">case_when</span>(</span>
+<span id="cb15-253"><a href="#cb15-253" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Direitos-Eventuais"</span> <span class="sc">~</span> <span class="fl">1.5</span>,</span>
+<span id="cb15-254"><a href="#cb15-254" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Indenizações"</span> <span class="sc">~</span> <span class="dv">2</span>,</span>
+<span id="cb15-255"><a href="#cb15-255" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Contracheque"</span> <span class="sc">~</span> <span class="fl">1.7</span>,</span>
+<span id="cb15-256"><a href="#cb15-256" aria-hidden="true" tabindex="-1"></a>    categ <span class="sc">==</span> <span class="st">"Direitos-Pessoais"</span> <span class="sc">~</span> <span class="dv">2</span></span>
+<span id="cb15-257"><a href="#cb15-257" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-258"><a href="#cb15-258" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-259"><a href="#cb15-259" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">%&gt;%</span> </span>
+<span id="cb15-260"><a href="#cb15-260" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">categoria =</span> <span class="fu">str_to_title</span>(categoria)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-261"><a href="#cb15-261" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(categoria <span class="sc">==</span> categ) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-262"><a href="#cb15-262" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(data, categoria, item, nome, <span class="at">wt =</span> valor, <span class="at">name =</span> <span class="st">"valor"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-263"><a href="#cb15-263" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(data, categoria, item, nome) <span class="sc">%&gt;%</span></span>
+<span id="cb15-264"><a href="#cb15-264" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">valor =</span> <span class="fu">mean</span>(valor), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-265"><a href="#cb15-265" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">is_joana_ribeiro_zimmer =</span> <span class="fu">if_else</span>(nome <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"JOANA RIBEIRO"</span>, <span class="st">"Demais magistrados (TJSC)"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-266"><a href="#cb15-266" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">reorder</span>(item, valor), <span class="at">x =</span> valor, <span class="at">color =</span> is_joana_ribeiro_zimmer)) <span class="sc">+</span></span>
+<span id="cb15-267"><a href="#cb15-267" aria-hidden="true" tabindex="-1"></a>    ggbeeswarm<span class="sc">::</span><span class="fu">geom_quasirandom</span>(<span class="at">groupOnX =</span> <span class="cn">FALSE</span>, <span class="at">size =</span> size_categ) <span class="sc">+</span></span>
+<span id="cb15-268"><a href="#cb15-268" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_manual</span>(<span class="at">values =</span> cores_dadosjusbr[[<span class="st">"lilas"</span>]]) <span class="sc">+</span></span>
+<span id="cb15-269"><a href="#cb15-269" aria-hidden="true" tabindex="-1"></a>    gghighlight<span class="sc">::</span><span class="fu">gghighlight</span>(</span>
+<span id="cb15-270"><a href="#cb15-270" aria-hidden="true" tabindex="-1"></a>      is_joana_ribeiro_zimmer <span class="sc">==</span> <span class="st">"JOANA RIBEIRO"</span>,</span>
+<span id="cb15-271"><a href="#cb15-271" aria-hidden="true" tabindex="-1"></a>      <span class="at">unhighlighted_colour =</span> <span class="fu">alpha</span>(cor_pontos, .<span class="dv">15</span>), <span class="at">use_direct_label =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb15-272"><a href="#cb15-272" aria-hidden="true" tabindex="-1"></a>      <span class="at">label_params =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">3</span>, </span>
+<span id="cb15-273"><a href="#cb15-273" aria-hidden="true" tabindex="-1"></a>                          <span class="at">label.padding =</span> <span class="fu">unit</span>(<span class="fl">0.01</span>, <span class="st">"lines"</span>),</span>
+<span id="cb15-274"><a href="#cb15-274" aria-hidden="true" tabindex="-1"></a>                          <span class="at">label.size =</span> <span class="cn">NA</span>, <span class="at">fill =</span> <span class="st">"transparent"</span>,  <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">vjust =</span> <span class="dv">0</span>,</span>
+<span id="cb15-275"><a href="#cb15-275" aria-hidden="true" tabindex="-1"></a>                          <span class="at">color =</span> cores_dadosjusbr[[<span class="st">"cinza_azulado"</span>]])</span>
+<span id="cb15-276"><a href="#cb15-276" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb15-277"><a href="#cb15-277" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">label =</span> scales<span class="sc">::</span>number) <span class="sc">+</span></span>
+<span id="cb15-278"><a href="#cb15-278" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
+<span id="cb15-279"><a href="#cb15-279" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> <span class="fu">str_glue</span>(<span class="st">"Rendimentos mensais na categoria {categ}"</span>),</span>
+<span id="cb15-280"><a href="#cb15-280" aria-hidden="true" tabindex="-1"></a>      <span class="at">subtitle =</span> <span class="st">"Membros do TJSC - 2021"</span>,</span>
+<span id="cb15-281"><a href="#cb15-281" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="st">"Valor em R$"</span>,</span>
+<span id="cb15-282"><a href="#cb15-282" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> <span class="cn">NULL</span>,</span>
+<span id="cb15-283"><a href="#cb15-283" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Cada ponto é um pagamento mensal feito para um membro em 2021"</span>,</span>
+<span id="cb15-284"><a href="#cb15-284" aria-hidden="true" tabindex="-1"></a>      <span class="at">color =</span> <span class="cn">NULL</span></span>
+<span id="cb15-285"><a href="#cb15-285" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb15-286"><a href="#cb15-286" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>, <span class="at">legend.justification =</span> <span class="st">"right"</span>)</span>
+<span id="cb15-287"><a href="#cb15-287" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-288"><a href="#cb15-288" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-289"><a href="#cb15-289" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-290"><a href="#cb15-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-291"><a href="#cb15-291" aria-hidden="true" tabindex="-1"></a><span class="fu">### Direitos eventuais</span></span>
+<span id="cb15-292"><a href="#cb15-292" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-295"><a href="#cb15-295" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-296"><a href="#cb15-296" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-height: 10</span></span>
+<span id="cb15-297"><a href="#cb15-297" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_rendimentos</span>(base_tjsc, <span class="st">"Direitos-Eventuais"</span>)</span>
+<span id="cb15-298"><a href="#cb15-298" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-299"><a href="#cb15-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-300"><a href="#cb15-300" aria-hidden="true" tabindex="-1"></a><span class="fu">### Contracheque</span></span>
+<span id="cb15-301"><a href="#cb15-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-304"><a href="#cb15-304" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-305"><a href="#cb15-305" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-height: 9</span></span>
+<span id="cb15-306"><a href="#cb15-306" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_rendimentos</span>(base_tjsc, <span class="st">"Contracheque"</span>)</span>
+<span id="cb15-307"><a href="#cb15-307" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb15-308"><a href="#cb15-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-309"><a href="#cb15-309" aria-hidden="true" tabindex="-1"></a><span class="fu">### Indenizações</span></span>
+<span id="cb15-310"><a href="#cb15-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-313"><a href="#cb15-313" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb15-314"><a href="#cb15-314" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-height: 10</span></span>
+<span id="cb15-315"><a href="#cb15-315" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_rendimentos</span>(base_tjsc, <span class="st">"Indenizações"</span>)</span>
+<span id="cb15-316"><a href="#cb15-316" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 </code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

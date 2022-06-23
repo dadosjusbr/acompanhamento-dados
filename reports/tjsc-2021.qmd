@@ -17,12 +17,16 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, collapse = 
 ## Bibliotecas
 
 ```{r}
+#| label: libs
 library(tidyverse)
 library(frictionless)
 library(here)
 ```
 
-```{r echo = FALSE}
+## Estilização de gráficos
+
+```{r}
+#| label: style
 # peguei as cores do site e criei um vetor com nomes fáceis de lembrar
 cores_dadosjusbr <- c(
   lilas = "#B361C6",
@@ -64,6 +68,7 @@ hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]
 A leitura dos dados é feita com `frictionless::read_package`
 
 ```{r  warning = TRUE, message = TRUE}
+#| label: read-data
 # read from zip
 read_dadosjus <- function(pkgURL, myDir) {
   
@@ -103,49 +108,58 @@ datapackage_tjsc <- read_dadosjus(pkgURL = pkgURL, myDir = "data/pacotes")
 inspeciona listando data resources
 
 ```{r}
+#| label: inspec-resources
 # List resources
 frictionless::resources(datapackage_tjsc)
 ```
 
-## dataset de remunerações
+### dataset de remunerações
 
 Para extrair o dataset de remunerações basta ler o data resource com `frictionless::read_resource("remuneracao")`
 ```{r}
+#| label: read-remuneracao
 remuneracao <- datapackage_tjsc %>% 
   frictionless::read_resource("remuneracao") %>% 
   filter(!is.na(valor))
 ```
 
-## dataset de contra-cheques
+### dataset de contra-cheques
 
 Para extrair o dataset de contra-cheques basta ler o data resource com `frictionless::read_resource("rcontra_cheque")`
 ```{r}
+#| label: read-contra_cheque
 contra_cheque <- datapackage_tjsc %>% 
   frictionless::read_resource("contra_cheque") %>% 
   filter(!is.na(ativo))
 ```
 
-## join contra-cheques com remuneração
+### join contra-cheques com remuneração
 
 ```{r message = TRUE}
+#| label: read-base_tjsc
 left_join <- tidylog::left_join
 base_tjsc <- left_join(remuneracao, contra_cheque) %>% 
   mutate(data = lubridate::dmy(str_replace(chave_coleta, "tjsc", "01"))) %>% 
   select(data, natureza, categoria, item, nome, valor)
 ```
 
-Estamos procurando por [Joana Ribeiro Zimmer](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml), responsável por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma [matéria do The Intercept Brasil](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/). 
+### Objetivo da análise
+
+Comparar os rendimentos da juíza [Joana Ribeiro Zimmer](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml) com o rendimento dos demais magistrados do TJSC. A juíza ficou conhecida por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma [matéria do The Intercept Brasil](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/).
 
 ```{r}
+#| label: detect-joana-ribeiro-zimmer
 # filtrando por magistradas que contenham "JOANA" no primeiro nome
 base_tjsc %>% 
   filter(str_detect(nome, "JOANA")) %>% 
   distinct(nome)
 ```
 
-## Rendimentos dos membros do TJSC
+## Análise
 
-Média dos rendimentos mensais
+### Distribuição dos rendimentos dos membros do TJSC por categoria
+
+#### Média dos rendimentos mensais
 
 ```{r}
 base_tjsc %>%
@@ -173,7 +187,7 @@ base_tjsc %>%
   )
 ```
 
-Rendimentos mensais
+#### Rendimentos mensais
 
 ```{r}
 base_tjsc %>%
@@ -203,3 +217,77 @@ base_tjsc %>%
     caption = "Cada ponto é um pagamento mensal feito para um membro em 2021"
   )
 ```
+
+### Distribuição dos rendimentos dos membros do TJSC por item da categoria
+
+```{r}
+#| label: plot-rendimentos
+plot_rendimentos <- function(df, categ) {
+  
+  cor_pontos <- case_when(
+    categ == "Direitos-Eventuais" ~ cores_dadosjusbr[["cyan"]],
+    categ == "Indenizações" ~ cores_dadosjusbr[["laranja"]],
+    categ == "Contracheque" ~ cores_dadosjusbr[["verde"]],
+    categ == "Direitos-Pessoais" ~ cores_dadosjusbr[["cinza_azulado"]]
+  )
+  
+  size_categ <- case_when(
+    categ == "Direitos-Eventuais" ~ 1.5,
+    categ == "Indenizações" ~ 2,
+    categ == "Contracheque" ~ 1.7,
+    categ == "Direitos-Pessoais" ~ 2
+  )
+  
+  df %>% 
+    mutate(categoria = str_to_title(categoria)) %>% 
+    filter(categoria == categ) %>% 
+    count(data, categoria, item, nome, wt = valor, name = "valor") %>% 
+    group_by(data, categoria, item, nome) %>%
+    summarise(valor = mean(valor), .groups = "drop") %>%
+    mutate(is_joana_ribeiro_zimmer = if_else(nome == "JOANA RIBEIRO", "JOANA RIBEIRO", "Demais magistrados (TJSC)")) %>% 
+    ggplot(aes(y = reorder(item, valor), x = valor, color = is_joana_ribeiro_zimmer)) +
+    ggbeeswarm::geom_quasirandom(groupOnX = FALSE, size = size_categ) +
+    scale_color_manual(values = cores_dadosjusbr[["lilas"]]) +
+    gghighlight::gghighlight(
+      is_joana_ribeiro_zimmer == "JOANA RIBEIRO",
+      unhighlighted_colour = alpha(cor_pontos, .15), use_direct_label = FALSE,
+      label_params = list(size = 3, 
+                          label.padding = unit(0.01, "lines"),
+                          label.size = NA, fill = "transparent",  hjust = 0.5, vjust = 0,
+                          color = cores_dadosjusbr[["cinza_azulado"]])
+    ) +
+    scale_x_continuous(label = scales::number) +
+    labs(
+      title = str_glue("Rendimentos mensais na categoria {categ}"),
+      subtitle = "Membros do TJSC - 2021",
+      x = "Valor em R$",
+      y = NULL,
+      caption = "Cada ponto é um pagamento mensal feito para um membro em 2021",
+      color = NULL
+    ) +
+    theme(legend.position = "bottom", legend.justification = "right")
+  
+}
+```
+
+### Direitos eventuais
+
+```{r}
+#| fig-height: 10
+plot_rendimentos(base_tjsc, "Direitos-Eventuais")
+```
+
+### Contracheque
+
+```{r}
+#| fig-height: 9
+plot_rendimentos(base_tjsc, "Contracheque")
+```
+
+### Indenizações
+
+```{r}
+#| fig-height: 10
+plot_rendimentos(base_tjsc, "Indenizações")
+```
+
