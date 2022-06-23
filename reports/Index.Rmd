@@ -15,3 +15,4 @@ Temos no repositório:
 - [Índice de Transparência - Ministérios Públicos](https://dadosjusbr.github.io/acompanhamento-dados/indice-transparencia-mp.html)
 - [Gráficos para o relatório - Ministérios Públicos](https://dadosjusbr.github.io/acompanhamento-dados/graficos-relatorios-mp.html)
 - [Gráficos para a página inicial do DadosJusBr](https://dadosjusbr.github.io/acompanhamento-dados/indice-de-transparencia-plots-front.html)
+- [TJSC: Exemplo de consulta e anáise de pacote de dados com R](https://dadosjusbr.github.io/acompanhamento-dados/tjsc-2021.html)
