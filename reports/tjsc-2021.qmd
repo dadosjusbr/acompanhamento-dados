@@ -1,5 +1,5 @@
 ---
-title: "Quanto ganha a juíza de SC que impediu uma criança de realizar um procedimento de aborto legal?"
+title: "Juíza do TJSC que impediu um procedimento de aborto legal em criança vítima de violência sexual tem rendimentos acima do teto remuneratório de R$39,2 mil"
 format:
  html:
   toc: true
@@ -110,14 +110,14 @@ base_tjsc <- left_join(remuneracao, contra_cheque) %>%
 
 ### Objetivo da análise
 
-O objetivo desta análise é fazer um levantamento dos rendimentos da juíza [Joana Ribeiro Zimmer](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml) do Tribunal de Justiça de Santa Catarina. A juíza ficou conhecida por impedir o aborto legal de uma criança que sofreu violência sexual e estava com 22 semanas de gestação. O caso foi revelado por uma [matéria do The Intercept Brasil](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/).
+O objetivo desta análise é fazer um levantamento dos rendimentos da juíza [Joana Ribeiro Zimmer](https://g1.globo.com/sc/santa-catarina/noticia/2022/06/22/quem-e-joana-ribeiro-zimmer-juiza-que-impediu-o-aborto-de-uma-menina-de-11-anos-que-foi-estuprada.ghtml) do Tribunal de Justiça de Santa Catarina. A juíza ficou conhecida por impedir o aborto legal de uma criança que sofreu violência sexual. O caso foi revelado por uma [matéria do The Intercept Brasil](https://theintercept.com/2022/06/20/video-juiza-sc-menina-11-anos-estupro-aborto/).
 
 ### Dados
 
 Os dados são do próprio TJSC e foram disponibilizados de forma estruturada para análise pelo projeto 
 [DadosJusBr](https://dadosjusbr.org/), que é realizado pela Transparência Brasil em parceria com o Instituto Federal de Alagoas e a Universidade Federal de Campina Grande.
 
-O [DadosJusBr](https://dadosjusbr.org/) é uma plataforma que recupera, padroniza e publica como dado aberto continuamente os dados dos órgãos do sistema de justiça brasileiro. Até maio de 2022 foram publicados dados mensais de salários, indenizações, gratificações e diárias de 54 órgãos. Para essa análise foram extraídos os [dados do **Tribunal de Justiça de Santa Catarina** para o ano de 2021](https://dadosjusbr.org/download/datapackage/tjsc/tjsc-2021.zip).
+O [DadosJusBr](https://dadosjusbr.org/) é uma plataforma que recupera, padroniza e publica como dado aberto continuamente os dados dos órgãos do sistema de justiça brasileiro. Até maio de 2022 foram publicados dados mensais de salários, indenizações, gratificações e diárias de 54 órgãos. Para essa análise foram extraídos os [dados do Tribunal de Justiça de Santa Catarina para o ano de 2021](https://dadosjusbr.org/download/datapackage/tjsc/tjsc-2021.zip).
 
 Como o TJSC não disponibiliza dados de matrícula, a busca pelos dados da Joana Ribeiro Zimmer foi feita pelo seu nome, especificado nos dados como `JOANA RIBEIRO`. A relação completa dos nomes dos magistrados está [disponível no final deste relatório](http://localhost:7034/?capabilities=1&host=http%3A%2F%2F127.0.0.1%3A63588#rela%C3%A7%C3%A3o-de-nomes-de-magistrados-do-tjsc)
 
@@ -172,13 +172,15 @@ base_tjsc %>%
 
 ### Rendimentos e descontos por categorias
 
+Apesar de os ganhos da juíza superarem o teto remuneratório em várias ocasiões, não foram encontrados registros de descontos para rubrica que equipara ganhos aos R\$39,2 mil estabelecidos pela lei.
+
 O salário-base da juíza é fixado em R$32 mil reais. No grupo de indenizações, os ganhos são relativos ao auxílio saúde (R\$1.556 por mês) e ao auxílio alimentação (R\$1.160 por mês). 
 
 Na rubrica de direitos eventuais, os ganhos com gratificação natalina (incluíndo antecipação) somaram R\$ 54.527 e foram pagos em uma parcela de R\$ 17.722 em abril e R\$36.805 em novembro de 2021.
 
 ```{r}
 diarias <- "Diárias"
-direitos_eventuais <-  "Direitos eventuais\n(Pagamentos retroativos, férias,\nLicença prêmio, gratificação natalina,\nantecipação de gratificação natalina,\nsubstituição)"
+direitos_eventuais <-  "Direitos eventuais\n(Pagamentos retroativos, férias, Licença prêmio,\ngratificação natalina, substituição)"
 indenizacoes <- "Indenizações\n(Auxílio saúde e alimentação)"
 contracheque <- "Salário base\n(contracheque)"
 descontos <- "Descontos\n(IR e Previdência)"
@@ -226,31 +228,123 @@ base_tjsc %>%
   scale_y_continuous(expand = c(0, 0), label = reais_mil, breaks = c(-15e3, 0, 3e4, 6e4, 9e4), limits = c(-4e4, 1e5)) +
   scale_x_date(date_breaks = "month", date_labels = "%b") +
   labs(
-    title = "Folha de pagamento da juíza Joana Ribeiro Zimmer",
+    title = "Folha de pagamento da juíza Joana Ribeiro Zimmer - TJSC - 2021",
     fill = "Categoria",
     y = "Valor em milhares de R$",
     x = NULL
   )
 ```
 
-Outra rubrica que garantiu altos ganhos para a magistrada foi a referente aos pagamentos retroativos, da catgoria de direitos eventuais:
+Somente no ano de 2021 a soma dos rendimentos líquidos da juíza totalizaram R\$ 518.992:
 
 ```{r}
+#| fig-width: 10
+reais_mil <- function(x) scales::dollar(x/1e3, decimal.mark = ",", big.mark = " ", prefix = "R$ ", suffix = "mil")
+base_tjsc %>% 
+  filter(nome == "JOANA RIBEIRO") %>%
+  filter(categoria != "direitos-pessoais") %>% 
+  mutate(
+    catg = case_when(
+      natureza == "D" ~ descontos,
+      item == "Diárias" ~ diarias,
+      categoria == "indenizações" ~ indenizacoes,
+      categoria == "direitos-eventuais" ~ direitos_eventuais,
+      TRUE ~ contracheque
+    ) %>% ordered(levels = lbls)) %>% 
+  group_by(catg) %>% 
+  summarise(valor = sum(valor), .groups = "drop") %>% 
+  ggplot(aes(x = reorder(catg, valor), y = valor, fill = reorder(catg, valor))) +
+  geom_col() +
+  geom_text(aes(label = reais_mil(valor)), hjust = -.1) +  
+  scale_fill_manual(
+    values = paleta,
+    guide = NULL
+  ) +
+  coord_flip() +
+  scale_y_continuous(label = reais_mil, limits = c(-2e5, 5e5)) +
+  labs(
+    title = "Folha de pagamento da juíza Joana Ribeiro Zimmer - 2021 - TJSC",
+    subtitle = "Valores acumulados",
+    y = " Valor em milhares de R$",
+    x = NULL
+  ) +
+  theme(
+    axis.text.y = element_text(size = 8, vjust = .7),
+    axis.text.x = element_text(size = 8)
+  )
+```
+
+Outra rubrica que garantiu altos ganhos para a magistrada foi a referente aos pagamentos retroativos, da catgoria de direitos eventuais. Em um único mês foram pagos mais de R\$ 35 mil.
+
+```{r}
+reais_mil <- function(x) scales::dollar(x/1e3, decimal.mark = ",", big.mark = " ", prefix = "R$ ", suffix = "\nmil")
 base_tjsc %>% 
   filter(nome == "JOANA RIBEIRO") %>%
   filter(item == "Pagamentos retroativos") %>% 
   group_by(data, item) %>% 
   summarise(valor = sum(valor)) %>% 
   ggplot(aes(x = data, y = valor, fill = item)) +
-  geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
-  geom_area(fill = cores_dadosjusbr[["cyan"]], alpha = .7) +
-  geom_text(aes(label = reais_mil(valor)), color = cores_dadosjusbr[["cinza_azulado"]], fontface = "bold", vjust = -.1) +
+  geom_col(fill = cores_dadosjusbr[["verde"]], alpha = .7) +
+  geom_text(aes(label = reais_mil(valor)), color = cores_dadosjusbr[["cinza_azulado"]],
+            size = 2.5, fontface = "bold", vjust = 1) +
   scale_y_continuous(labels = reais_mil) +
   scale_x_date(date_breaks = "month", date_labels = "%b") + 
   labs(
     title = "Pagamentos retroativos - direitos eventuais",
     subtitle = "Juíza Joana Ribeiro Zimmer (TJSC)",
-    y = "Valor em R$",
+    y = NULL,
+    x = NULL
+  ) +
+  theme(
+    panel.grid.minor.x = element_blank()
+  )
+```
+
+Os pagamentos de licença prêmio indenizada gerou receitas regulares para a juíza de até R\$ 7.210 no mês:
+
+```{r}
+base_tjsc %>% 
+  filter(nome == "JOANA RIBEIRO") %>%
+  filter(item == "LIC PREMIO INDENIZADA") %>% 
+  group_by(data, item) %>% 
+  summarise(valor = sum(valor)) %>% 
+  ggplot(aes(x = data, y = valor, fill = item)) +
+
+  geom_col(fill = cores_dadosjusbr[["cyan"]], alpha = .7) +
+  geom_text(aes(label = reais_mil(valor)), color = cores_dadosjusbr[["cinza_azulado"]],
+            size = 2.5, fontface = "bold", vjust = 1) +
+  scale_y_continuous(labels = reais_mil) +
+  scale_x_date(date_breaks = "month", date_labels = "%b") + 
+  labs(
+    title = "Pagamentos de Licença prêmio indenizada - direitos eventuais",
+    subtitle = "Juíza Joana Ribeiro Zimmer (TJSC)",
+    y = NULL,
+    x = NULL
+  ) +
+  theme(
+    panel.grid.minor.x = element_blank()
+  )
+```
+
+Pagamentos de férias também foram receitas que contribuíram bastante para os ganhos na folha de pagamento da juíza:
+
+```{r}
+base_tjsc %>% 
+  filter(nome == "JOANA RIBEIRO") %>%
+  filter(item == "Indenização de férias") %>% 
+  group_by(data, item) %>% 
+  summarise(valor = sum(valor)) %>% 
+  ggplot(aes(x = data, y = valor, fill = item)) +
+  geom_col(fill = cores_dadosjusbr[["laranja"]], alpha = .7) +
+  geom_text(aes(label = reais_mil(valor)), 
+            color = cores_dadosjusbr[["cinza_azulado"]],
+            size = 2.5, fontface = "bold", vjust = 1) +
+  scale_y_continuous(labels = reais_mil) +
+  scale_x_date(date_breaks = "month", date_labels = "%b") + 
+  labs(
+    title = "Pagamentos de férias indenizada - direitos eventuais",
+    subtitle = "Juíza Joana Ribeiro Zimmer (TJSC)",
+    y = NULL,
     x = NULL
   ) +
   theme(
