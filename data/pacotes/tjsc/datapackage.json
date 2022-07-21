@@ -1,0 +1,467 @@
+{
+  "aid": "tjsc",
+  "contributors": [
+    {
+      "role": "author",
+      "title": "DadosJusBR"
+    }
+  ],
+  "description": "Remunerações do Sistema de Justiça Brasileiro, libertadas por DadosJusBR",
+  "homepage": "https://dadosjusbr.org",
+  "keywords": [
+    "justice-system",
+    "payments",
+    "remunerações",
+    "sistema-de-justiça"
+  ],
+  "licenses": [
+    {
+      "name": "CC-BY-4.0",
+      "path": "https://creativecommons.org/licenses/by/4.0/",
+      "title": "Creative Commons Attribution 4.0"
+    }
+  ],
+  "name": "remuneracoes-jusbr",
+  "profile": "tabular-data-package",
+  "resources": [
+    {
+      "encoding": "utf-8",
+      "name": "coleta",
+      "path": "coleta.csv",
+      "profile": "tabular-data-resource",
+      "schema": {
+        "fields": [
+          {
+            "Constraints": {
+              "required": true
+            },
+            "description": "The Unique Key of collection",
+            "description-ptbr": "A chave única da coleta ",
+            "format": "default",
+            "name": "chave_coleta",
+            "title": "Chave coleta",
+            "type": "string"
+          },
+          {
+            "Constraints": {
+              "required": true
+            },
+            "description": "The ID of agency",
+            "description-ptbr": "A sigla da agência",
+            "format": "default",
+            "name": "orgao",
+            "title": "órgão",
+            "type": "string"
+          },
+          {
+            "bareNumber": false,
+            "constraints": {
+              "maximum": "12",
+              "minimum": "0",
+              "required": true
+            },
+            "description": "Month of data collection",
+            "description-ptbr": "O mês que os dados foram coletados",
+            "format": "default",
+            "name": "mes",
+            "title": "Mês",
+            "type": "integer"
+          },
+          {
+            "constraints": {
+              "minimum": "0",
+              "required": true
+            },
+            "description": "Year of data collection",
+            "description-ptbr": "O ano que os dados foram coletados",
+            "name": "ano",
+            "title": "Ano",
+            "type": "integer"
+          },
+          {
+            "constraints": {
+              "minimum": "0",
+              "required": true
+            },
+            "description": "Timestamp mark of data crawled",
+            "description-ptbr": "Contém o tempo em que o dado foi coletado.",
+            "name": "timestamp_coleta",
+            "title": "Ano",
+            "type": "time"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "The name of the repository that performed the collection",
+            "description-ptbr": "O nome do repositório que realizou a coleta",
+            "format": "default",
+            "name": "repositorio_coletor",
+            "title": "Repositório Coletor",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Version of the collector that performed the collection",
+            "description-ptbr": "Versão do coletor que realizou a coleta",
+            "format": "default",
+            "name": "versao_coletor",
+            "title": "Versão do coletor",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Directory of the collector who performed the collection",
+            "description-ptbr": "Diretório do coletor que realizou a coleta",
+            "format": "default",
+            "name": "dir_coletor",
+            "title": "Diretório do coletor",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "encoding": "utf-8",
+      "name": "contra_cheque",
+      "path": "contra_cheque.csv",
+      "profile": "tabular-data-resource",
+      "schema": {
+        "fields": [
+          {
+            "Constraints": {
+              "required": true
+            },
+            "description": "Payroll identifier",
+            "description-ptbr": "Identificador da folha de pagamento",
+            "format": "default",
+            "name": "id_contra_cheque",
+            "title": "Identificador da folha de pagamento",
+            "type": "string"
+          },
+          {
+            "Constraints": {
+              "required": true
+            },
+            "description": "The Unique Key of collection",
+            "description-ptbr": "A chave única da coleta ",
+            "format": "default",
+            "name": "chave_coleta",
+            "title": "Chave coleta",
+            "type": "string"
+          },
+          {
+            "Constraints": {
+              "required": true
+            },
+            "description": "Employee Name",
+            "description-ptbr": "O nome do membro",
+            "format": "default",
+            "name": "nome",
+            "title": "Nome do membro",
+            "type": "string"
+          },
+          {
+            "description": "Employee registration word",
+            "description-ptbr": "A palavra que refere-se ao identificador de registro do empregado",
+            "format": "default",
+            "name": "matricula",
+            "title": "Matrícula do membro",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Role of the employee",
+            "description-ptbr": "A função do membro",
+            "format": "default",
+            "name": "funcao",
+            "title": "Função",
+            "type": "string"
+          },
+          {
+            "description": "Employee workplace",
+            "description-ptbr": "O local onde o membro está alocado",
+            "format": "default",
+            "name": "local_trabalho",
+            "title": "Local de trabalho",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "MEMBRO",
+                "SERVIDOR"
+              ],
+              "required": true
+            },
+            "description": "Describe if the employee is a servidor, membro, pensionista or indefinido",
+            "description-ptbr": "Descreve se o empregado é um servidor ou membro",
+            "format": "default",
+            "name": "tipo",
+            "title": "Type",
+            "type": "string"
+          },
+          {
+            "description": "Active or inactive employee",
+            "description-ptbr": "Descreve se o funcionário está ativo ou inativo",
+            "name": "ativo",
+            "title": "Active",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "encoding": "utf-8",
+      "name": "remuneracao",
+      "path": "remuneracao.csv",
+      "profile": "tabular-data-resource",
+      "schema": {
+        "fields": [
+          {
+            "Constraints": {
+              "required": true
+            },
+            "description": "Payroll identifier",
+            "description-ptbr": "Identificador da folha de pagamento",
+            "format": "default",
+            "name": "id_contra_cheque",
+            "title": "Identificador da folha de pagamento",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "The Unique Key of collection",
+            "description-ptbr": "A chave única da coleta ",
+            "format": "default",
+            "name": "chave_coleta",
+            "title": "Chave coleta",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "R",
+                "D"
+              ],
+              "required": true
+            },
+            "description": "Describe whether it is an income or a discount",
+            "description-ptbr": "Descreve se é um rendimento ou um desconto",
+            "format": "default",
+            "name": "natureza",
+            "title": "Natureza",
+            "type": "string"
+          },
+          {
+            "description": "Subdivision that is associated",
+            "description-ptbr": "Subdivisão que está associado",
+            "format": "default",
+            "name": "categoria",
+            "title": "Categoria",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "item name",
+            "description-ptbr": "Nome do ítem",
+            "format": "default",
+            "name": "item",
+            "title": "Ítem",
+            "type": "string"
+          },
+          {
+            "description": "Describe employee wage",
+            "description-ptbr": "Corresponde ao valor do ítem",
+            "name": "valor",
+            "title": "Valor",
+            "type": "number"
+          }
+        ]
+      }
+    },
+    {
+      "encoding": "utf-8",
+      "name": "metadados",
+      "path": "metadados.csv",
+      "profile": "tabular-data-resource",
+      "schema": {
+        "fields": [
+          {
+            "Constraints": {
+              "required": true
+            },
+            "description": "Does the data collection need login?",
+            "description-ptbr": "É necessário login para coleta dos dados?",
+            "format": "default",
+            "name": "nao_requer_login",
+            "title": "Não Requer Login",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Does the data collection need captcha?",
+            "description-ptbr": "É necessário captcha para coleta dos dados?",
+            "format": "default",
+            "name": "nao_requer_captcha",
+            "title": "Não Requer Captcha",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "ACESSO_DIRETO",
+                "AMIGAVEL_PARA_RASPAGEM",
+                "RASPAGEM_DIFICULTADA",
+                "NECESSITA_SIMULACAO_USUARIO"
+              ],
+              "required": true
+            },
+            "description": "Can we build a URL that leads to the data download based on agency/month/year?",
+            "description-ptbr": "Conseguimos prever/construir uma URL com base no órgão/mês/ano que leve ao download do dado?",
+            "format": "default",
+            "name": "acesso",
+            "title": "Acesso",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "PDF",
+                "ODS",
+                "XLS",
+                "JSON",
+                "CSV"
+              ],
+              "required": true
+            },
+            "description": "Extension of the original data file.",
+            "description-ptbr": "Extensao do arquivo de dados, ex: CSV, JSON, XLS, etc",
+            "format": "default",
+            "name": "extensao",
+            "title": "Extensão",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Is the available data tidy?",
+            "description-ptbr": "Órgãos que disponibilizam dados limpos (tidy data)",
+            "format": "default",
+            "name": "estritamente_tabular",
+            "title": "Estritamente Tabular",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Has the data changed since last month?",
+            "description-ptbr": "Órgão alterou a forma de expor seus dados entre o mês em questão e o mês anterior?",
+            "format": "default",
+            "name": "formato_consistente",
+            "title": "Formato Consistente",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Does the agency publicize the employee id?",
+            "description-ptbr": "Órgão disponibiliza matrícula do servidor?",
+            "format": "default",
+            "name": "tem_matricula",
+            "title": "Tem Matrícula",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Does the agency publicize the employee workplace?",
+            "description-ptbr": "Órgão disponibiliza lotação do servidor?",
+            "format": "default",
+            "name": "tem_lotacao",
+            "title": "Tem Lotação",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "required": true
+            },
+            "description": "Does the agency publicize the employee role?",
+            "description-ptbr": "Órgão disponibiliza a função do servidor?",
+            "format": "default",
+            "name": "tem_cargo",
+            "title": "Tem Cargo",
+            "type": "boolean"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "AUSENCIA",
+                "SUMARIZADO",
+                "DETALHADO"
+              ],
+              "required": true
+            },
+            "description": "Detail level of the base remuneration (wage).",
+            "description-ptbr": "Quão detalhado é a publicação da receita base.",
+            "format": "default",
+            "name": "detalhamento_receita_base",
+            "title": "Detalhamento Receita Base",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "AUSENCIA",
+                "SUMARIZADO",
+                "DETALHADO"
+              ],
+              "required": true
+            },
+            "description": "Detail level of other remunerations.",
+            "description-ptbr": "Quão detalhado é a publicação das demais receitas.",
+            "format": "default",
+            "name": "detalhamento_outras_receitas",
+            "title": "Detalhamento Outras Despesas",
+            "type": "string"
+          },
+          {
+            "constraints": {
+              "enum": [
+                "AUSENCIA",
+                "SUMARIZADO",
+                "DETALHADO"
+              ],
+              "required": true
+            },
+            "description": "Detail level of the base discounts.",
+            "description-ptbr": "Quão detalhado é a publicação dos descontos.",
+            "format": "default",
+            "name": "detalhamento_descontos",
+            "title": "Detalhamento Descontos",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "title": "Remunerações do Sistema de Justiça Brasileiro",
+  "version": "1.0.0",
+  "year": 2021
+}
