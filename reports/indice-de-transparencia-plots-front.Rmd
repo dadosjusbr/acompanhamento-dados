@@ -22,7 +22,6 @@ knitr::opts_chunk$set(tidy = FALSE,
 
 set.seed(1014)
 options(digits = 2, scipen = 999, OutDec = ",", hrbrthemes.loadfonts = TRUE)
-Sys.setenv(LANGUAGE = "pt-br")
 ```
 
 ```{r libs, echo=FALSE, warning=FALSE, message=FALSE}
@@ -87,7 +86,9 @@ theme_adjust_waffle = theme(
 )
 
 # pega os órgãos da API
-orgaos = fromJSON("https://api.dadosjusbr.org/v1/orgaos") %>% as_tibble()
+orgaos = "https://api.dadosjusbr.org/v1/orgaos" %>% 
+  fromJSON() %>% 
+  as_tibble()
 
 # Função para pegar dados da API
 get_data = function(aid, ano){
