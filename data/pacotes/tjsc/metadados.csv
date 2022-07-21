@@ -1,0 +1,13 @@
+chave_coleta,nao_requer_login,nao_requer_captcha,acesso,extensao,estritamente_tabular,formato_consistente,tem_matricula,tem_lotacao,tem_cargo,detalhamento_receita_base,detalhamento_outras_receitas,detalhamento_descontos
+tjsc/01/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/02/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/03/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/05/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/06/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/07/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/08/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/09/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/10/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/11/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/04/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO
+tjsc/12/2021,true,true,NECESSITA_SIMULACAO_USUARIO,XLS,true,true,false,false,false,DETALHADO,DETALHADO,DETALHADO

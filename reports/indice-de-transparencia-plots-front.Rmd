@@ -22,7 +22,6 @@ knitr::opts_chunk$set(tidy = FALSE,
 
 set.seed(1014)
 options(digits = 2, scipen = 999, OutDec = ",", hrbrthemes.loadfonts = TRUE)
-Sys.setenv(LANGUAGE = "pt-br")
 ```
 
 ```{r libs, echo=FALSE, warning=FALSE, message=FALSE}
@@ -31,6 +30,7 @@ library(lubridate)
 library(jsonlite)
 library(scales)
 library(extrafont)
+library(here)
 ```
 
 ```{r style, echo=FALSE, warning=FALSE, message=FALSE}
@@ -86,7 +86,9 @@ theme_adjust_waffle = theme(
 )
 
 # pega os órgãos da API
-orgaos = fromJSON("https://api.dadosjusbr.org/v1/orgaos") %>% as_tibble()
+orgaos = "https://api.dadosjusbr.org/v1/orgaos" %>% 
+  fromJSON() %>% 
+  as_tibble()
 
 # Função para pegar dados da API
 get_data = function(aid, ano){
@@ -746,7 +748,7 @@ plot_mp <- indice_mps_media_geral %>%
   #   color = guide_legend(order = 1, label.theme = element_text(size = 12))
   # )
 
-pngfile <- fs::path(knitr::fig_path(),  "indice-transparencia-mps.png")
+pngfile <- fs::path(knitr::fig_path(), "indice-transparencia-mps.png")
 ragg::agg_png(pngfile, width = 850, height = 850, res = 100)
 plot_mp
 invisible(dev.off())
@@ -1409,7 +1411,7 @@ plot_tj <- indice_tjs_media_geral %>%
     )
   )
 
-pngfile <- fs::path(knitr::fig_path(),  "indice-transparencia-tjs.png")
+pngfile <- fs::path(knitr::fig_path(), "indice-transparencia-tjs.png")
 ragg::agg_png(pngfile, width = 800, height = 1000, res = 100)
 plot_tj
 invisible(dev.off())

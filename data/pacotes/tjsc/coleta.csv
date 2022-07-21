@@ -1,0 +1,13 @@
+chave_coleta,orgao,mes,ano,timestamp_coleta,repositorio_coletor,versao_coletor,dir_coletor
+tjsc/01/2021,tjsc,1,2021,2022-01-05T13:16:34.754011Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/02/2021,tjsc,2,2021,2022-01-05T13:22:13.170723Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/03/2021,tjsc,3,2021,2022-01-05T13:27:57.039388Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/05/2021,tjsc,5,2021,2022-01-05T13:39:49.041342Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/06/2021,tjsc,6,2021,2022-01-05T13:45:33.972128Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/07/2021,tjsc,7,2021,2022-01-05T13:51:20.920396Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/08/2021,tjsc,8,2021,2022-01-05T13:57:02.518376Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/09/2021,tjsc,9,2021,2022-01-05T14:02:44.621749Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/10/2021,tjsc,10,2021,2022-01-05T14:08:26.231924Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/11/2021,tjsc,11,2021,2022-01-05T14:14:23.885603Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/04/2021,tjsc,4,2021,2022-01-05T13:34:05.861812Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
+tjsc/12/2021,tjsc,12,2021,2022-01-10T13:34:17.966852Z,https://github.com/dadosjusbr/coletor-cnj,unspecified,
