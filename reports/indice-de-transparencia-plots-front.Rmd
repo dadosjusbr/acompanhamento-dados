@@ -31,6 +31,7 @@ library(lubridate)
 library(jsonlite)
 library(scales)
 library(extrafont)
+library(here)
 ```
 
 ```{r style, echo=FALSE, warning=FALSE, message=FALSE}
@@ -746,7 +747,7 @@ plot_mp <- indice_mps_media_geral %>%
   #   color = guide_legend(order = 1, label.theme = element_text(size = 12))
   # )
 
-pngfile <- fs::path(knitr::fig_path(),  "indice-transparencia-mps.png")
+pngfile <- fs::path(knitr::fig_path(), "indice-transparencia-mps.png")
 ragg::agg_png(pngfile, width = 850, height = 850, res = 100)
 plot_mp
 invisible(dev.off())
@@ -1409,7 +1410,7 @@ plot_tj <- indice_tjs_media_geral %>%
     )
   )
 
-pngfile <- fs::path(knitr::fig_path(),  "indice-transparencia-tjs.png")
+pngfile <- fs::path(knitr::fig_path(), "indice-transparencia-tjs.png")
 ragg::agg_png(pngfile, width = 800, height = 1000, res = 100)
 plot_tj
 invisible(dev.off())
