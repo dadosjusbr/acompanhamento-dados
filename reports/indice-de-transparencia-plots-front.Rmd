@@ -108,7 +108,8 @@ get_data_safe <- safely(get_data)
 ## Dados
 
 ```{r dados-mp}
-mps = orgaos %>% filter(entity %in% c("Ministério", "M"), type %in% c("Estadual", "E"))
+mps = orgaos %>% filter(str_detect(aid, "^mp"))
+  #filter(entity %in% c("Ministério", "M"), type %in% c("Estadual", "E"))
 
 coletado_mps = mps %>%
   mutate(ano = c(2018:2022, rep(2022, nrow(mps) - 5))) %>% 
