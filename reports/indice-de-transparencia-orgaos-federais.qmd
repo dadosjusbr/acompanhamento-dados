@@ -1,0 +1,1228 @@
+---
+title: "Índice de transparência - DadosJusBr"
+lang: pt-BR
+format:
+  html:
+    anchor-sections: true
+    code-fold: true
+    code-tools: true
+    code-link: true
+    code-line-numbers: true
+    code-summary: "Código"
+    toc: true
+    toc-title: "Índice"
+    toc-depth: 4
+    footnotes-hover: true
+    smooth-scroll: true
+    fig-width: 9
+    search: true
+    theme:
+          light: flatly
+          dark: darkly
+knitr:
+  opts_chunk: 
+    echo: false
+    collapse: true
+    message: false
+    warning: false
+    comment: "#>" 
+editor_options: 
+  chunk_output_type: console
+execute: 
+  cache: false
+---
+
+```{=html}
+<style>
+.nav-tabs .nav-link {
+    margin-bottom: -1px;
+    background: none;
+    border: 1px solid transparent;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    color: "#3e5363";
+    font-size: 0.875em;
+    background-color: #F5F5F5;
+}
+.nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
+    color: #B361C6;
+    background-color: #F5F5F5;
+    border-color: #dee2e6 #dee2e6 #fff;
+    font-size: 1em;
+}
+.tab-content {
+    margin-top: 0px;
+    border-left: #dee2e6 1px solid;
+    border-right: #dee2e6 1px solid;
+    border-bottom: #dee2e6 1px solid;
+    background-color: #F5F5F5;
+    margin-left: 0;
+    padding: 1em;
+    margin-bottom: 1em;
+}
+</style>
+```
+
+```{r}
+#| label: libs
+library(tidyverse)
+library(lubridate)
+library(jsonlite)
+library(scales)
+library(extrafont)
+library(here)
+```
+
+```{r}
+#| label: plot-aesthetics
+
+# peguei as cores do site e criei um vetor com nomes fáceis de lembrar
+cores_dadosjusbr <- c(
+  lilas = "#B361C6",
+  cyan = "#2FBB96",
+  cinza_azulado = "#3e5363",
+  verde = "#96ba2f",
+  laranja = "#F2C94C",
+  cinza_claro = "#F5F5F5"
+)
+
+itens_categoria <- c(
+  # - Facilidade:
+  "login_nao_necessario" = "Requer login",
+  "captcha_nao_necessario" = "Necessário captcha",
+  "acesso" = "Acesso",
+  "manteve_consistencia_no_formato" = "Manteve consistência no formato",
+  "dados_estritamente_tabulares" = "Formato estritamente tabular",
+  # - Completude:
+  "tem_matricula" = "Possui nome e matrícula",
+  "tem_lotacao" = "Possui lotação",
+  "tem_cargo" = "Possui cargo",
+  "remuneracao_basica" = "Dados de remuneração básica",
+  "despesas" = "Dados de despesas",
+  "outras_receitas" = "Dados de outras remunerações"
+)
+
+# cores para índices
+cores_indice <- c(
+  "Transparência" = cores_dadosjusbr[["cyan"]],
+  "Completude" = cores_dadosjusbr[["laranja"]],
+  "Facilidade" = cores_dadosjusbr[["lilas"]]
+)
+
+# cores para classificar se requer login
+cores_login_nao_necessario <- c(
+  "Não requer login" = cores_dadosjusbr[["cyan"]],
+  "Requer login" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores para classificar necessidade de captcha
+cores_captcha_nao_necessario <- c(
+  "Não requer captcha" = cores_dadosjusbr[["cyan"]],
+  "Requer captcha" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores para classificar acesso
+cores_acesso <- c(
+  "Acesso direto" = cores_dadosjusbr[["verde"]],
+  "Amigável para raspagem" = cores_dadosjusbr[["cyan"]],
+  "Raspagem dificultada" = cores_dadosjusbr[["lilas"]],
+  "Necessita simulação de usuário" = cores_dadosjusbr[["laranja"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores se manteve consistência no formato
+cores_manteve_consistencia_no_formato <- c(
+  "Manteve consistência no formato" = cores_dadosjusbr[["cyan"]],
+  "Não manteve consistência no formato" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores para tabularidade dos dados
+cores_dados_estritamente_tabulares <- c(
+  "Dados estritamente tabulares" = cores_dadosjusbr[["cyan"]],
+  "Dados não tabulares" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores para presença de nome e matricula
+cores_tem_matricula <- c(
+  "Possui nome e matrícula" = cores_dadosjusbr[["cyan"]],
+  "Não possui nome e matrícula" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores para presença de lotação de membro
+cores_tem_lotacao <- c(
+  "Possui lotação" = cores_dadosjusbr[["cyan"]],
+  "Não possui lotação" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores para presença de cargo de membro
+cores_tem_cargo <- c(
+  "Possui cargo" = cores_dadosjusbr[["cyan"]],
+  "Não possui cargo" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+# cores para dados de remuneracao básica, outras receitas ou despesas
+cores_remuneracoes <- c(
+  "Detalhado" = cores_dadosjusbr[["cyan"]],
+  "Sumarizado" = cores_dadosjusbr[["laranja"]],
+  "Ausência" = cores_dadosjusbr[["lilas"]],
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+)
+
+hrbrthemes::import_roboto_condensed()
+extrafont::loadfonts()
+theme_set(hrbrthemes::theme_ipsum_rc())
+
+theme_update(
+  axis.ticks.x = element_line(),
+  plot.title = element_text(color = "black", size = 14),
+  plot.subtitle = element_text(color = cores_dadosjusbr[["cinza_azulado"]]),
+  plot.background = element_rect(fill = cores_dadosjusbr[["cinza_claro"]], color = "transparent"),
+  axis.text.x = element_text(color = cores_dadosjusbr[["cinza_azulado"]], face = "bold"),
+  axis.text.y = element_text(color = cores_dadosjusbr[["cinza_azulado"]], face = "bold"),
+  axis.title.x = element_text(color = "black", face = "bold"),
+  axis.title.y = element_text(color = "black", face = "bold"),
+  legend.text = element_text(color = "black", face = "bold"),
+  legend.title = element_text(color = "black", face = "bold"),
+  strip.text = element_text(color = cores_dadosjusbr[["cinza_azulado"]], face = "bold"),
+  panel.background = element_blank(),
+  text = element_text(family = "Roboto Condensed")
+)
+
+hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]], 
+                                      family = "Roboto Condensed")
+
+theme_adjust_waffle = theme(
+  legend.position = "top",
+  legend.direction = "vertical",
+  legend.justification = "left",
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.spacing = unit(2, "mm")
+)
+```
+
+```{r}
+#| label: consulta-api
+
+# pega os órgãos da API
+orgaos <- "https://api.dadosjusbr.org/v1/orgaos" %>%
+  fromJSON() %>%
+  as_tibble()
+
+# Função para pegar dados da API
+get_data = function(aid, ano){
+  message(str_glue("get {aid} {ano}"))
+  Sys.sleep(.3)
+  fromJSON(
+    str_glue("https://api.dadosjusbr.org/v1/dados/{aid}/{ano}")
+  )
+}
+
+get_data_safe <- safely(get_data)
+```
+
+
+# Órgãos Federais
+
+Atualizado em `r str_glue("{day(today())}/{month(today())}/{year(today())}")`
+
+```{r}
+#| label: orgaos-federais
+
+orgaos_federais <- orgaos %>% filter(uf == "Federal")
+
+coletado_federais <- orgaos_federais %>%
+  mutate(ano = c(2018:2022, rep(2022, nrow(orgaos_federais) - 5))) %>%
+  expand(aid, ano) %>%
+  mutate(a1 = map2(aid, ano, get_data_safe))
+
+dados_federais <- coletado_federais %>%
+  unnest(a1) %>%
+  group_by(aid, ano) %>%
+  mutate(tipo = c("df", "error")) %>%
+  ungroup() %>%
+  filter(tipo != "error") %>%
+  select(-ano, -tipo) %>%
+  unnest(a1)
+
+indice_feds_full <- dados_federais %>%
+  select(aid, mes, ano, Meta) %>%
+  unnest(Meta) %>%
+  mutate(
+    aid = aid %>%
+      toupper() %>%
+      gsub("^(\\w*)(\\d)$", "\\1-\\2", .),
+    across(where(is.logical), replace_na, FALSE)
+  ) %>% 
+  complete(mes, ano, aid) %>%
+  mutate(data = my(str_glue("{mes}-{ano}")))
+
+indice_feds <- indice_feds_full %>% 
+  transmute(
+
+    # colunas de data e identificação de órgão
+    mes, ano, data, aid,
+
+    # Agrupamento de órgãos
+    grp = case_when(
+      aid == "MPF" ~ "Ministério Público Federal",
+      aid == "STJ" ~ "Supremo Tribunal de Justiça",
+      TRUE ~ "Tribunal Regional Federal"
+    ),
+    aid_ord = case_when(
+      aid == "MPF" ~ -1L,
+      aid == "STJ" ~ 0L,
+      TRUE ~ as.integer(str_extract(aid, "\\d"))
+    ),
+    aid = reorder(aid, -aid_ord),
+
+    # define se é necessário login
+    login_nao_necessario = case_when(
+      login_nao_necessario ~ "Não requer login",
+      !login_nao_necessario ~ "Requer login",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Não requer login", 
+      "Requer login",
+      "Órgão não prestou contas"
+    )),
+
+    # define se é necessário captcha
+    captcha_nao_necessario = case_when(
+      captcha_nao_necessario ~ "Não requer captcha",
+      !captcha_nao_necessario ~ "Requer captcha",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Não requer captcha",
+      "Requer captcha",
+      "Órgão não prestou contas"      
+    )),
+
+    # define o tipo de acesso aos dados
+    acesso = case_when(
+      acesso == "ACESSO_DIRETO" ~ "Acesso direto",
+      acesso == "AMIGAVEL_PARA_RASPAGEM" ~ "Amigável para raspagem",
+      acesso == "RASPAGEM_DIFICULTADA" ~ "Raspagem dificultada",
+      acesso == "NECESSITA_SIMULACAO_USUARIO" ~ "Necessita simulação de usuário",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Acesso direto",
+      "Amigável para raspagem",
+      "Raspagem dificultada",
+      "Necessita simulação de usuário",
+      "Órgão não prestou contas"
+    )),
+
+    # define consistência de formato de dado
+    manteve_consistencia_no_formato = case_when(
+      manteve_consistencia_no_formato ~ "Manteve consistência no formato",
+      !manteve_consistencia_no_formato ~ "Não manteve consistência no formato",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Manteve consistência no formato",
+      "Não manteve consistência no formato",
+      "Órgão não prestou contas"
+    )),
+
+    # define tabularidade dos dados
+    dados_estritamente_tabulares = case_when(
+      dados_estritamente_tabulares ~ "Dados estritamente tabulares",
+      !dados_estritamente_tabulares ~ "Dados não tabulares",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Dados estritamente tabulares",
+      "Dados não tabulares",
+      "Órgão não prestou contas"
+    )),
+
+    # define presença de nome e matrícula
+    tem_matricula = case_when(
+      tem_matricula ~ "Possui nome e matrícula",
+      !tem_matricula ~ "Não possui nome e matrícula",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Possui nome e matrícula",
+      "Não possui nome e matrícula",
+      "Órgão não prestou contas"
+    )),
+
+    # define presença de lotação de membro
+    tem_lotacao = case_when(
+      tem_lotacao ~ "Possui lotação",
+      !tem_lotacao ~ "Não possui lotação",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Possui lotação",
+      "Não possui lotação",
+      "Órgão não prestou contas"
+    )),
+
+    # define presença de nome/cargo de membro
+    tem_cargo = case_when(
+      tem_cargo ~ "Possui cargo",
+      !tem_cargo ~ "Não possui cargo",
+      TRUE ~ "Órgão não prestou contas"
+    ) %>% ordered(levels = c(
+      "Possui cargo",
+      "Não possui cargo",
+      "Órgão não prestou contas"
+    )),
+
+    # define dados de remuneração básica, despesas e outras receitas
+    across(c(remuneracao_basica, despesas, outras_receitas), 
+      ~ case_when(
+        . == "DETALHADO" ~ "Detalhado",
+        . == "SUMARIZADO" ~ "Sumarizado",
+        . == "AUSENCIA" ~ "Ausência",
+        TRUE ~ "Órgão não prestou contas"
+      ) %>% ordered(levels = c(
+        "Detalhado",
+        "Sumarizado",
+        "Ausência",
+        "Órgão não prestou contas"
+    )))
+  )
+```
+
+```{r}
+#| label: plot-categoria
+
+plot_categoria <- function(df, orgao, categoria, pallete) {
+  df <- df %>% filter(aid %in% orgao)
+  plot_title <- str_glue("{itens_categoria[[categoria]]} | {unique(df$grp)}")
+  df %>% 
+    ggplot(aes_string(x = "data", y = "aid", fill = categoria)) +
+    facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
+    geom_tile(color = "gray90") +
+    scale_fill_manual(values = pallete) +
+    scale_x_date(
+      date_breaks = "3 months",
+      date_labels = "%b"
+    ) +
+    theme_adjust_waffle +
+    labs(
+      x = "Cada célula representa 1 mês",
+      y = NULL,
+      title = plot_title,
+      fill = NULL
+    ) +
+    guides(fill = guide_legend(ncol = 3)) +
+    scale_y_discrete(expand = c(0, 0))
+}
+```
+
+## Índice de Facilidade
+
+- Requer login
+- Necessário captcha
+- Formato de acesso
+- Manteve consistência no formato
+- Formato estritamente tabular
+
+### Requer Login
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "login_nao_necessario",
+  pallete = cores_login_nao_necessario
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "login_nao_necessario",
+  pallete = cores_login_nao_necessario
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "login_nao_necessario",
+  pallete = cores_login_nao_necessario
+)
+```
+
+:::
+
+### Necessário captcha
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "captcha_nao_necessario",
+  pallete = cores_captcha_nao_necessario
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "captcha_nao_necessario",
+  pallete = cores_captcha_nao_necessario
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "captcha_nao_necessario",
+  pallete = cores_captcha_nao_necessario
+)
+```
+
+:::
+
+### Acesso
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "acesso",
+  pallete = cores_acesso
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "acesso",
+  pallete = cores_acesso
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "acesso",
+  pallete = cores_acesso
+)
+```
+
+:::
+
+### Manteve consistência no formato
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "manteve_consistencia_no_formato",
+  pallete = cores_manteve_consistencia_no_formato
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "manteve_consistencia_no_formato",
+  pallete = cores_manteve_consistencia_no_formato
+)
+#validar
+#indice_feds_full %>% filter(aid == "MPF", ano == 2019, mes %in% c(6, 7)) %>% glimpse()
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "manteve_consistencia_no_formato",
+  pallete = cores_manteve_consistencia_no_formato
+)
+```
+
+:::
+
+### Formato estritamente tabular
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "dados_estritamente_tabulares",
+  pallete = cores_dados_estritamente_tabulares
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "dados_estritamente_tabulares",
+  pallete = cores_dados_estritamente_tabulares
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "dados_estritamente_tabulares",
+  pallete = cores_dados_estritamente_tabulares
+)
+```
+
+:::
+
+## Índice de Completude
+
+- Nome e matrícula
+- Lotação
+- Cargo
+- Remuneração básica
+- Outras receitas
+- Detalhamento de despesas
+
+### Nome e matrícula
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "tem_matricula",
+  pallete = cores_tem_matricula
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "tem_matricula",
+  pallete = cores_tem_matricula
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "tem_matricula",
+  pallete = cores_tem_matricula
+)
+```
+
+:::
+
+### Lotação
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "tem_lotacao",
+  pallete = cores_tem_lotacao
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "tem_lotacao",
+  pallete = cores_tem_lotacao
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "tem_lotacao",
+  pallete = cores_tem_lotacao
+)
+```
+
+:::
+
+### Cargo
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "tem_cargo",
+  pallete = cores_tem_cargo
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "tem_cargo",
+  pallete = cores_tem_cargo
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "tem_cargo",
+  pallete = cores_tem_cargo
+)
+```
+
+:::
+
+### Remuneração básica
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "remuneracao_basica",
+  pallete = cores_remuneracoes
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "remuneracao_basica",
+  pallete = cores_remuneracoes
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "remuneracao_basica",
+  pallete = cores_remuneracoes
+)
+```
+
+:::
+
+### Despesas
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "despesas",
+  pallete = cores_remuneracoes
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "despesas",
+  pallete = cores_remuneracoes
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "despesas",
+  pallete = cores_remuneracoes
+)
+```
+
+:::
+
+### Outras receitas
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds, 
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  categoria = "outras_receitas",
+  pallete = cores_remuneracoes
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "MPF",
+  categoria = "outras_receitas",
+  pallete = cores_remuneracoes
+)
+
+#validar
+#indice_feds_full %>% filter(aid == "MPF", ano == 2019, mes %in% c(6, 7)) %>% glimpse()
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_categoria(
+  df = indice_feds,
+  orgao = "STJ",
+  categoria = "outras_receitas",
+  pallete = cores_remuneracoes
+)
+```
+
+:::
+
+## Índice de Transparência
+
+```{r}
+
+# indice_feds_full %>% glimpse()
+# indice_feds_full %>% count(login_nao_necessario)
+# indice_feds_full %>% count(captcha_nao_necessario)
+# indice_feds_full %>% count(acesso)
+# indice_feds_full %>% count(dados_estritamente_tabulares)
+# indice_feds_full %>% count(manteve_consistencia_no_formato)
+# indice_feds_full %>% count(dados_estritamente_tabulares)
+# indice_feds_full %>% count(manteve_consistencia_no_formato)
+# indice_feds_full %>% count(tem_lotacao)
+# indice_feds_full %>% count(tem_cargo)
+# indice_feds_full %>% count(remuneracao_basica)
+# indice_feds_full %>% count(despesas)
+# indice_feds_full %>% count(outras_receitas)
+
+criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
+
+indices_feds_long <- indice_feds_full %>% 
+  select(-extensao) %>% 
+  mutate(
+    # Atribui pontuação para acesso
+    acesso = case_when(
+      acesso == "ACESSO_DIRETO" ~ 1,
+      acesso == "AMIGAVEL_PARA_RASPAGEM" ~ 0.5,
+      acesso == "RASPAGEM_DIFICULTADA" ~ 0.25,
+      acesso == "NECESSITA_SIMULACAO_USUARIO" ~ 0,
+      TRUE ~ NA_real_
+    ),
+    # Atribui pontuações para classificações de receitas e descontos
+    across(c(remuneracao_basica, despesas, outras_receitas),
+      ~ case_when(
+        . == "DETALHADO" ~ 1,
+        . == "SUMARIZADO" ~ 0.5,
+        . == "AUSENCIA" ~ 0,
+        TRUE ~ NA_real_
+    ))
+  ) %>% 
+  pivot_longer(-c(aid, ano, mes, data), names_to = "criterio", values_to = "pontuacao") %>%
+  mutate(
+    criterio = case_when(
+      criterio == "login_nao_necessario" ~ "Login não necessário",
+      criterio == "captcha_nao_necessario" ~ "Captcha não necessário",
+      criterio == "acesso" ~ "Acesso",
+      criterio == "dados_estritamente_tabulares" ~ "Dados estritamente tabulares",
+      criterio == "manteve_consistencia_no_formato" ~ "Manteve consistência no formato",
+      criterio == "remuneracao_basica" ~ "Remuneração básica",
+      criterio == "outras_receitas" ~ "Outras receitas",
+      criterio == "despesas" ~ "Despesas",
+      criterio == "tem_matricula" ~ "Tem matrícula",
+      criterio == "tem_lotacao" ~ "Tem lotação",
+      criterio == "tem_cargo" ~ "Tem cargo",
+      TRUE ~ criterio
+    ),
+    dimensao = if_else(criterio %in% criterios, "Completude", "Facilidade"),
+    status = if_else(is.na(pontuacao), "Órgão não prestou contas", "Ok"),
+    pontuacao = replace_na(pontuacao, 0),
+    # correção para critérios de facilidade nos TJ devem refletir a plataforma do CNJ
+    pontuacao = case_when(
+      criterio == "Login não necessário" & status != "Ok" ~ 1,
+      criterio == "Captcha não necessário" & status != "Ok" ~ 1,
+      criterio == "Acesso" & status != "Ok" ~ 0,
+        criterio == "Dados estritamente tabulares" & status != "Ok" ~ 1,
+      criterio == "Manteve consistência no formato" & status != "Ok" ~ 1,
+      TRUE ~ pontuacao
+    )
+  )
+
+# Função que faz o cálculo da média harmônica em `indice`
+media_harmonica <- function(x,y) if_else(x + y == 0, 0, ((x * y) / (x + y)) * 2)
+
+# `indice_pontuacoes` contém os índices de Completude, Facilidade e Transparência
+indices_feds_pontuacoes <- indices_feds_long %>%
+  group_by(mes, ano, aid, dimensao) %>%
+  summarise(indice = mean(pontuacao), .groups = "drop") %>%
+  pivot_wider(names_from = dimensao, values_from = indice) %>% 
+  mutate(Transparência = media_harmonica(Completude, Facilidade))
+
+# `indice_media_geral`: média aritmética simples dos índices de todo o período
+indices_feds_media_geral <- indices_feds_pontuacoes %>%
+  group_by(aid) %>%
+  summarise(across(c(Completude, Facilidade, Transparência), mean, .groups = "drop"))
+```
+
+```{r}
+#| label: plot-indice-transparencia
+
+
+
+
+plot_indices <- function(df, cut_orgao, center = 1.1) {
+  df %>% 
+     pivot_longer(-aid, names_to = "dimensao", values_to = "pontuacao") %>%
+     mutate(
+       aid_ord = case_when(
+         aid == "MPF" ~ -1L,
+         aid == "STJ" ~ 0L,
+         TRUE ~ as.integer(str_extract(aid, "\\d"))
+       ),
+       aid = reorder(aid, -aid_ord),
+     )  %>% 
+     filter(str_detect(aid, str_extract(cut_orgao, "\\w+"))) %>%
+     ggplot(aes(
+       y = aid,
+       x = pontuacao
+     )) +
+     geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
+     geom_point(
+       data = . %>% filter(dimensao != "Transparência"),
+       aes(fill = dimensao, size = dimensao),
+       shape = 21,
+       size = 3.5
+     ) +
+     geom_point(
+       data = . %>%
+         filter(dimensao == "Transparência") %>%
+         mutate(indice = "Índice de Transparência"),
+       size = .25
+     ) +
+     geom_point(
+       data = . %>%
+         filter(dimensao == "Transparência") %>%
+         mutate(indice = "Índice de Transparência"),
+       aes(color = indice),
+       size = 6,
+       alpha = .7
+     ) +
+     scale_x_continuous(
+       limits = c(-.01, 1.3),
+       breaks = c(0, .25, .5, .75, 1),
+       minor_breaks = c(.25, .75),
+       expand = c(.001, 0)
+     ) +
+     scale_fill_manual(values = c(
+       "Completude" = cores_dadosjusbr[["laranja"]],
+       "Facilidade" = cores_dadosjusbr[["lilas"]]
+     ), guide = "none") +
+     scale_color_manual(
+       values = cores_dadosjusbr[["cyan"]],
+       guide = "none"
+     ) +
+     geom_curve(
+       data = . %>% filter(aid == cut_orgao, dimensao == "Transparência"),
+       aes(x = center, xend = pontuacao, y = aid, yend = aid),
+       color = cores_dadosjusbr[["cinza_azulado"]],
+       size = .3, arrow = arrow(length = unit(2, "mm")), curvature = -0.15
+     ) +
+     geom_label(
+       data = . %>% filter(aid == cut_orgao, dimensao == "Transparência"), 
+       size = 3, 
+       label.r = unit(.3, "lines"),
+       lineheight = 1.1,
+       aes(
+         x = center,
+         y = aid,
+         label = str_glue(" índice de\nTransparência é uma\nmédia harmônica\ndas pontuações\nobtidas nas dimensões\nCompletude e Facilidade")
+       ),
+       fontface = "bold"
+     ) +
+     labs(
+       title = NULL,
+       x = "Pontuação",
+       y = NULL,
+       fill = NULL,
+       color = NULL
+     ) +
+     theme(
+       plot.title = element_text(size = 13),
+       axis.title.x = element_text(vjust = -.5, hjust = .8),
+       axis.ticks.x = element_blank(),
+       axis.text.x = element_text(vjust = -.2),
+       legend.position = "top",
+       legend.justification = "left",
+       legend.background = element_rect(
+         fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
+         color = "transparent"
+       )
+     )
+}
+```
+
+::: {.panel-tabset}
+
+#### Tribunal Regional Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indices(
+  df = indices_feds_media_geral,
+  cut_orgao = "TRF-2"
+)
+```
+
+#### Ministério Público Federal
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indices(
+  df = indices_feds_media_geral,
+  cut_orgao = "MPF",
+  center = 1.5
+)
+```
+
+#### Superior Tribunal de Justiça
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indices(
+  df = indices_feds_media_geral,
+  cut_orgao = "STJ"
+)
+```
+
+:::
