@@ -175,6 +175,7 @@ cores_remuneracoes <- c(
   "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
 )
 
+# uso de fontes e plot-aesthetics
 hrbrthemes::import_roboto_condensed()
 extrafont::loadfonts()
 theme_set(hrbrthemes::theme_ipsum_rc())
@@ -217,7 +218,7 @@ orgaos <- "https://api.dadosjusbr.org/v1/orgaos" %>%
   as_tibble()
 
 # Função para pegar dados da API
-get_data = function(aid, ano){
+get_data <- function(aid, ano){
   message(str_glue("get {aid} {ano}"))
   Sys.sleep(.3)
   fromJSON(
@@ -236,13 +237,16 @@ Atualizado em `r str_glue("{day(today())}/{month(today())}/{year(today())}")`
 ```{r}
 #| label: orgaos-federais
 
+# seleção de órgãos
 orgaos_federais <- orgaos %>% filter(uf == "Federal")
 
+# coleta de dados da APi
 coletado_federais <- orgaos_federais %>%
   mutate(ano = c(2018:2022, rep(2022, nrow(orgaos_federais) - 5))) %>%
   expand(aid, ano) %>%
   mutate(a1 = map2(aid, ano, get_data_safe))
 
+# Acesso aos campos de interesse em "Meta"
 dados_federais <- coletado_federais %>%
   unnest(a1) %>%
   group_by(aid, ano) %>%
@@ -252,6 +256,7 @@ dados_federais <- coletado_federais %>%
   select(-ano, -tipo) %>%
   unnest(a1)
 
+# Tabela completa
 indice_feds_full <- dados_federais %>%
   select(aid, mes, ano, Meta) %>%
   unnest(Meta) %>%
@@ -264,6 +269,7 @@ indice_feds_full <- dados_federais %>%
   complete(mes, ano, aid) %>%
   mutate(data = my(str_glue("{mes}-{ano}")))
 
+# Prepara os campos para plotar waffle charts
 indice_feds <- indice_feds_full %>% 
   transmute(
 
