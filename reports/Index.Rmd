@@ -17,3 +17,7 @@ Temos no repositório:
 - [Gráficos para a página inicial do DadosJusBr](https://dadosjusbr.github.io/acompanhamento-dados/indice-de-transparencia-plots-front.html)
 - [TJSC: Exemplo de consulta e anáise de pacote de dados com R](https://dadosjusbr.github.io/acompanhamento-dados/tjsc-2021.html)
 - [Validação e cálculo de índice de Transparência para TRF's, MPF e STJ](https://dadosjusbr.github.io/acompanhamento-dados/indice-de-transparencia-orgaos-federais.html)
+
+## Novo!
+
+- [Reformulação do índice de transparência](https://dadosjusbr.github.io/acompanhamento-dados/indice-de-transparencia.html) 
