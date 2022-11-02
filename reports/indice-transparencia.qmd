@@ -3,6 +3,8 @@ title: "Índice de transparência - DadosJusBr"
 lang: pt-BR
 format:
   html:
+    html-math-method: katex
+    css: style.css
     anchor-sections: true
     code-fold: true
     code-tools: true
@@ -35,48 +37,6 @@ execute:
   cache: false
 ---
 
-```{=html}
-<style>
-
-h1, h2, h3, h4 {
-    margin: 4;
-    padding: 4;
-}
-
-p {
-    margin: 3;
-    padding: 3;
-}
-
-.nav-tabs .nav-link {
-    margin-bottom: -1px;
-    background: none;
-    border: 1px solid transparent;
-    border-top-left-radius: .25rem;
-    border-top-right-radius: .25rem;
-    color: "#3e5363";
-    font-size: 0.875em;
-    background-color: #F5F5F5;
-}
-.nav-tabs .nav-link.active, .nav-tabs .nav-item.show .nav-link {
-    color: #B361C6;
-    background-color: #F5F5F5;
-    border-color: #dee2e6 #dee2e6 #fff;
-    font-size: 1em;
-}
-.tab-content {
-    margin-top: 0px;
-    border-left: #dee2e6 1px solid;
-    border-right: #dee2e6 1px solid;
-    border-bottom: #dee2e6 1px solid;
-    background-color: #F5F5F5;
-    margin-left: 0;
-    padding: 1em;
-    margin-bottom: 1em;
-}
-</style>
-```
-
 ```{r}
 #| label: libs-e-setup
 library(tidyverse)
@@ -86,64 +46,13 @@ library(scales)
 library(extrafont)
 library(here)
 library(gt)
-source(here("src/plot-aesthetics.R"), encoding = "utf-8")
-```
-
-```{r}
-#| label: consulta-api
-
-# Função para pegar dados da API
-get_data <- function(aid, ano) {
-  message(str_glue("get {aid} {ano}"))
-  Sys.sleep(.3)
-  fromJSON(
-    str_glue("https://api.dadosjusbr.org/v1/dados/{aid}/{ano}")
-  )
-}
-
-get_data_safe <- safely(get_data)
-
-# Lista de órgãos categorizados por grupo e subgrupo
-orgaos <- "https://api.dadosjusbr.org/v1/orgaos" %>%
-  fromJSON() %>%
-  as_tibble()
-```
-
-Atualizado em `r str_glue("{day(today())}/{month(today())}/{year(today())}")`
-
-```{r}
-#| label: carrega-dado-api
-#| eval: false
-
-coletado <- orgaos %>%
-  select(aid, name, type, entity, uf) %>%
-  crossing(ano = 2018:2022, .) %>%
-  arrange(aid, ano) %>%
-  mutate(a1 = map2(aid, ano, get_data_safe)) %>%
-  unnest(a1) %>%
-  group_by(aid, ano) %>%
-  mutate(tipo = c("df", "error")) %>%
-  ungroup()
-
-erros_de_coleta <- coletado %>%
-  filter(tipo == "error") %>%
-  mutate(erro_de_coleta = !map_lgl(a1, is.null))
-
-dados <- coletado %>%
-  filter(tipo != "error") %>%
-  select(-ano, -tipo) %>%
-  unnest(a1)
-
-saveRDS(dados, here(str_glue("data/load/dados-{Sys.Date()}.rds")))
-```
-
-```{r}
-#| label: carrega-dado-local
+source(here("src/00-plot-aesthetics.R"), encoding = "utf-8")
+#source(here("src/01-indices-e-pesos.R"), encoding = "utf-8")
 
 # carregando os dados em disco
-dados <- "data/load" %>%
+indices <- "data/load" %>%
   here() %>%
-  list.files(pattern = "dados-2022-\\d{2}-\\d{2}", full.names = TRUE) %>%
+  list.files(pattern = "indices-2022-\\d{2}-\\d{2}", full.names = TRUE) %>%
   file.info() %>%
   rownames_to_column(var = "file") %>%
   filter(ctime == max(ctime)) %>%
@@ -151,56 +60,13 @@ dados <- "data/load" %>%
   readRDS()
 ```
 
-```{r}
-#| label: agrupando-orgaos
-
-indices_full <- dados %>%
-    mutate(
-    # cria um grupo mais amplo
-    grupo = case_when(
-      str_detect(aid, "^tj") ~ "Tribunal de Justiça",
-      str_detect(aid, "^mp[^f$]") ~ "Ministério Público",
-      str_detect(aid, "^tr") ~ "Tribunal Regional",
-      TRUE ~ "Órgãos superiores"
-    ),
-    # cria subgrupos mais granulares
-    subgrupo = case_when(
-      grupo == "Tribunal de Justiça" & type == "Estadual" ~ "Tribunais de Justiça estaduais",
-      grupo == "Tribunal de Justiça" & type != "Estadual" & str_detect(name, "Militar") ~ "Tribunais de Justiça Militar",
-      grupo == "Ministério Público" ~ "Ministérios Públicos estaduais",
-      grupo == "Tribunal Regional" & uf == "Federal" ~  "Tribunais Regionais Federais",
-      grupo == "Tribunal Regional" & uf == "Trabalho" ~  "Tribunais Regionais do Trabalho",
-      TRUE ~ "Órgãos superiores"
-    ),
-    # recodifica siglas de órgão (maiúscula e com hífen)
-    aid = case_when(
-      grupo == "Ministério Público" ~ gsub("^(mp)(.+)$", "\\1-\\2", aid),
-      subgrupo == "Tribunais de Justiça estaduais" ~ gsub("^(tj)(.+)$", "\\1-\\2", aid),
-      subgrupo == "Tribunais de Justiça Militar" ~ gsub("^(tjm)(.+)$", "\\1-\\2", aid),
-      grupo == "Tribunal Regional" ~ gsub("^([a-z]+)(\\d{1,2})$", "\\1-\\2", aid),
-      TRUE ~ aid
-    ) %>% toupper()
-  ) %>%
-  select(aid, mes, ano, Meta, subgrupo) %>%
-  unnest(Meta) %>%
-  mutate(across(where(is.logical), replace_na, FALSE)) %>%
-  complete(mes, ano, nesting(aid, subgrupo)) %>%
-  mutate(
-    data = my(str_glue("{mes}-{ano}")),
-    periodo_invalido = if_else(
-      ano == year(today()) & mes > month(today()),
-      TRUE, FALSE
-    )
-  )
-```
-
 ## Distribuição dos Pesos
 
 ```{r}
 #| label: tbl-pesos
-gsheet <- googlesheets4::read_sheet(
-  "https://docs.google.com/spreadsheets/d/1xEx525Dxnk0BtS4-3f2SM9vHQr_tMXXY3maUIKnfYfk/edit#gid=0"
-)
+
+gsheet <- "1xEx525Dxnk0BtS4-3f2SM9vHQr_tMXXY3maUIKnfYfk"
+gsheet <- googlesheets4::read_sheet(gsheet)
 
 wgt_table <- function(df, criterio) {
   df %>% 
@@ -255,8 +121,9 @@ wgt_table <- function(df, criterio) {
       )
     ) %>% 
     cols_width(
-     Item ~ px(300),
-     Label ~ px(400)
+     Item ~ pct(30),
+     Label ~ pct(30),
+     Peso ~ pct(30)
     ) %>% 
     tab_style(
       style = cell_fill(color = cores_dadosjusbr[["cinza_claro"]]),
@@ -272,190 +139,24 @@ wgt_table <- function(df, criterio) {
 }
 ```
 
-### Critérios de Facilidade
+:::{.column-body-outset}
 
-Serão agrupadas métricas relacionadas a dificuldade para acessar os dados que estão disponíveis de forma automatizada.
+### Critérios de Facilidade
 
 ```{r}
 #| label: wgt-table-facilidade
+#| panel: fill
 wgt_table(gsheet, "Facilidade")
 ```
 
 ### Critérios de Completude
 
-Aqui serão agrupadas métricas relacionadas a disponibilidade dos dados.
-
 ```{r}
+#| panel: fill
 #| label: wgt-table-completude
 wgt_table(gsheet, "Completude")
 ```
-
-```{r}
-#| label: recodifica-categorias
-
-indices <- indices_full %>% 
-  transmute(
-
-    # colunas de data e identificação de órgão
-    mes, ano, data, periodo_invalido, aid, subgrupo,
-
-    ##
-    ## FACILIDADE
-    ##
-
-    # define o tipo de acesso aos dados
-    acesso = case_when(
-      acesso == "ACESSO_DIRETO" ~ "Acesso direto",
-      acesso == "AMIGAVEL_PARA_RASPAGEM" ~ "Acesso direto",
-      acesso == "RASPAGEM_DIFICULTADA" ~ "Raspagem dificultada",
-      acesso == "NECESSITA_SIMULACAO_USUARIO" ~ "Necessita simulação de usuário",
-      TRUE ~ "Órgão não prestou contas"
-    ) %>% ordered(levels = c(
-      "Acesso direto",
-      # "Amigável para raspagem",
-      "Raspagem dificultada",
-      "Necessita simulação de usuário",
-      "Órgão não prestou contas"
-    )),
-
-    # define um peso para ordenar as categorias
-    acesso_wgt = case_when(
-      acesso == "Acesso direto" ~ 1,
-      acesso == "Raspagem dificultada" ~ 0.5,
-      acesso == "Necessita simulação de usuário" ~ 0.0,
-      acesso == "Órgão não prestou contas" ~ -1
-    ),
-
-    # define consistência de formato de dado
-    manteve_consistencia_no_formato = case_when(
-      manteve_consistencia_no_formato ~ "Manteve consistência no formato",
-      !manteve_consistencia_no_formato ~ "Não manteve consistência no formato",
-      TRUE ~ "Órgão não prestou contas"
-    ) %>% ordered(levels = c(
-      "Manteve consistência no formato",
-      "Não manteve consistência no formato",
-      "Órgão não prestou contas"
-    )),
-
-    # define um peso para ordenar as categorias
-    manteve_consistencia_no_formato_wgt = case_when(
-      manteve_consistencia_no_formato == "Manteve consistência no formato" ~ 1,
-      manteve_consistencia_no_formato == "Não manteve consistência no formato" ~ 0,
-      manteve_consistencia_no_formato == "Órgão não prestou contas" ~ -1
-    ),
-
-    # define tabularidade dos dados
-    dados_estritamente_tabulares = case_when(
-      dados_estritamente_tabulares ~ "Dados estritamente tabulares",
-      !dados_estritamente_tabulares ~ "Dados não tabulares",
-      TRUE ~ "Órgão não prestou contas"
-    ) %>% ordered(levels = c(
-      "Dados estritamente tabulares",
-      "Dados não tabulares",
-      "Órgão não prestou contas"
-    )),
-
-    # define um peso para ordenar as categorias
-    dados_estritamente_tabulares_wgt = case_when(
-      dados_estritamente_tabulares == "Dados estritamente tabulares" ~ 1,
-      dados_estritamente_tabulares == "Dados não tabulares" ~ 0,
-      dados_estritamente_tabulares == "Órgão não prestou contas" ~ -1
-    ),
-
-    # define uso de formato aberto
-    extensao = if_else(is.na(extensao), "Órgão não prestou contas", extensao),
-
-    # define um peso para ordenar as categorias
-    extensao_wgt = case_when(
-      extensao == "HTML" ~ 4,
-      extensao == "ODS" ~ 3,
-      extensao == "CSV" ~ 2,
-      extensao == "XLS" ~ 1,
-      extensao == "Órgão não prestou contas" ~ 0
-    ),
-
-    # define uso de formato aberto (binário)
-    formato_aberto = case_when(
-      extensao %in% c("HTML", "ODS") ~ "Formato Aberto",
-      extensao == "Órgão não prestou contas" ~ extensao,
-      TRUE ~ "Formato Proprietário"
-    ),
-
-    # define um peso para ordenar as categorias
-    formato_aberto_wgt = case_when(
-      formato_aberto == "Formato Aberto" ~ 1,
-      formato_aberto == "Formato Proprietário" ~ 0,
-      TRUE ~ -1
-    ),
-
-    ##
-    ## COMPLETUDE
-    ##
-
-    # define presença e ausência de de matricula e nome
-    tem_matricula = case_when(
-      tem_matricula ~ "Possui nome e matrícula",
-      !tem_matricula ~ "Não possui nome e matrícula",
-      TRUE ~ "Órgão não prestou contas"
-    ),
-
-    # define um peso para ordenar as categorias
-    tem_matricula_wgt = case_when(
-      tem_matricula == "Possui nome e matrícula" ~ 1,
-      tem_matricula == "Não possui nome e matrícula" ~ 0,
-      tem_matricula == "Órgão não prestou contas" ~ -1
-    ),
-
-    # define presença e ausência de cargo
-    tem_cargo = case_when(
-      tem_cargo ~ "Possui cargo",
-      !tem_cargo ~ "Não possui cargo",
-      TRUE ~ "Órgão não prestou contas"
-    ),
-
-    # define um peso para ordenar as categorias
-    tem_cargo_wgt = case_when(
-      tem_cargo == "Possui cargo" ~ 1,
-      tem_cargo == "Não possui cargo" ~ 0,
-      tem_cargo == "Órgão não prestou contas" ~ -1
-    ),
-
-    # define presença e ausência de cargo
-    tem_lotacao = case_when(
-      tem_lotacao ~ "Possui lotação",
-      !tem_lotacao ~ "Não possui lotação",
-      TRUE ~ "Órgão não prestou contas"
-    ),
-
-    # define um peso para ordenar as categorias
-    tem_lotacao_wgt = case_when(
-      tem_lotacao == "Possui lotação" ~ 1,
-      tem_lotacao == "Não possui lotação" ~ 0,
-      tem_lotacao == "Órgão não prestou contas" ~ -1
-    ),
-
-  # define dados de remuneração básica, despesas e outras receitas
-  across(
-    .cols = c(remuneracao_basica, despesas, outras_receitas), 
-    .fns = ~ case_when(
-      . == "DETALHADO" ~ "Dados detalhados",
-      . == "SUMARIZADO" ~ "Dados sumarizados",
-      . == "AUSENCIA" ~ "Dados ausentes",
-      TRUE ~ "Órgão não prestou contas"
-  )),
-  
-  # define pesos para ordenar categorias
-  across(
-    .cols = c(remuneracao_basica, despesas, outras_receitas),
-    .names = "{.col}_wgt",
-    .fns = ~ case_when(
-      . == "Dados detalhados" ~ 1,
-      . == "Dados sumarizados" ~ 0.5,
-      . == "Dados ausentes" ~ 0,
-      . == "Órgão não prestou contas" ~ -1
-  ))
-)
-```
+:::
 
 ```{r}
 #| label: plot-categoria
@@ -464,6 +165,7 @@ plot_categoria <- function(df, orgao, categoria, pallete) {
   df <- df %>% filter(aid %in% orgao)
   plot_title <- str_glue("{itens_categoria[[categoria]]} | {unique(df$subgrupo)}")
   df %>%
+    filter(!periodo_invalido) %>% 
     ggplot(aes_string(x = "data", y = "aid", fill = categoria)) +
     facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
     geom_tile(color = "gray90") +
@@ -496,7 +198,7 @@ plot_categoria <- function(df, orgao, categoria, pallete) {
 #| warning: false
 #| message: false
 
-indices_full %>%
+indices %>%
   distinct(aid, subgrupo) %>%
   group_by(subgrupo) %>%
   nest() %>%
@@ -507,16 +209,13 @@ indices_full %>%
 ```
 
 ## Índice de Facilidade
-### Formato de acesso
 
-**Descrição**: Se é possível acessar os dados programaticamente através de URLs que seguem boas práticas; se é necessário raspar os dados de forma facilitada (por meio de páginas e URLs com boas práticas de estrutura); se é necessário raspagem complexa; ou se é necessário simular um usuário usando um navegador (pior caso);
+### Acesso
 
-
-- **Valores**
-    - $1,00$:Acesso direto (`ACESSO_DIRETO` & `AMIGAVEL_PARA_RASPAGEM`)
-    - $0,50$: Raspagem dificultada (`RASPAGEM_DIFICULTADA`)
-    - $0,25$: Necessita simulação de usuário (`NECESSITA_SIMULACAO_USUARIO`)
-    - Órgão não prestou contas (`NA`)
+- Acesso direto (`ACESSO_DIRETO` & `AMIGAVEL_PARA_RASPAGEM`)
+- Raspagem dificultada (`RASPAGEM_DIFICULTADA`)
+- Necessita simulação de usuário (`NECESSITA_SIMULACAO_USUARIO`)
+- Órgão não prestou contas (`NA`)
 
 ::: {.panel-tabset}
 
@@ -626,10 +325,8 @@ indices %>%
 
 ### Manteve consistência no formato
 
-Essa métrica captura se houve mudanças no formato como os dados foram estruturados e disponibilizados com relação ao mês anterior;
-
-- $1$: Manteve consistência no formato (`TRUE`)
-- $0$: Não manteve consistência no formato (`FALSE`)
+- Manteve consistência no formato (`TRUE`)
+- Não manteve consistência no formato (`FALSE`)
 - Órgão não prestou contas (`NA`)
 
 ::: {.panel-tabset}
@@ -740,12 +437,9 @@ indices %>%
 
 ### Dados Estritamente Tabulares
 
-Os dados estão em formato que permite importação direta em software de análise ou precisam ser processados primeiro (por ex. por estarem em um doc ou pdf).
-
-- $1$ Dados estritamente tabulares (`TRUE`)
-- $0$ Dados não tabulares (`FALSE`)
+- Dados estritamente tabulares (`TRUE`)
+- Dados não tabulares (`FALSE`)
 - Órgão não prestou contas (`NA`)
-
 
 ::: {.panel-tabset}
 
@@ -853,17 +547,17 @@ indices %>%
 
 :::
 
-### Possui formato aberto
 
-Os dados são diponibilizados em uma extensão que é formato aberto ou formato proprietário?
+### Possui formato aberto
 
 #### Extensão
 
-- $1$ HTML (`Formato Aberto`)
-- $1$ ODS (`Formato Aberto`)
-- $0$ CSV (`Formato Proprietário`)
-- $0$ XLS (`Formato Proprietário`)
+- CSV (`Formato Proprietário`)
+- HTML (`Formato Aberto`)
+- ODS (`Formato Aberto`)
+- XLS (`Formato Proprietário`)
 - Órgão não prestou contas (`NA`)
+
 
 ::: {.panel-tabset}
 
@@ -956,8 +650,8 @@ indices %>%
 
 #### Formato Aberto ou Proprietário
 
-- $0$ Formato aberto (`ODS, HTML`)
-- $1$ Formato Proprietário (`XLS, CSV`)
+- Formato aberto (`ODS, HTML`)
+- Formato Proprietário (`XLS, CSV`)
 - Órgão não prestou contas (`NA`)
 
 ::: {.panel-tabset}
@@ -1053,10 +747,8 @@ indices %>%
 
 ### Possui Nome e Matrícula
 
-Nome e número de identificação do funcionário
-
-- $1$ Possui nome e matrícula (`TRUE`)
-- $0$ Não possui lotação (`FALSE`)
+- Possui nome e matrícula (`TRUE`)
+- Não possui lotação (`FALSE`)
 - Órgão não prestou contas (`NA`)
 
 ::: {.panel-tabset}
@@ -1165,12 +857,10 @@ indices %>%
 
 :::
 
-### Possui lotação
+### Possui Lotação
 
-Local onde o servidor exerce as atribuições e responsabilidades do cargo.
-
-- $1$: Possui lotação (`TRUE`)
-- $0$: Não possui lotação (`FALSE`)
+- Possui lotação (`TRUE`)
+- Não possui lotação (`FALSE`)
 - Órgão não prestou contas (`NA`)
 
 ::: {.panel-tabset}
@@ -1279,12 +969,10 @@ indices %>%
 
 :::
 
-### Possui cargo
+### Possui Cargo
 
-Função que se exerce numa organização.
-
-- $1$: Possui cargo (`TRUE`)
-- $0$: Não possui cargo (`FALSE`)
+- Possui cargo (`TRUE`)
+- Não possui cargo (`FALSE`)
 - Órgão não prestou contas (`NA`)
 
 ::: {.panel-tabset}
@@ -1395,14 +1083,11 @@ indices %>%
 
 ### Remuneração básica
 
-Para o **Ministério Público** o valor da remuneração básica é composto pela soma do valor da remuneração do cargo efetivo e o valor correspondente a outras verbas remuneratórias, legais ou judiciais, como adicionais por tempo de serviço, por exemplo. 
-
-Já para o **Judiciário** esse valor é o correspondente ao subsídio mensal, parcela única, à qual é vedado o acréscimo de qualquer gratificação, adicional, abono, prêmio, verba de representação ou outra espécie remuneratória, de qualquer origem;
-
-- $1,0$: Dados detalhados (`DETALHADO`)
-- $0,5$: Dados sumarizados (`SUMARIZADO`)
-- $0,0$: Dados ausentes (`AUSENTE`)
+- Dados detalhados (`DETALHADO`)
+- Dados sumarizados (`SUMARIZADO`)
+- Dados ausentes (`AUSENTE`)
 - Órgão não presou contas (`NA`)
+
 
 ::: {.panel-tabset}
 
@@ -1512,12 +1197,11 @@ indices %>%
 
 ### Despesas
 
-Valor correspondente a descontos obrigatórios como: contribuição previdenciária, imposto de renda e retenção por teto constitucional.
-
-- $1,0$: Dados detalhados (`DETALHADO`)
-- $0,5$: Dados sumarizados (`SUMARIZADO`)
-- $0,0$: Dados ausentes (`AUSENTE`)
+- Dados detalhados (`DETALHADO`)
+- Dados sumarizados (`SUMARIZADO`)
+- Dados ausentes (`AUSENTE`)
 - Órgão não presou contas (`NA`)
+
 
 ::: {.panel-tabset}
 
@@ -1627,12 +1311,11 @@ indices %>%
 
 ### Outras Receitas
 
-Inclui remuneração eventual ou temporária, tais como: função de confiança ou cargo em comissão, gratificação natalina, férias constitucionais, abono permanência, insalubridade, bem como as indenizações, por exemplo: pecúnias ou auxílios como: alimentação, saúde, creche, moradia, natalidade;
-
-- $1,0$: Dados detalhados (`DETALHADO`)
-- $0,5$: Dados sumarizados (`SUMARIZADO`)
-- $0,0$: Dados ausentes (`AUSENTE`)
+- Dados detalhados (`DETALHADO`)
+- Dados sumarizados (`SUMARIZADO`)
+- Dados ausentes (`AUSENTE`)
 - Órgão não presou contas (`NA`)
+
 
 ::: {.panel-tabset}
 
@@ -1742,31 +1425,40 @@ indices %>%
 
 ## Índice de Transparência
 
-### Metodologia de cálculo do índice
 
-#### Índice de Facilidade
+:::{.column-body-outset}
 
-$$
-indice\_facilidade_{mês} = \frac{formato\_acesso_{mês} + manteve\_consistencia_{mês} + formato\_tabular_{mês} + formato\_aberto_{mes}}{5}
-$$
-
-#### Índice de Completude
+### Facilidade
 
 $$
-indice\_completude_{mês} = \frac{tem\_matricula_{mês} + tem\_lotacao_{mês} + tem\_cargo_{mês} + remuneracao\_basica_{mês} + outras\_remuneracoes_{mês} + despesas_{mês}}{6}
+\begin{aligned}
+Índice\;de\;Facilidade = \frac{(Acesso_{mês} + Manteve\;consistência\;no\;formato_ {mês} +\\ Dados\;estritamente\;tabulares_{mês} + Formato\;aberto_{mês})}{4}
+\end{aligned}
 $$
 
-#### Índice de Transparência
+### Completude
 
 $$
-indice\_transparencia = 2 \times \frac{indice\_facilidade_{mês} \times indice\_completude_{mês}}{indice\_facilidade_{mês} + indice\_completude_{mês}}
+\begin{aligned}
+Índice\;de\;Completude = \frac{(Possui\;nome\;e\;matrícula_{mês} + Possui\;lotacão + possui\;cargo + \\ Remuneracão\;básica_{mês} + Despesas_{mês} + Outras\;receitas_{mês})}{6}
+\end{aligned}
 $$
 
+$$
+Índice\;de\;Transparência = 2 \times \frac{Índice\;Facilidade_{mês} \times Índice\;Completude_{mês}}{Índice\;Facilidade_{mês} + Índice\;Completude_{mês}}
+$$
+
+:::
+
+### Visualização do índice
+
+#### Ministérios Públicos
 
 ```{r}
 criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
 
-indices_long <- indices %>%
+indices_long <- indices %>% 
+  filter(!periodo_invalido) %>% 
   select(
     mes:subgrupo,
     ends_with("_wgt"),
@@ -1791,20 +1483,39 @@ indices_long <- indices %>%
       criterio == "outras_receitas_wgt" ~ "Outras receitas",
       TRUE ~ criterio
     ),
-    dimensao = if_else(criterio %in% criterios, "Completude", "Facilidade"),
     pontuacao = case_when(
-      subgrupo == "Tribunais de Justiça estaduais" & pontuacao == -1 &
-        criterio == "Acesso" ~ 0,
-      subgrupo == "Tribunais de Justiça estaduais" & pontuacao == -1 &
-        criterio == "Manteve consistência no formato" ~ 1,
-      subgrupo == "Tribunais de Justiça estaduais" & pontuacao == -1 &
-        criterio == "Dados estritamente tabulares" ~ 1,
-      subgrupo == "Tribunais de Justiça estaduais" & pontuacao == -1 &
-        criterio == "Formato aberto" ~ 0,
+      subgrupo %in% c("Tribunais de Justiça estaduais",
+                      "Tribunais Regionais Federais",
+                      "Tribunais Regionais do Trabalho",
+                      "Tribunais de Justiça Militar") & 
+        criterio == "Acesso" & pontuacao == -1 ~ 0,
+      subgrupo %in% c("Tribunais de Justiça estaduais", 
+                      "Tribunais Regionais Federais",
+                      "Tribunais Regionais do Trabalho",
+                      "Tribunais de Justiça Militar") &
+        criterio == "Extensão" & pontuacao == -1 ~ 0,
+      subgrupo %in% c("Tribunais de Justiça estaduais",
+                      "Tribunais Regionais Federais",
+                      "Tribunais Regionais do Trabalho",
+                      "Tribunais de Justiça Militar") &  
+        criterio == "Manteve consistência no formato" &
+        pontuacao == -1 ~ 1,
+      subgrupo %in% c("Tribunais de Justiça estaduais",
+                      "Tribunais Regionais Federais",
+                      "Tribunais Regionais do Trabalho",
+                      "Tribunais de Justiça Militar") & 
+        criterio == "Dados estritamente tabulares" & 
+        pontuacao == -1 ~ 1,
+      aid == "STJ" &
+        criterio == "Dados estritamente tabulares" & 
+        pontuacao == -1 ~ 1,
       TRUE ~ pontuacao
     ),
-    pontuacao = if_else(pontuacao == -1, 0, pontuacao)
+    pontuacao = if_else(pontuacao < 0, 0, pontuacao),
+    dimensao = if_else(criterio %in% criterios, "Completude", "Facilidade")
   )
+
+
 
 # Função que faz o cálculo da média harmônica em `indice`
 media_harmonica <- function(x,y) if_else(x + y == 0, 0, ((x * y) / (x + y)) * 2)
@@ -1820,108 +1531,195 @@ indices_pontuacoes <- indices_long %>%
 
 ```{r}
 #| label: indice-media-geral
-
 # `indice_media_geral`: média aritmética simples dos índices de todo o período
 indices_media_geral <- indices_pontuacoes %>%
   group_by(aid, subgrupo) %>%
   summarise(across(c(Completude, Facilidade, Transparência), mean), .groups = "drop")
 ```
 
-### Visualização do índice
-
-::: {.panel-tabset}
-
-#### Ministérios Públicos
-
 ```{r}
 #| fig-height: 9
 
-cut_orgao <- indices_media_geral %>%
-  pivot_longer(-c(aid, subgrupo), names_to = "dimensao", values_to = "pontuacao") %>%
-  mutate(aid = reorder(aid, pontuacao, sum)) %>%
-  filter(dimensao == "Transparência", aid == "MP-PR") %>%
-  mutate(
-    center = 1.1,
-    lbl = str_glue(" índice de\nTransparência é uma\nmédia harmônica\ndas pontuações\nobtidas nas dimensões\nCompletude e Facilidade")
-  )
-
-p_mps <- indices_media_geral %>% 
-  filter(subgrupo == "Ministérios Públicos estaduais") %>% 
-  pivot_longer(-c(aid, subgrupo), names_to = "dimensao", values_to = "pontuacao") %>% 
-  mutate(aid = reorder(aid, pontuacao, sum)) %>% 
-  ggplot(aes(
-    y = aid,
-    x = pontuacao
-  )) +
-  geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
-  geom_point(
-    data = . %>% filter(dimensao != "Transparência"),
-    aes(fill = dimensao, size = dimensao),
-    shape = 21,
-    size = 3.5
-  ) +
-  geom_point(
-    data = . %>%
-    filter(dimensao == "Transparência") %>%
-    mutate(indice = "Índice de Transparência"),
-    size = .25
-  ) +
-  geom_point(
-    data = . %>%
+plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
+  
+  cut_orgao <- df %>%
+    pivot_longer(-c(aid, subgrupo), names_to = "dimensao", values_to = "pontuacao") %>%
+    mutate(aid = reorder(aid, pontuacao, sum)) %>%
+    filter(dimensao == "Transparência", aid == aid_cut) %>%
+    mutate(
+      center = box_center,
+      lbl = str_glue(" índice de\nTransparência é uma\nmédia harmônica\ndas pontuações\nobtidas nas dimensões\nCompletude e Facilidade")
+    )
+  
+  indices_media_geral %>% 
+    filter(subgrupo == subgroup) %>% 
+    pivot_longer(-c(aid, subgrupo), names_to = "dimensao", values_to = "pontuacao") %>% 
+    mutate(aid = reorder(aid, pontuacao, sum)) %>% 
+    ggplot(aes(
+      y = aid,
+      x = pontuacao
+    )) +
+    geom_line(color = cores_dadosjusbr[["cinza_azulado"]]) +
+    geom_point(
+      data = . %>% filter(dimensao != "Transparência"),
+      aes(fill = dimensao, size = dimensao),
+      shape = 21,
+      size = 3.5
+    ) +
+    geom_point(
+      data = . %>%
       filter(dimensao == "Transparência") %>%
       mutate(indice = "Índice de Transparência"),
-    aes(color = indice),
-    size = 6,
-    alpha = .7
-  ) +
-  scale_x_continuous(
-    limits = c(-.01, 1.3),
-    breaks = c(0, .25, .5, .75, 1),
-    minor_breaks = c(.25, .75),
-    expand = c(.001, 0)
-  ) +
-  scale_fill_manual(values = c(
-    "Completude" = cores_dadosjusbr[["laranja"]],
-    "Facilidade" = cores_dadosjusbr[["lilas"]]
-  )#, guide = "none"
-  ) +
-  scale_color_manual(
-    values = cores_dadosjusbr[["cyan"]]#, guide = "none"
-  )  +
-  geom_curve(
-    data = cut_orgao,
-    aes(x = center, xend = pontuacao, y = aid, yend = aid),
-    color = cores_dadosjusbr[["cinza_azulado"]],
-    size = .3, arrow = arrow(length = unit(2, "mm")), curvature = -0.15
-  ) +
-  geom_label(
-    data = cut_orgao, 
-    size = 3, 
-    label.r = unit(.3, "lines"),
-    lineheight = 1.1,
-    aes(x = center, y = aid, label = lbl), fontface = "bold"
-  ) +
-  labs(
-    title = NULL,
-    x = "Pontuação",
-    y = NULL,
-    fill = NULL,
-    color = NULL
-  ) +
-  theme(
-    plot.title = element_text(size = 13),
-    axis.title.x = element_text(vjust = -.5, hjust = .8),
-    axis.ticks.x = element_blank(),
-    axis.text.x = element_text(vjust = -.2),
-    legend.position = "top",
-    legend.justification = "left",
-    legend.background = element_rect(
-      fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
-      color = "transparent"
+      size = .25
+    ) +
+    geom_point(
+      data = . %>%
+        filter(dimensao == "Transparência") %>%
+        mutate(indice = "Índice de Transparência"),
+      aes(color = indice),
+      size = 6,
+      alpha = .7
+    ) +
+    scale_x_continuous(
+      limits = c(-.01, max_limit),
+      breaks = c(0, .25, .5, .75, 1),
+      minor_breaks = c(.25, .75),
+      expand = c(.001, 0)
+    ) +
+    scale_fill_manual(values = c(
+      "Completude" = cores_dadosjusbr[["laranja"]],
+      "Facilidade" = cores_dadosjusbr[["lilas"]]
+    )#, guide = "none"
+    ) +
+    scale_color_manual(
+      values = cores_dadosjusbr[["cyan"]]#, guide = "none"
+    )  +
+    geom_curve(
+      data = cut_orgao,
+      aes(x = center, xend = pontuacao, y = aid, yend = aid),
+      color = cores_dadosjusbr[["cinza_azulado"]],
+      size = .3, arrow = arrow(length = unit(2, "mm")), curvature = -0.15
+    ) +
+    geom_label(
+      data = cut_orgao,
+      size = 3,
+      label.r = unit(.3, "lines"),
+      lineheight = 1.1,
+      aes(x = center, y = aid, label = lbl), fontface = "bold"
+    ) +
+    labs(
+      title = NULL,
+      x = "Pontuação",
+      y = NULL,
+      fill = NULL,
+      color = NULL
+    ) +
+    theme(
+      plot.title = element_text(size = 13),
+      axis.title.x = element_text(vjust = -.5, hjust = .8),
+      axis.ticks.x = element_blank(),
+      axis.text.x = element_text(vjust = -.2),
+      legend.position = "top",
+      legend.justification = "left",
+      legend.background = element_rect(
+        fill = alpha(cores_dadosjusbr[["cinza_azulado"]], .1),
+        color = "transparent"
     )
   )
 
-p_mps
+}
+```
+
+::: {.panel-tabset}
+
+#### MP's
+
+```{r}
+#| label: plot-indice-mp
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indice(df = indices_media_geral,
+            aid_cut = "MP-PR",
+            subgroup = "Ministérios Públicos estaduais",
+            box_center = 1.1,
+            max_limit = 1.3)
+```
+
+#### TJ's
+
+```{r}
+#| label: plot-indice-tj
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indice(df = indices_media_geral,
+            aid_cut = "TJ-MS",
+            subgroup = "Tribunais de Justiça estaduais",
+            box_center = 0.7,
+            max_limit = 1)
+```
+
+#### TRF's
+
+```{r}
+#| label: plot-indice-trf
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indice(df = indices_media_geral,
+            aid_cut = "TRF-2",
+            subgroup = "Tribunais Regionais Federais",
+            box_center = 0.85,
+            max_limit = 1)
+```
+
+#### TRT's
+
+```{r}
+#| label: plot-indice-trt
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indice(df = indices_media_geral,
+            aid_cut = "TRT-5",
+            subgroup = "Tribunais Regionais do Trabalho",
+            box_center = 0.85,
+            max_limit = 1)
+```
+
+#### TJM's
+
+```{r}
+#| label: plot-indice-tjm
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indice(df = indices_media_geral,
+            aid_cut = "TJM-RS",
+            subgroup = "Tribunais de Justiça Militar",
+            box_center = 0.85,
+            max_limit = 1)
+```
+
+#### Órgãos superiores
+
+```{r}
+#| label: plot-indice-superiores
+#| echo: false
+#| warning: false
+#| message: false
+
+plot_indice(df = indices_media_geral,
+            aid_cut = "STJ",
+            subgroup = "Órgãos superiores",
+            box_center = 1.3,
+            max_limit = 1.5)
 ```
 
 :::
