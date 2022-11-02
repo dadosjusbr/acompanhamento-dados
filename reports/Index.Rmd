@@ -20,5 +20,5 @@ Temos no repositório:
 
 ## Novo!
 
-- [Reformulação do índice de transparência](https://dadosjusbr.github.io/acompanhamento-dados/indice-de-transparencia.html) 
+- [Reformulação do índice de transparência](https://dadosjusbr.github.io/acompanhamento-dados/indice-transparencia.html) 
 - [Disponibilidade dos dados por parte dos órgãos](https://dadosjusbr.github.io/acompanhamento-dados/disponibilidade-de-dados.html) 
