@@ -1,0 +1,29 @@
+.nav-tabs .nav-link {
+  margin-bottom: -1px;
+  background: none;
+  border: 1px solid transparent;
+  border-top-left-radius: .25rem;
+  border-top-right-radius: .25rem;
+  color: "#3e5363";
+  font-size: 0.875em;
+  background-color: #F5F5F5;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+  color: #B361C6;
+  background-color: #F5F5F5;
+  border-color: #dee2e6 #dee2e6 #fff;
+  font-size: 1em;
+}
+
+.tab-content {
+  margin-top: 0px;
+  border-left: #dee2e6 1px solid;
+  border-right: #dee2e6 1px solid;
+  border-bottom: #dee2e6 1px solid;
+  background-color: #F5F5F5;
+  margin-left: 0;
+  padding: 1em;
+  margin-bottom: 1em;
+}
