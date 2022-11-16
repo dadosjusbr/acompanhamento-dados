@@ -18,7 +18,7 @@ format:
     toc-collapsed: false
     footnotes-hover: true
     smooth-scroll: true
-    fig-width: 10
+    fig-width: 11
     fig-height: 7
     search: true
     theme:
@@ -51,7 +51,8 @@ prestacao_contas <- "data/load" %>%
   pull(file) %>%
   readRDS() %>% 
   transmute(
-    mes, ano, data, periodo_invalido, subgrupo, 
+    mes, ano, data, subgrupo,
+    periodo_invalido = if_else(mes == 11 & ano == 2022, TRUE, periodo_invalido),
     prestou_contas = if_else(acesso == "Órgão não prestou contas", FALSE, TRUE),
     prestou_contas_lbl = if_else(
       prestou_contas, 
@@ -105,6 +106,7 @@ plot_grid <- function(df, subgroup) {
 
 ### Órgãos por mês e ano
 
+:::{.column-page}
 ::: {.panel-tabset}
 
 #### MP's
@@ -125,6 +127,7 @@ plot_grid(df = prestacao_contas, subgroup = `Ministérios Públicos estaduais`)
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 9
 
 plot_grid(df = prestacao_contas, subgroup = `Tribunais de Justiça estaduais`)
 ```
@@ -136,6 +139,7 @@ plot_grid(df = prestacao_contas, subgroup = `Tribunais de Justiça estaduais`)
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 plot_grid(df = prestacao_contas, subgroup = `Tribunais Regionais Federais`)
 ```
@@ -147,6 +151,7 @@ plot_grid(df = prestacao_contas, subgroup = `Tribunais Regionais Federais`)
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 6
 
 plot_grid(df = prestacao_contas, subgroup = `Tribunais Regionais do Trabalho`)
 ```
@@ -158,6 +163,7 @@ plot_grid(df = prestacao_contas, subgroup = `Tribunais Regionais do Trabalho`)
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 plot_grid(df = prestacao_contas, subgroup = `Tribunais de Justiça Militar`)
 ```
@@ -169,10 +175,12 @@ plot_grid(df = prestacao_contas, subgroup = `Tribunais de Justiça Militar`)
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3
 
-plot_grid(df = prestacao_contas, subgroup = `Órgãos superiores`)
+plot_grid(df = prestacao_contas %>% filter(aid != "MPF"), subgroup = `Órgãos superiores`)
 ```
 
+:::
 :::
 
 ### Órgãos por ano
@@ -199,10 +207,6 @@ plot_bars <- function(df, subgroup) {
     scale_fill_manual(values = cores_prestou_contas) +
     labs(
       title = "Completude de dados por ano e órgão",
-      subtitle = str_glue(
-        "Quantidade de meses com disponibilidade de dados de remuneração\n",
-        "por ano órgão"
-      ),
       y = "Quantidade de meses",
       x = "Órgão (sigla)",
       fill = NULL
@@ -215,6 +219,7 @@ plot_bars <- function(df, subgroup) {
 }
 ```
 
+::: {.column-page}
 ::: {.panel-tabset}
 
 #### MP's
@@ -225,6 +230,7 @@ plot_bars <- function(df, subgroup) {
 #| warning: false
 #| message: false
 #| fig-height: 12
+#| fig-width: 10
 
 plot_bars(df = prestacao_contas, subgroup = `Ministérios Públicos estaduais`) 
 ```
@@ -248,7 +254,8 @@ plot_bars(df = prestacao_contas, subgroup = `Tribunais de Justiça estaduais`)
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-height: 8
+#| fig-height: 12
+#| fig-width: 6
 
 plot_bars(df = prestacao_contas, subgroup = `Tribunais Regionais Federais`)
 ```
@@ -260,7 +267,8 @@ plot_bars(df = prestacao_contas, subgroup = `Tribunais Regionais Federais`)
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-height: 8
+#| fig-height: 12
+#| fig-width: 8
 
 plot_bars(df = prestacao_contas, subgroup = `Tribunais Regionais do Trabalho`)
 ```
@@ -272,7 +280,8 @@ plot_bars(df = prestacao_contas, subgroup = `Tribunais Regionais do Trabalho`)
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-height: 8
+#| fig-height: 12
+#| fig-width: 5
 
 plot_bars(df = prestacao_contas, subgroup = `Tribunais de Justiça Militar`)
 ```
@@ -284,9 +293,11 @@ plot_bars(df = prestacao_contas, subgroup = `Tribunais de Justiça Militar`)
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-height: 8
+#| fig-height: 12
+#| fig-width: 5
 
 plot_bars(df = prestacao_contas, subgroup = `Órgãos superiores`)
 ```
 
+:::
 :::
