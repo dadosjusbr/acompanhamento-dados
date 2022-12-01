@@ -20,15 +20,15 @@ format:
           light: flatly
           dark: darkly
 knitr:
-  opts_chunk: 
+  opts_chunk:
     echo: false
     collapse: true
     message: false
     warning: false
-    comment: "#>" 
-editor_options: 
+    comment: "#>"
+editor_options:
   chunk_output_type: console
-execute: 
+execute:
   cache: false
 ---
 
@@ -196,7 +196,7 @@ theme_update(
   text = element_text(family = "Roboto Condensed")
 )
 
-hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]], 
+hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]],
                                       family = "Roboto Condensed")
 
 theme_adjust_waffle = theme(
@@ -228,7 +228,6 @@ get_data <- function(aid, ano){
 
 get_data_safe <- safely(get_data)
 ```
-
 
 # Órgãos Federais
 
@@ -265,12 +264,12 @@ indice_feds_full <- dados_federais %>%
       toupper() %>%
       gsub("^(\\w*)(\\d)$", "\\1-\\2", .),
     across(where(is.logical), replace_na, FALSE)
-  ) %>% 
+  ) %>%
   complete(mes, ano, aid) %>%
   mutate(data = my(str_glue("{mes}-{ano}")))
 
 # Prepara os campos para plotar waffle charts
-indice_feds <- indice_feds_full %>% 
+indice_feds <- indice_feds_full %>%
   transmute(
 
     # colunas de data e identificação de órgão
@@ -295,7 +294,7 @@ indice_feds <- indice_feds_full %>%
       !login_nao_necessario ~ "Requer login",
       TRUE ~ "Órgão não prestou contas"
     ) %>% ordered(levels = c(
-      "Não requer login", 
+      "Não requer login",
       "Requer login",
       "Órgão não prestou contas"
     )),
@@ -308,7 +307,7 @@ indice_feds <- indice_feds_full %>%
     ) %>% ordered(levels = c(
       "Não requer captcha",
       "Requer captcha",
-      "Órgão não prestou contas"      
+      "Órgão não prestou contas"
     )),
 
     # define o tipo de acesso aos dados
@@ -382,7 +381,7 @@ indice_feds <- indice_feds_full %>%
     )),
 
     # define dados de remuneração básica, despesas e outras receitas
-    across(c(remuneracao_basica, despesas, outras_receitas), 
+    across(c(remuneracao_basica, despesas, outras_receitas),
       ~ case_when(
         . == "DETALHADO" ~ "Detalhado",
         . == "SUMARIZADO" ~ "Sumarizado",
@@ -403,7 +402,7 @@ indice_feds <- indice_feds_full %>%
 plot_categoria <- function(df, orgao, categoria, pallete) {
   df <- df %>% filter(aid %in% orgao)
   plot_title <- str_glue("{itens_categoria[[categoria]]} | {unique(df$grp)}")
-  df %>% 
+  df %>%
     ggplot(aes_string(x = "data", y = "aid", fill = categoria)) +
     facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
     geom_tile(color = "gray90") +
@@ -444,8 +443,8 @@ plot_categoria <- function(df, orgao, categoria, pallete) {
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "login_nao_necessario",
   pallete = cores_login_nao_necessario
 )
@@ -495,8 +494,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "captcha_nao_necessario",
   pallete = cores_captcha_nao_necessario
 )
@@ -546,8 +545,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "acesso",
   pallete = cores_acesso
 )
@@ -597,8 +596,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "manteve_consistencia_no_formato",
   pallete = cores_manteve_consistencia_no_formato
 )
@@ -650,8 +649,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "dados_estritamente_tabulares",
   pallete = cores_dados_estritamente_tabulares
 )
@@ -710,8 +709,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "tem_matricula",
   pallete = cores_tem_matricula
 )
@@ -760,8 +759,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "tem_lotacao",
   pallete = cores_tem_lotacao
 )
@@ -811,8 +810,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "tem_cargo",
   pallete = cores_tem_cargo
 )
@@ -862,8 +861,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "remuneracao_basica",
   pallete = cores_remuneracoes
 )
@@ -913,8 +912,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "despesas",
   pallete = cores_remuneracoes
 )
@@ -964,8 +963,8 @@ plot_categoria(
 #| message: false
 
 plot_categoria(
-  df = indice_feds, 
-  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"), 
+  df = indice_feds,
+  orgao = c("TRF-1", "TRF-2", "TRF-3", "TRF-4", "TRF-5"),
   categoria = "outras_receitas",
   pallete = cores_remuneracoes
 )
@@ -1026,8 +1025,8 @@ plot_categoria(
 
 criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
 
-indices_feds_long <- indice_feds_full %>% 
-  select(-extensao) %>% 
+indices_feds_long <- indice_feds_full %>%
+  select(-extensao) %>%
   mutate(
     # Atribui pontuação para acesso
     acesso = case_when(
@@ -1045,7 +1044,7 @@ indices_feds_long <- indice_feds_full %>%
         . == "AUSENCIA" ~ 0,
         TRUE ~ NA_real_
     ))
-  ) %>% 
+  ) %>%
   pivot_longer(-c(aid, ano, mes, data), names_to = "criterio", values_to = "pontuacao") %>%
   mutate(
     criterio = case_when(
@@ -1083,7 +1082,7 @@ media_harmonica <- function(x,y) if_else(x + y == 0, 0, ((x * y) / (x + y)) * 2)
 indices_feds_pontuacoes <- indices_feds_long %>%
   group_by(mes, ano, aid, dimensao) %>%
   summarise(indice = mean(pontuacao), .groups = "drop") %>%
-  pivot_wider(names_from = dimensao, values_from = indice) %>% 
+  pivot_wider(names_from = dimensao, values_from = indice) %>%
   mutate(Transparência = media_harmonica(Completude, Facilidade))
 
 # `indice_media_geral`: média aritmética simples dos índices de todo o período
@@ -1099,7 +1098,7 @@ indices_feds_media_geral <- indices_feds_pontuacoes %>%
 
 
 plot_indices <- function(df, cut_orgao, center = 1.1) {
-  df %>% 
+  df %>%
      pivot_longer(-aid, names_to = "dimensao", values_to = "pontuacao") %>%
      mutate(
        aid_ord = case_when(
@@ -1108,7 +1107,7 @@ plot_indices <- function(df, cut_orgao, center = 1.1) {
          TRUE ~ as.integer(str_extract(aid, "\\d"))
        ),
        aid = reorder(aid, -aid_ord),
-     )  %>% 
+     )  %>%
      filter(str_detect(aid, str_extract(cut_orgao, "\\w+"))) %>%
      ggplot(aes(
        y = aid,
@@ -1156,8 +1155,8 @@ plot_indices <- function(df, cut_orgao, center = 1.1) {
        size = .3, arrow = arrow(length = unit(2, "mm")), curvature = -0.15
      ) +
      geom_label(
-       data = . %>% filter(aid == cut_orgao, dimensao == "Transparência"), 
-       size = 3, 
+       data = . %>% filter(aid == cut_orgao, dimensao == "Transparência"),
+       size = 3,
        label.r = unit(.3, "lines"),
        lineheight = 1.1,
        aes(
