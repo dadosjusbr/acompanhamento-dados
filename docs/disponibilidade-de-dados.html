@@ -561,7 +561,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-54"><a href="#cb1-54"></a>  <span class="fu">readRDS</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb1-55"><a href="#cb1-55"></a>  <span class="fu">transmute</span>(</span>
 <span id="cb1-56"><a href="#cb1-56"></a>    mes, ano, data, subgrupo,</span>
-<span id="cb1-57"><a href="#cb1-57"></a>    <span class="at">periodo_invalido =</span> <span class="fu">if_else</span>(mes <span class="sc">==</span> <span class="dv">12</span> <span class="sc">&amp;</span> ano <span class="sc">==</span> <span class="dv">2022</span>, <span class="cn">TRUE</span>, periodo_invalido),</span>
+<span id="cb1-57"><a href="#cb1-57"></a>    <span class="at">periodo_invalido =</span> <span class="fu">if_else</span>(mes <span class="sc">%in%</span> <span class="dv">11</span><span class="sc">:</span><span class="dv">12</span> <span class="sc">&amp;</span> ano <span class="sc">==</span> <span class="dv">2022</span>, <span class="cn">TRUE</span>, periodo_invalido),</span>
 <span id="cb1-58"><a href="#cb1-58"></a>    <span class="at">prestou_contas =</span> <span class="fu">if_else</span>(acesso <span class="sc">==</span> <span class="st">"Órgão não prestou contas"</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span>),</span>
 <span id="cb1-59"><a href="#cb1-59"></a>    <span class="at">prestou_contas_lbl =</span> <span class="fu">if_else</span>(</span>
 <span id="cb1-60"><a href="#cb1-60"></a>      prestou_contas,</span>

@@ -52,7 +52,7 @@ prestacao_contas <- "data/load" %>%
   readRDS() %>%
   transmute(
     mes, ano, data, subgrupo,
-    periodo_invalido = if_else(mes == 12 & ano == 2022, TRUE, periodo_invalido),
+    periodo_invalido = if_else(mes %in% 11:12 & ano == 2022, TRUE, periodo_invalido),
     prestou_contas = if_else(acesso == "Órgão não prestou contas", FALSE, TRUE),
     prestou_contas_lbl = if_else(
       prestou_contas,
