@@ -558,14 +558,14 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-51"><a href="#cb1-51"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"file"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb1-52"><a href="#cb1-52"></a>  <span class="fu">filter</span>(ctime <span class="sc">==</span> <span class="fu">max</span>(ctime)) <span class="sc">%&gt;%</span></span>
 <span id="cb1-53"><a href="#cb1-53"></a>  <span class="fu">pull</span>(file) <span class="sc">%&gt;%</span></span>
-<span id="cb1-54"><a href="#cb1-54"></a>  <span class="fu">readRDS</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb1-54"><a href="#cb1-54"></a>  <span class="fu">readRDS</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb1-55"><a href="#cb1-55"></a>  <span class="fu">transmute</span>(</span>
 <span id="cb1-56"><a href="#cb1-56"></a>    mes, ano, data, subgrupo,</span>
-<span id="cb1-57"><a href="#cb1-57"></a>    <span class="at">periodo_invalido =</span> <span class="fu">if_else</span>(mes <span class="sc">==</span> <span class="dv">11</span> <span class="sc">&amp;</span> ano <span class="sc">==</span> <span class="dv">2022</span>, <span class="cn">TRUE</span>, periodo_invalido),</span>
+<span id="cb1-57"><a href="#cb1-57"></a>    <span class="at">periodo_invalido =</span> <span class="fu">if_else</span>(mes <span class="sc">==</span> <span class="dv">12</span> <span class="sc">&amp;</span> ano <span class="sc">==</span> <span class="dv">2022</span>, <span class="cn">TRUE</span>, periodo_invalido),</span>
 <span id="cb1-58"><a href="#cb1-58"></a>    <span class="at">prestou_contas =</span> <span class="fu">if_else</span>(acesso <span class="sc">==</span> <span class="st">"Órgão não prestou contas"</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span>),</span>
 <span id="cb1-59"><a href="#cb1-59"></a>    <span class="at">prestou_contas_lbl =</span> <span class="fu">if_else</span>(</span>
-<span id="cb1-60"><a href="#cb1-60"></a>      prestou_contas, </span>
-<span id="cb1-61"><a href="#cb1-61"></a>      <span class="st">"Órgão prestou contas"</span>, </span>
+<span id="cb1-60"><a href="#cb1-60"></a>      prestou_contas,</span>
+<span id="cb1-61"><a href="#cb1-61"></a>      <span class="st">"Órgão prestou contas"</span>,</span>
 <span id="cb1-62"><a href="#cb1-62"></a>      <span class="st">"Órgão não prestou contas"</span></span>
 <span id="cb1-63"><a href="#cb1-63"></a>    ) <span class="sc">%&gt;%</span> <span class="fu">fct_reorder</span>(prestou_contas),</span>
 <span id="cb1-64"><a href="#cb1-64"></a>    <span class="at">aid =</span> <span class="fu">fct_reorder</span>(aid, prestou_contas, sum)</span>
@@ -586,10 +586,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-81"><a href="#cb1-81"></a>  df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(aid <span class="sc">%in%</span> subgroup)</span>
 <span id="cb1-82"><a href="#cb1-82"></a>  plot_title <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"Prestação de contas | {unique(df$subgrupo)}"</span>)</span>
 <span id="cb1-83"><a href="#cb1-83"></a>  df <span class="sc">%&gt;%</span></span>
-<span id="cb1-84"><a href="#cb1-84"></a>    <span class="fu">filter</span>(<span class="sc">!</span>periodo_invalido) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-84"><a href="#cb1-84"></a>    <span class="fu">filter</span>(<span class="sc">!</span>periodo_invalido) <span class="sc">%&gt;%</span></span>
 <span id="cb1-85"><a href="#cb1-85"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> data, <span class="at">y =</span> aid, <span class="at">fill =</span> prestou_contas_lbl)) <span class="sc">+</span></span>
 <span id="cb1-86"><a href="#cb1-86"></a>    <span class="fu">facet_wrap</span>(ano <span class="sc">~</span> ., <span class="at">nrow =</span> <span class="dv">1</span>, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
-<span id="cb1-87"><a href="#cb1-87"></a>    <span class="fu">geom_tile</span>(<span class="at">color =</span> <span class="st">"gray90"</span>) <span class="sc">+</span></span>
+<span id="cb1-87"><a href="#cb1-87"></a>    <span class="fu">geom_tile</span>(<span class="at">color =</span> <span class="st">"gray60"</span>) <span class="sc">+</span></span>
 <span id="cb1-88"><a href="#cb1-88"></a>    <span class="fu">geom_tile</span>(</span>
 <span id="cb1-89"><a href="#cb1-89"></a>      <span class="at">data =</span> . <span class="sc">%&gt;%</span> <span class="fu">filter</span>(periodo_invalido),</span>
 <span id="cb1-90"><a href="#cb1-90"></a>      <span class="at">fill =</span> cores_dadosjusbr[[<span class="st">"cinza_claro"</span>]],</span>
@@ -626,7 +626,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-123"><a href="#cb1-123"></a><span class="co">#| warning: false</span></span>
 <span id="cb1-124"><a href="#cb1-124"></a><span class="co">#| message: false</span></span>
 <span id="cb1-125"><a href="#cb1-125"></a></span>
-<span id="cb1-126"><a href="#cb1-126"></a><span class="fu">plot_grid</span>(<span class="at">df =</span> prestacao_contas, <span class="at">subgroup =</span> <span class="st">`</span><span class="at">Ministérios Públicos estaduais</span><span class="st">`</span>) </span>
+<span id="cb1-126"><a href="#cb1-126"></a><span class="fu">plot_grid</span>(<span class="at">df =</span> prestacao_contas, <span class="at">subgroup =</span> <span class="st">`</span><span class="at">Ministérios Públicos estaduais</span><span class="st">`</span>)</span>
 <span id="cb1-127"><a href="#cb1-127"></a><span class="in">```</span></span>
 <span id="cb1-128"><a href="#cb1-128"></a></span>
 <span id="cb1-129"><a href="#cb1-129"></a><span class="fu">#### TJ's</span></span>
@@ -696,10 +696,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-203"><a href="#cb1-203"></a></span>
 <span id="cb1-206"><a href="#cb1-206"></a><span class="in">```{r}</span></span>
 <span id="cb1-207"><a href="#cb1-207"></a>plot_bars <span class="ot">&lt;-</span> <span class="cf">function</span>(df, subgroup) {</span>
-<span id="cb1-208"><a href="#cb1-208"></a>  df <span class="sc">%&gt;%</span> </span>
+<span id="cb1-208"><a href="#cb1-208"></a>  df <span class="sc">%&gt;%</span></span>
 <span id="cb1-209"><a href="#cb1-209"></a>    <span class="fu">count</span>(aid, ano, prestou_contas_lbl, prestou_contas) <span class="sc">%&gt;%</span></span>
-<span id="cb1-210"><a href="#cb1-210"></a>    <span class="fu">complete</span>(aid, ano, prestou_contas, <span class="at">fill =</span> <span class="fu">list</span>(<span class="at">n =</span> <span class="dv">0</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-211"><a href="#cb1-211"></a>    <span class="fu">filter</span>(prestou_contas, aid <span class="sc">%in%</span> subgroup) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-210"><a href="#cb1-210"></a>    <span class="fu">complete</span>(aid, ano, prestou_contas, <span class="at">fill =</span> <span class="fu">list</span>(<span class="at">n =</span> <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb1-211"><a href="#cb1-211"></a>    <span class="fu">filter</span>(prestou_contas, aid <span class="sc">%in%</span> subgroup) <span class="sc">%&gt;%</span></span>
 <span id="cb1-212"><a href="#cb1-212"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
 <span id="cb1-213"><a href="#cb1-213"></a>      <span class="at">x =</span> tidytext<span class="sc">::</span><span class="fu">reorder_within</span>(aid, <span class="sc">-</span>n, ano),</span>
 <span id="cb1-214"><a href="#cb1-214"></a>      <span class="at">y =</span> n</span>
@@ -707,10 +707,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-216"><a href="#cb1-216"></a>    <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="dv">12</span>, <span class="at">fill =</span> <span class="st">"Órgão não prestou contas"</span>),</span>
 <span id="cb1-217"><a href="#cb1-217"></a>             <span class="at">width =</span> .<span class="dv">9</span>) <span class="sc">+</span></span>
 <span id="cb1-218"><a href="#cb1-218"></a>    <span class="fu">geom_col</span>(<span class="fu">aes</span>(<span class="at">fill =</span> prestou_contas_lbl), <span class="at">color =</span> <span class="st">"gray25"</span>) <span class="sc">+</span></span>
-<span id="cb1-219"><a href="#cb1-219"></a>    tidytext<span class="sc">::</span><span class="fu">scale_x_reordered</span>() <span class="sc">+</span> </span>
+<span id="cb1-219"><a href="#cb1-219"></a>    tidytext<span class="sc">::</span><span class="fu">scale_x_reordered</span>() <span class="sc">+</span></span>
 <span id="cb1-220"><a href="#cb1-220"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span> ano, <span class="at">ncol =</span> <span class="dv">1</span>, <span class="at">scales =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
 <span id="cb1-221"><a href="#cb1-221"></a>    <span class="fu">scale_y_continuous</span>(</span>
-<span id="cb1-222"><a href="#cb1-222"></a>      <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">12</span>, <span class="dv">3</span>)[<span class="sc">-</span><span class="dv">1</span>], </span>
+<span id="cb1-222"><a href="#cb1-222"></a>      <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">12</span>, <span class="dv">3</span>)[<span class="sc">-</span><span class="dv">1</span>],</span>
 <span id="cb1-223"><a href="#cb1-223"></a>      <span class="at">labels =</span> <span class="fu">paste</span>(<span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">12</span>, <span class="dv">3</span>)[<span class="sc">-</span><span class="dv">1</span>], <span class="st">"Meses"</span>)</span>
 <span id="cb1-224"><a href="#cb1-224"></a>    ) <span class="sc">+</span></span>
 <span id="cb1-225"><a href="#cb1-225"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> cores_prestou_contas) <span class="sc">+</span></span>
@@ -741,7 +741,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-252"><a href="#cb1-252"></a><span class="co">#| fig-height: 12</span></span>
 <span id="cb1-253"><a href="#cb1-253"></a><span class="co">#| fig-width: 10</span></span>
 <span id="cb1-254"><a href="#cb1-254"></a></span>
-<span id="cb1-255"><a href="#cb1-255"></a><span class="fu">plot_bars</span>(<span class="at">df =</span> prestacao_contas, <span class="at">subgroup =</span> <span class="st">`</span><span class="at">Ministérios Públicos estaduais</span><span class="st">`</span>) </span>
+<span id="cb1-255"><a href="#cb1-255"></a><span class="fu">plot_bars</span>(<span class="at">df =</span> prestacao_contas, <span class="at">subgroup =</span> <span class="st">`</span><span class="at">Ministérios Públicos estaduais</span><span class="st">`</span>)</span>
 <span id="cb1-256"><a href="#cb1-256"></a><span class="in">```</span></span>
 <span id="cb1-257"><a href="#cb1-257"></a></span>
 <span id="cb1-258"><a href="#cb1-258"></a><span class="fu">#### TJ's</span></span>
