@@ -9,3 +9,5 @@ local-files/*
 .Rhistory
 /.Rproj.user
 .Rproj.user
+.vscode
+.lintr

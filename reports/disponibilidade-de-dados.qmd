@@ -49,14 +49,14 @@ prestacao_contas <- "data/load" %>%
   rownames_to_column(var = "file") %>%
   filter(ctime == max(ctime)) %>%
   pull(file) %>%
-  readRDS() %>% 
+  readRDS() %>%
   transmute(
     mes, ano, data, subgrupo,
-    periodo_invalido = if_else(mes == 11 & ano == 2022, TRUE, periodo_invalido),
+    periodo_invalido = if_else(mes == 12 & ano == 2022, TRUE, periodo_invalido),
     prestou_contas = if_else(acesso == "Órgão não prestou contas", FALSE, TRUE),
     prestou_contas_lbl = if_else(
-      prestou_contas, 
-      "Órgão prestou contas", 
+      prestou_contas,
+      "Órgão prestou contas",
       "Órgão não prestou contas"
     ) %>% fct_reorder(prestou_contas),
     aid = fct_reorder(aid, prestou_contas, sum)
@@ -77,10 +77,10 @@ plot_grid <- function(df, subgroup) {
   df <- df %>% filter(aid %in% subgroup)
   plot_title <- str_glue("Prestação de contas | {unique(df$subgrupo)}")
   df %>%
-    filter(!periodo_invalido) %>% 
+    filter(!periodo_invalido) %>%
     ggplot(aes(x = data, y = aid, fill = prestou_contas_lbl)) +
     facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
-    geom_tile(color = "gray90") +
+    geom_tile(color = "gray60") +
     geom_tile(
       data = . %>% filter(periodo_invalido),
       fill = cores_dadosjusbr[["cinza_claro"]],
@@ -117,7 +117,7 @@ plot_grid <- function(df, subgroup) {
 #| warning: false
 #| message: false
 
-plot_grid(df = prestacao_contas, subgroup = `Ministérios Públicos estaduais`) 
+plot_grid(df = prestacao_contas, subgroup = `Ministérios Públicos estaduais`)
 ```
 
 #### TJ's
@@ -187,10 +187,10 @@ plot_grid(df = prestacao_contas %>% filter(aid != "MPF"), subgroup = `Órgãos s
 
 ```{r}
 plot_bars <- function(df, subgroup) {
-  df %>% 
+  df %>%
     count(aid, ano, prestou_contas_lbl, prestou_contas) %>%
-    complete(aid, ano, prestou_contas, fill = list(n = 0)) %>% 
-    filter(prestou_contas, aid %in% subgroup) %>% 
+    complete(aid, ano, prestou_contas, fill = list(n = 0)) %>%
+    filter(prestou_contas, aid %in% subgroup) %>%
     ggplot(aes(
       x = tidytext::reorder_within(aid, -n, ano),
       y = n
@@ -198,10 +198,10 @@ plot_bars <- function(df, subgroup) {
     geom_col(aes(y = 12, fill = "Órgão não prestou contas"),
              width = .9) +
     geom_col(aes(fill = prestou_contas_lbl), color = "gray25") +
-    tidytext::scale_x_reordered() + 
+    tidytext::scale_x_reordered() +
     facet_wrap(~ ano, ncol = 1, scales = "free") +
     scale_y_continuous(
-      breaks = seq(0, 12, 3)[-1], 
+      breaks = seq(0, 12, 3)[-1],
       labels = paste(seq(0, 12, 3)[-1], "Meses")
     ) +
     scale_fill_manual(values = cores_prestou_contas) +
@@ -232,7 +232,7 @@ plot_bars <- function(df, subgroup) {
 #| fig-height: 12
 #| fig-width: 10
 
-plot_bars(df = prestacao_contas, subgroup = `Ministérios Públicos estaduais`) 
+plot_bars(df = prestacao_contas, subgroup = `Ministérios Públicos estaduais`)
 ```
 
 #### TJ's
