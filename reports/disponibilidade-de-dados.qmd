@@ -54,11 +54,16 @@ prestacao_contas <- "data/load" %>%
     mes, ano, data, subgrupo,
     periodo_invalido = if_else(mes %in% 11:12 & ano == 2022, TRUE, periodo_invalido),
     prestou_contas = if_else(acesso == "Órgão não prestou contas", FALSE, TRUE),
-    prestou_contas_lbl = if_else(
-      prestou_contas,
+    prestou_contas_lbl = case_when(
+      prestou_contas ~ "Órgão prestou contas",
+      !prestou_contas & periodo_invalido ~ "Coleta não realizada",
+      !prestou_contas & !periodo_invalido ~ "Órgão não prestou contas"
+    ),
+    prestou_contas_lbl = ordered(prestou_contas_lbl, c(
       "Órgão prestou contas",
-      "Órgão não prestou contas"
-    ) %>% fct_reorder(prestou_contas),
+      "Órgão não prestou contas",
+      "Coleta não realizada"
+    )),
     aid = fct_reorder(aid, prestou_contas, sum)
   )
 
@@ -77,10 +82,10 @@ plot_grid <- function(df, subgroup) {
   df <- df %>% filter(aid %in% subgroup)
   plot_title <- str_glue("Prestação de contas | {unique(df$subgrupo)}")
   df %>%
-    filter(!periodo_invalido) %>%
+    # filter(!periodo_invalido) %>%
     ggplot(aes(x = data, y = aid, fill = prestou_contas_lbl)) +
     facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
-    geom_tile(color = "gray60") +
+    geom_tile(color = "gray40") +
     geom_tile(
       data = . %>% filter(periodo_invalido),
       fill = cores_dadosjusbr[["cinza_claro"]],
@@ -127,7 +132,7 @@ plot_grid(df = prestacao_contas, subgroup = `Ministérios Públicos estaduais`)
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-height: 9
+#| fig-height: 8.75
 
 plot_grid(df = prestacao_contas, subgroup = `Tribunais de Justiça estaduais`)
 ```
@@ -151,7 +156,7 @@ plot_grid(df = prestacao_contas, subgroup = `Tribunais Regionais Federais`)
 #| echo: false
 #| warning: false
 #| message: false
-#| fig-height: 6
+#| fig-height: 7.25
 
 plot_grid(df = prestacao_contas, subgroup = `Tribunais Regionais do Trabalho`)
 ```
