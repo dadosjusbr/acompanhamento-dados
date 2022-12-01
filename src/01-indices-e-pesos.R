@@ -49,7 +49,7 @@ indices <- pacote_de_dados %>%
   select(-ano, -tipo) %>%
   unnest(a1) %>%
   mutate(
-    
+
     # cria um grupo mais amplo para separar órgãos
     grupo = case_when(
       str_detect(aid, "^tj") ~ "Tribunal de Justiça",
@@ -57,7 +57,7 @@ indices <- pacote_de_dados %>%
       str_detect(aid, "^tr") ~ "Tribunal Regional",
       TRUE ~ "Órgãos superiores"
     ),
-    
+
     # cria subgrupos mais granulares
     subgrupo = case_when(
       grupo == "Tribunal de Justiça" & type == "Estadual" ~ "Tribunais de Justiça estaduais",
@@ -67,7 +67,7 @@ indices <- pacote_de_dados %>%
       grupo == "Tribunal Regional" & uf == "Trabalho" ~  "Tribunais Regionais do Trabalho",
       TRUE ~ "Órgãos superiores"
     ),
-    
+
     # recodifica siglas de órgão (maiúscula e com hífen)
     aid = case_when(
       grupo == "Ministério Público" ~ gsub("^(mp)(.+)$", "\\1-\\2", aid),
@@ -76,7 +76,7 @@ indices <- pacote_de_dados %>%
       grupo == "Tribunal Regional" ~ gsub("^([a-z]+)(\\d{1,2})$", "\\1-\\2", aid),
       TRUE ~ aid
     ) %>% toupper()
-    
+
   ) %>%
   select(aid, mes, ano, Meta, subgrupo) %>%
   unnest(Meta) %>%
@@ -93,16 +93,16 @@ indices <- pacote_de_dados %>%
 # PESOS ------------------------------------------------------------------------
 
 # Atribui pesos para as categorias dos órgãos
-indices <- indices %>% 
+indices <- indices %>%
   transmute(
-    
+
     # colunas de data e identificação de órgão
     mes, ano, data, periodo_invalido, aid, subgrupo,
-    
+
     ##
     ## FACILIDADE
     ##
-    
+
     # define o tipo de acesso aos dados
     acesso = case_when(
       acesso == "ACESSO_DIRETO" ~ "Acesso direto",
@@ -111,7 +111,7 @@ indices <- indices %>%
       acesso == "NECESSITA_SIMULACAO_USUARIO" ~ "Necessita simulação de usuário",
       TRUE ~ "Órgão não prestou contas"
     ),
-    
+
     # define um peso para ordenar as categorias
     acesso_wgt = case_when(
       acesso == "Acesso direto" ~ 1,
@@ -119,38 +119,38 @@ indices <- indices %>%
       acesso == "Necessita simulação de usuário" ~ 0,
       acesso == "Órgão não prestou contas" ~ -1
     ),
-    
+
     # define consistência de formato de dado
     manteve_consistencia_no_formato = case_when(
       manteve_consistencia_no_formato ~ "Manteve consistência no formato",
       !manteve_consistencia_no_formato ~ "Não manteve consistência no formato",
       TRUE ~ "Órgão não prestou contas"
     ),
-    
+
     # define um peso para ordenar as categorias
     manteve_consistencia_no_formato_wgt = case_when(
       manteve_consistencia_no_formato == "Manteve consistência no formato" ~ 1L,
       manteve_consistencia_no_formato == "Não manteve consistência no formato" ~ 0L,
       manteve_consistencia_no_formato == "Órgão não prestou contas" ~ -1L
     ),
-    
+
     # define tabularidade dos dados
     dados_estritamente_tabulares = case_when(
       dados_estritamente_tabulares ~ "Dados estritamente tabulares",
       !dados_estritamente_tabulares ~ "Dados não tabulares",
       TRUE ~ "Órgão não prestou contas"
     ),
-    
+
     # define um peso para ordenar as categorias
     dados_estritamente_tabulares_wgt = case_when(
       dados_estritamente_tabulares == "Dados estritamente tabulares" ~ 1L,
       dados_estritamente_tabulares == "Dados não tabulares" ~ 0L,
       dados_estritamente_tabulares == "Órgão não prestou contas" ~ -1L
     ),
-    
+
     # define uso de formato aberto
     extensao = if_else(is.na(extensao), "Órgão não prestou contas", extensao),
-    
+
     # define um peso para ordenar as categorias
     extensao_wgt = case_when(
       extensao == "HTML" ~ 1L,
@@ -159,77 +159,77 @@ indices <- indices %>%
       extensao == "XLS" ~ 0L,
       extensao == "Órgão não prestou contas" ~ -1L
     ),
-    
+
     # define uso de formato aberto (binário)
     formato_aberto = case_when(
       extensao %in% c("HTML", "ODS") ~ "Formato Aberto",
       extensao == "Órgão não prestou contas" ~ extensao,
       TRUE ~ "Formato Proprietário"
     ),
-    
+
     # define um peso para ordenar as categorias
     formato_aberto_wgt = case_when(
       formato_aberto == "Formato Aberto" ~ 1L,
       formato_aberto == "Formato Proprietário" ~ 0L,
       TRUE ~ -1L
     ),
-    
+
     ##
     ## COMPLETUDE
     ##
-    
+
     # define presença e ausência de de matricula e nome
     tem_matricula = case_when(
       tem_matricula ~ "Possui nome e matrícula",
       !tem_matricula ~ "Não possui nome e matrícula",
       TRUE ~ "Órgão não prestou contas"
     ),
-    
+
     # define um peso para ordenar as categorias
     tem_matricula_wgt = case_when(
       tem_matricula == "Possui nome e matrícula" ~ 1L,
       tem_matricula == "Não possui nome e matrícula" ~ 0L,
       tem_matricula == "Órgão não prestou contas" ~ -1L
     ),
-    
+
     # define presença e ausência de cargo
     tem_cargo = case_when(
       tem_cargo ~ "Possui cargo",
       !tem_cargo ~ "Não possui cargo",
       TRUE ~ "Órgão não prestou contas"
     ),
-    
+
     # define um peso para ordenar as categorias
     tem_cargo_wgt = case_when(
       tem_cargo == "Possui cargo" ~ 1L,
       tem_cargo == "Não possui cargo" ~ 0L,
       tem_cargo == "Órgão não prestou contas" ~ -1L
     ),
-    
+
     # define presença e ausência de cargo
     tem_lotacao = case_when(
       tem_lotacao ~ "Possui lotação",
       !tem_lotacao ~ "Não possui lotação",
       TRUE ~ "Órgão não prestou contas"
     ),
-    
+
     # define um peso para ordenar as categorias
     tem_lotacao_wgt = case_when(
       tem_lotacao == "Possui lotação" ~ 1L,
       tem_lotacao == "Não possui lotação" ~ 0L,
       tem_lotacao == "Órgão não prestou contas" ~ -1L
     ),
-    
+
     # define dados de remuneração básica, despesas e outras receitas
     across(
-      .cols = c(remuneracao_basica, despesas, outras_receitas), 
+      .cols = c(remuneracao_basica, despesas, outras_receitas),
       .fns = ~ case_when(
         . == "DETALHADO" ~ "Dados detalhados",
         . == "SUMARIZADO" ~ "Dados sumarizados",
         . == "AUSENCIA" ~ "Dados ausentes",
         TRUE ~ "Órgão não prestou contas"
       )),
-    
+
     # define pesos para ordenar categorias
     across(
       .cols = c(remuneracao_basica, despesas, outras_receitas),
@@ -240,7 +240,7 @@ indices <- indices %>%
         . == "Dados ausentes" ~ 0,
         . == "Órgão não prestou contas" ~ -1
       )),
-    
+
     # reordena as categorias de acordo com o peso
     acesso = fct_reorder(acesso, acesso_wgt),
     manteve_consistencia_no_formato = fct_reorder(manteve_consistencia_no_formato,
@@ -255,7 +255,7 @@ indices <- indices %>%
     remuneracao_basica = fct_reorder(remuneracao_basica, remuneracao_basica_wgt),
     despesas = fct_reorder(despesas, despesas_wgt),
     outras_receitas = fct_reorder(outras_receitas, outras_receitas_wgt)
-    
+
   )
 
 saveRDS(indices, here::here(str_glue("data/load/indices-{Sys.Date()}.rds")))
