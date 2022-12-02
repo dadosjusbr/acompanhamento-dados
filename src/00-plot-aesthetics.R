@@ -118,7 +118,8 @@ cores_formato_aberto <- c(
 # cores se órgão presou contas ou não
 cores_prestou_contas <- c(
   "Órgão prestou contas" = cores_dadosjusbr[["laranja"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Coleta não realizada" = cores_dadosjusbr[["cinza_claro"]]
 )
 
 # uso de fontes e plot-aesthetics
@@ -142,7 +143,7 @@ ggplot2::theme_update(
   text = ggplot2::element_text(family = "Roboto Condensed")
 )
 
-hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]], 
+hrbrthemes::update_geom_font_defaults(color = cores_dadosjusbr[["cinza_azulado"]],
                                       family = "Roboto Condensed")
 
 theme_adjust_waffle = ggplot2::theme(
