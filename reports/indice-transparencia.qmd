@@ -69,14 +69,14 @@ gsheet <- "1xEx525Dxnk0BtS4-3f2SM9vHQr_tMXXY3maUIKnfYfk"
 gsheet <- googlesheets4::read_sheet(gsheet)
 
 wgt_table <- function(df, criterio) {
-  df %>% 
+  df %>%
     filter(Critério == criterio) %>%
-    select(-Critério) %>% 
-    group_by(Dimensão, Descrição) %>% 
+    select(-Critério) %>%
+    group_by(Dimensão, Descrição) %>%
     gt(
       # groupname_col = "Dimensão",
       # rowname_col = "Descrição"
-    ) %>% 
+    ) %>%
     tab_options(
       row_group.as_column = T,
       column_labels.font.weight = "bold",
@@ -100,13 +100,13 @@ wgt_table <- function(df, criterio) {
         )
       ),
       locations = cells_body(Label)
-    ) %>% 
+    ) %>%
     tab_style(
       style = cell_text(
         size = "small",
       ),
       locations = cells_body(Item)
-    ) %>% 
+    ) %>%
     tab_style(
       style = cell_borders(
         sides = c("bottom", "top"),
@@ -119,16 +119,16 @@ wgt_table <- function(df, criterio) {
           rows = everything()
         )
       )
-    ) %>% 
+    ) %>%
     cols_width(
      Item ~ pct(30),
      Label ~ pct(30),
      Peso ~ pct(30)
-    ) %>% 
+    ) %>%
     tab_style(
       style = cell_fill(color = cores_dadosjusbr[["cinza_claro"]]),
       locations = cells_body(Peso)
-    ) %>% 
+    ) %>%
     tab_style(
       style = cell_fill(color = 'white'),
       locations = cells_body(
@@ -165,7 +165,7 @@ plot_categoria <- function(df, orgao, categoria, pallete) {
   df <- df %>% filter(aid %in% orgao)
   plot_title <- str_glue("{itens_categoria[[categoria]]} | {unique(df$subgrupo)}")
   df %>%
-    filter(!periodo_invalido) %>% 
+    filter(!periodo_invalido) %>%
     ggplot(aes_string(x = "data", y = "aid", fill = categoria)) +
     facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
     geom_tile(color = "gray90") +
@@ -219,7 +219,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-acesso
@@ -236,7 +236,7 @@ indices %>%
 )
 ```
 
-#### Tj's
+#### Tj
 
 ```{r}
 #| label: plot-tj-acesso
@@ -253,7 +253,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-acesso
@@ -270,7 +270,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-acesso
@@ -287,7 +287,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-acesso
@@ -331,7 +331,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-manteve-consistencia
@@ -348,7 +348,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-manteve-consistencia
@@ -365,7 +365,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-manteve-consistencia
@@ -382,7 +382,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-manteve-consistencia
@@ -399,7 +399,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-manteve-consistencia
@@ -443,7 +443,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-tabulares
@@ -460,7 +460,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-tabulares
@@ -477,7 +477,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-tabulares
@@ -494,7 +494,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-tabulares
@@ -511,7 +511,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-extensao
@@ -561,7 +561,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-##### MP's
+##### MP
 
 ```{r}
 #| label: plot-mp-extensao
@@ -578,7 +578,7 @@ indices %>%
 )
 ```
 
-##### TJ's
+##### TJ
 
 ```{r}
 #| label: plot-tj-extensao
@@ -595,7 +595,7 @@ indices %>%
 )
 ```
 
-##### TRF's
+##### TRF
 
 ```{r}
 #| label: plot-trf-extensao
@@ -612,7 +612,7 @@ indices %>%
 )
 ```
 
-##### TRT's
+##### TRT
 
 ```{r}
 #| label: plot-trt-extensao
@@ -656,7 +656,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-##### MP's
+##### MP
 
 ```{r}
 #| label: plot-mp-formato-aberto
@@ -673,7 +673,7 @@ indices %>%
 )
 ```
 
-##### TJ's
+##### TJ
 
 ```{r}
 #| label: plot-tj-formato-aberto
@@ -690,7 +690,7 @@ indices %>%
 )
 ```
 
-##### TRF's
+##### TRF
 
 ```{r}
 #| label: plot-trf-formato-aberto
@@ -707,7 +707,7 @@ indices %>%
 )
 ```
 
-##### TRT's
+##### TRT
 
 ```{r}
 #| label: plot-trt-formato-aberto
@@ -753,7 +753,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-tem-nome-matricula
@@ -770,7 +770,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-tem-nome-matricula
@@ -787,7 +787,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-tem-nome-matricula
@@ -804,7 +804,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-tem-nome-matricula
@@ -821,7 +821,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-nome-matricula
@@ -865,7 +865,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-tem-lotacao
@@ -882,7 +882,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-tem-lotacao
@@ -899,7 +899,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-tem-lotacao
@@ -916,7 +916,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-tem-lotacao
@@ -933,7 +933,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-tem-lotacao
@@ -977,7 +977,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-tem-cargo
@@ -994,7 +994,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-tem-cargo
@@ -1011,7 +1011,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-tem-cargo
@@ -1028,7 +1028,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-tem-cargo
@@ -1045,7 +1045,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-tem-cargo
@@ -1091,7 +1091,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-remuneracao-basica
@@ -1108,7 +1108,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-remuneracao-basica
@@ -1125,7 +1125,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-remuneracao-basica
@@ -1142,7 +1142,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-remuneracao-basica
@@ -1159,7 +1159,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-remuneracao-basica
@@ -1205,7 +1205,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-despesas
@@ -1222,7 +1222,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-despesas
@@ -1239,7 +1239,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-despesas
@@ -1256,7 +1256,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-despesas
@@ -1273,7 +1273,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-despesas
@@ -1319,7 +1319,7 @@ indices %>%
 
 ::: {.panel-tabset}
 
-#### MP's
+#### MP
 
 ```{r}
 #| label: plot-mp-outras-receitas
@@ -1336,7 +1336,7 @@ indices %>%
 )
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-tj-outras-receitas
@@ -1353,7 +1353,7 @@ indices %>%
 )
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-trf-outras-receitas
@@ -1370,7 +1370,7 @@ indices %>%
 )
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-trt-outras-receitas
@@ -1387,7 +1387,7 @@ indices %>%
 )
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-tjm-outras-receitas
@@ -1457,17 +1457,17 @@ $$
 ```{r}
 criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
 
-indices_long <- indices %>% 
-  filter(!periodo_invalido) %>% 
+indices_long <- indices %>%
+  filter(!periodo_invalido) %>%
   select(
-    mes:subgrupo,
+    mes, ano, aid, subgrupo, data, periodo_invalido,
     ends_with("_wgt"),
     -extensao_wgt
-  ) %>% 
+  ) %>%
   pivot_longer(
     -c(mes, ano, data, periodo_invalido, aid, subgrupo),
     names_to = "criterio", values_to = "pontuacao"
-  ) %>% 
+  ) %>%
   mutate(
     criterio = case_when(
       criterio == "acesso_wgt" ~ "Acesso",
@@ -1487,9 +1487,9 @@ indices_long <- indices %>%
       subgrupo %in% c("Tribunais de Justiça estaduais",
                       "Tribunais Regionais Federais",
                       "Tribunais Regionais do Trabalho",
-                      "Tribunais de Justiça Militar") & 
+                      "Tribunais de Justiça Militar") &
         criterio == "Acesso" & pontuacao == -1 ~ 0,
-      subgrupo %in% c("Tribunais de Justiça estaduais", 
+      subgrupo %in% c("Tribunais de Justiça estaduais",
                       "Tribunais Regionais Federais",
                       "Tribunais Regionais do Trabalho",
                       "Tribunais de Justiça Militar") &
@@ -1497,17 +1497,17 @@ indices_long <- indices %>%
       subgrupo %in% c("Tribunais de Justiça estaduais",
                       "Tribunais Regionais Federais",
                       "Tribunais Regionais do Trabalho",
-                      "Tribunais de Justiça Militar") &  
+                      "Tribunais de Justiça Militar") &
         criterio == "Manteve consistência no formato" &
         pontuacao == -1 ~ 1,
       subgrupo %in% c("Tribunais de Justiça estaduais",
                       "Tribunais Regionais Federais",
                       "Tribunais Regionais do Trabalho",
-                      "Tribunais de Justiça Militar") & 
-        criterio == "Dados estritamente tabulares" & 
+                      "Tribunais de Justiça Militar") &
+        criterio == "Dados estritamente tabulares" &
         pontuacao == -1 ~ 1,
       aid == "STJ" &
-        criterio == "Dados estritamente tabulares" & 
+        criterio == "Dados estritamente tabulares" &
         pontuacao == -1 ~ 1,
       TRUE ~ pontuacao
     ),
@@ -1515,17 +1515,15 @@ indices_long <- indices %>%
     dimensao = if_else(criterio %in% criterios, "Completude", "Facilidade")
   )
 
-
-
 # Função que faz o cálculo da média harmônica em `indice`
 media_harmonica <- function(x,y) if_else(x + y == 0, 0, ((x * y) / (x + y)) * 2)
 
 # `indice_pontuacoes` contém os índices de Completude, Facilidade e Transparência
 indices_pontuacoes <- indices_long %>%
-  filter(!periodo_invalido) %>% 
+  filter(!periodo_invalido) %>%
   group_by(mes, ano, aid, subgrupo, dimensao) %>%
   summarise(indice = mean(pontuacao), .groups = "drop") %>%
-  pivot_wider(names_from = dimensao, values_from = indice) %>% 
+  pivot_wider(names_from = dimensao, values_from = indice) %>%
   mutate(Transparência = media_harmonica(Completude, Facilidade))
 ```
 
@@ -1534,14 +1532,19 @@ indices_pontuacoes <- indices_long %>%
 # `indice_media_geral`: média aritmética simples dos índices de todo o período
 indices_media_geral <- indices_pontuacoes %>%
   group_by(aid, subgrupo) %>%
-  summarise(across(c(Completude, Facilidade, Transparência), mean), .groups = "drop")
+  summarise(across(c(Completude, Facilidade, Transparência), mean), .groups = "drop") %>%
+  mutate(
+    across(
+      .cols = where(is.double),
+      .fns = ~ if_else(Completude + Facilidade + Transparência == 0, -1, .)
+  ))
 ```
 
 ```{r}
 #| fig-height: 9
 
 plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
-  
+
   cut_orgao <- df %>%
     pivot_longer(-c(aid, subgrupo), names_to = "dimensao", values_to = "pontuacao") %>%
     mutate(aid = reorder(aid, pontuacao, sum)) %>%
@@ -1550,11 +1553,15 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
       center = box_center,
       lbl = str_glue(" índice de\nTransparência é uma\nmédia harmônica\ndas pontuações\nobtidas nas dimensões\nCompletude e Facilidade")
     )
-  
-  indices_media_geral %>% 
-    filter(subgrupo == subgroup) %>% 
-    pivot_longer(-c(aid, subgrupo), names_to = "dimensao", values_to = "pontuacao") %>% 
-    mutate(aid = reorder(aid, pontuacao, sum)) %>% 
+
+  indices_media_geral %>%
+    filter(subgrupo %in% subgroup) %>%
+    pivot_longer(-c(aid, subgrupo), names_to = "dimensao", values_to = "pontuacao") %>%
+    mutate(aid_wgt = if_else(dimensao == "Transparência", pontuacao, NA_real_)) %>%
+    group_by(aid) %>%
+    fill(aid_wgt, .direction = "up") %>%
+    ungroup() %>%
+    mutate(aid = reorder(aid, aid_wgt)) %>%
     ggplot(aes(
       y = aid,
       x = pontuacao
@@ -1632,22 +1639,42 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
 
 ::: {.panel-tabset}
 
-#### MP's
+
+#### Ranking Geral
+
+```{r}
+#| label: plot-indice-geral
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-width: 10
+#| fig-height: 20
+
+plot_indice(df = indices_media_geral,
+            aid_cut = "MP-MS",
+            subgroup = indices %>% distinct(subgrupo) %>% pull(),
+            box_center = 1.3,
+            max_limit = 1.5)
+```
+
+#### MP
 
 ```{r}
 #| label: plot-indice-mp
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 11
 
 plot_indice(df = indices_media_geral,
             aid_cut = "MP-PR",
             subgroup = "Ministérios Públicos estaduais",
-            box_center = 1.1,
-            max_limit = 1.3)
+            box_center = 1.3,
+            max_limit = 1.5)
 ```
 
-#### TJ's
+#### TJ
 
 ```{r}
 #| label: plot-indice-tj
@@ -1658,11 +1685,11 @@ plot_indice(df = indices_media_geral,
 plot_indice(df = indices_media_geral,
             aid_cut = "TJ-MS",
             subgroup = "Tribunais de Justiça estaduais",
-            box_center = 0.7,
-            max_limit = 1)
+            box_center = 1.3,
+            max_limit = 1.5)
 ```
 
-#### TRF's
+#### TRF
 
 ```{r}
 #| label: plot-indice-trf
@@ -1673,11 +1700,11 @@ plot_indice(df = indices_media_geral,
 plot_indice(df = indices_media_geral,
             aid_cut = "TRF-2",
             subgroup = "Tribunais Regionais Federais",
-            box_center = 0.85,
-            max_limit = 1)
+            box_center = 1.3,
+            max_limit = 1.5)
 ```
 
-#### TRT's
+#### TRT
 
 ```{r}
 #| label: plot-indice-trt
@@ -1688,11 +1715,11 @@ plot_indice(df = indices_media_geral,
 plot_indice(df = indices_media_geral,
             aid_cut = "TRT-5",
             subgroup = "Tribunais Regionais do Trabalho",
-            box_center = 0.85,
-            max_limit = 1)
+            box_center = 1.3,
+            max_limit = 1.5)
 ```
 
-#### TJM's
+#### TJM
 
 ```{r}
 #| label: plot-indice-tjm
@@ -1703,8 +1730,8 @@ plot_indice(df = indices_media_geral,
 plot_indice(df = indices_media_geral,
             aid_cut = "TJM-RS",
             subgroup = "Tribunais de Justiça Militar",
-            box_center = 0.85,
-            max_limit = 1)
+            box_center = 1.3,
+            max_limit = 1.5)
 ```
 
 #### Órgãos superiores
