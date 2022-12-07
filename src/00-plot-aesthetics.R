@@ -37,14 +37,16 @@ cores_indice <- c(
 cores_login_nao_necessario <- c(
   "Não requer login" = cores_dadosjusbr[["cyan"]],
   "Requer login" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para classificar necessidade de captcha
 cores_captcha_nao_necessario <- c(
   "Não requer captcha" = cores_dadosjusbr[["cyan"]],
   "Requer captcha" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para classificar acesso
@@ -53,42 +55,48 @@ cores_acesso <- c(
   # "Amigável para raspagem" = cores_dadosjusbr[["cyan"]],
   "Raspagem dificultada" = cores_dadosjusbr[["cyan"]],
   "Necessita simulação de usuário" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores se manteve consistência no formato
 cores_manteve_consistencia_no_formato <- c(
   "Manteve consistência no formato" = cores_dadosjusbr[["cyan"]],
   "Não manteve consistência no formato" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para tabularidade dos dados
 cores_dados_estritamente_tabulares <- c(
   "Dados estritamente tabulares" = cores_dadosjusbr[["cyan"]],
   "Dados não tabulares" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para presença de nome e matricula
 cores_tem_matricula <- c(
   "Possui nome e matrícula" = cores_dadosjusbr[["cyan"]],
   "Não possui nome e matrícula" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para presença de lotação de membro
 cores_tem_lotacao <- c(
   "Possui lotação" = cores_dadosjusbr[["cyan"]],
   "Não possui lotação" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para presença de cargo de membro
 cores_tem_cargo <- c(
   "Possui cargo" = cores_dadosjusbr[["cyan"]],
   "Não possui cargo" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para dados de remuneracao básica, outras receitas ou despesas
@@ -96,7 +104,8 @@ cores_remuneracoes <- c(
   "Dados detalhados" = cores_dadosjusbr[["cyan"]],
   "Dados sumarizados" = cores_dadosjusbr[["laranja"]],
   "Dados ausentes" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores para formato/extensão dos dados
@@ -105,21 +114,24 @@ cores_extensao <- c(
   "HTML" = cores_dadosjusbr[["laranja"]],
   "ODS" = cores_dadosjusbr[["verde"]],
   "XLS" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores ára formato aberto ou proprietário
 cores_formato_aberto <- c(
   "Formato Aberto" = cores_dadosjusbr[["cyan"]],
   "Formato Proprietário" = cores_dadosjusbr[["lilas"]],
-  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]]
+  "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # cores se órgão presou contas ou não
 cores_prestou_contas <- c(
   "Órgão prestou contas" = cores_dadosjusbr[["laranja"]],
   "Órgão não prestou contas" = cores_dadosjusbr[["cinza_azulado"]],
-  "Coleta não realizada" = cores_dadosjusbr[["cinza_claro"]]
+  "Coleta não realizada" = cores_dadosjusbr[["cinza_claro"]],
+  "Órgão não coletado pelo DadosJusBr" = "gray85"
 )
 
 # uso de fontes e plot-aesthetics
