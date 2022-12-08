@@ -203,7 +203,7 @@ indices <- indices %>%
     # define uso de formato aberto
     extensao = case_when(
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
-      total_de_meses_coletados != 0 & is.na(extensao) ~ "Órgão não prestou contas",
+      is.na(extensao) ~ "Órgão não prestou contas",
       TRUE ~ extensao
     ),
 
