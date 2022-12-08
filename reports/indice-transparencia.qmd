@@ -39,6 +39,7 @@ execute:
 
 ```{r}
 #| label: libs-e-setup
+
 library(tidyverse)
 library(lubridate)
 library(jsonlite)
@@ -146,14 +147,16 @@ wgt_table <- function(df, criterio) {
 ```{r}
 #| label: wgt-table-facilidade
 #| panel: fill
+
 wgt_table(gsheet, "Facilidade")
 ```
 
 ### Critérios de Completude
 
 ```{r}
-#| panel: fill
 #| label: wgt-table-completude
+#| panel: fill
+
 wgt_table(gsheet, "Completude")
 ```
 :::
@@ -1529,6 +1532,7 @@ indices_pontuacoes <- indices_long %>%
 
 ```{r}
 #| label: indice-media-geral
+
 # `indice_media_geral`: média aritmética simples dos índices de todo o período
 indices_media_geral <- indices_pontuacoes %>%
   group_by(aid, subgrupo) %>%
@@ -1591,7 +1595,8 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
       limits = c(-.01, max_limit),
       breaks = c(0, .25, .5, .75, 1),
       minor_breaks = c(.25, .75),
-      expand = c(.001, 0)
+      expand = c(.001, 0),
+      labels = ~ scales::number(., decimal.mark = ",")
     ) +
     scale_fill_manual(values = c(
       "Completude" = cores_dadosjusbr[["laranja"]],
@@ -1626,6 +1631,7 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
       axis.title.x = element_text(vjust = -.5, hjust = .8),
       axis.ticks.x = element_blank(),
       axis.text.x = element_text(vjust = -.2),
+      axis.text.y = element_text(hjust = 0),
       legend.position = "top",
       legend.justification = "left",
       legend.background = element_rect(
@@ -1639,7 +1645,6 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
 
 ::: {.panel-tabset}
 
-
 #### Ranking Geral
 
 ```{r}
@@ -1648,13 +1653,38 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
 #| warning: false
 #| message: false
 #| fig-width: 10
-#| fig-height: 20
+#| fig-height: 25
 
 plot_indice(df = indices_media_geral,
             aid_cut = "MP-MS",
             subgroup = indices %>% distinct(subgrupo) %>% pull(),
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-indice-geral
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-width: 10
+#| fig-height: 25
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "MP-MS",
+            subgroup = indices %>% distinct(subgrupo) %>% pull(),
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-ranking-geral.svg"),
+  width = 2500,
+  height = 5000,
+  units = "px",
+  scale = 1
+)
+dev.off()
 ```
 
 #### MP
@@ -1674,6 +1704,28 @@ plot_indice(df = indices_media_geral,
             max_limit = 1.5)
 ```
 
+```{r}
+#| label: save-plot-mp
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "MP-MS",
+            subgroup = "Ministérios Públicos estaduais",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-mp.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
+```
+
 #### TJ
 
 ```{r}
@@ -1681,12 +1733,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 11
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TJ-MS",
             subgroup = "Tribunais de Justiça estaduais",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-tj
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TJ-MS",
+            subgroup = "Tribunais de Justiça estaduais",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-tj.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
 ```
 
 #### TRF
@@ -1696,12 +1772,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 5
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TRF-2",
             subgroup = "Tribunais Regionais Federais",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-trf
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TRF-2",
+            subgroup = "Tribunais Regionais Federais",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-trf.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
 ```
 
 #### TRT
@@ -1711,12 +1811,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 9.5
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TRT-5",
             subgroup = "Tribunais Regionais do Trabalho",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-trt
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TRT-5",
+            subgroup = "Tribunais Regionais do Trabalho",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-trt.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
 ```
 
 #### TJM
@@ -1726,12 +1850,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 3
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TJM-RS",
             subgroup = "Tribunais de Justiça Militar",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-tjm
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TJM-RS",
+            subgroup = "Tribunais de Justiça Militar",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-tjm.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
 ```
 
 #### Órgãos superiores
@@ -1741,12 +1889,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 3
 
 plot_indice(df = indices_media_geral,
             aid_cut = "STJ",
             subgroup = "Órgãos superiores",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-superiores
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "STJ",
+            subgroup = "Órgãos superiores",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-superiores.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
 ```
 
 :::
