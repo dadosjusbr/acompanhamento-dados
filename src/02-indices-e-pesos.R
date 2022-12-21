@@ -6,7 +6,12 @@ library(here)
 
 # USO DA API -------------------------------------------------------------------
 
-# Função para pegar dados da API para cara órgão/ano/mes
+#' @title Função para pegar dados da API para cara órgão/ano/mes
+#' @description recebe sigla do órgão (`aid`), `ano` e `mes` de referencia
+#' @param aid `string` com sigla do órgão, lower case e sem abreviação (ex: "mpal" ou "tjpb")
+#' @param ano `string` com ano de referencia a partid de 2018 (ex: "2022")
+#' @param mes `string` com mês de referencia, entre 1 e 12 (ex: "6")
+#' @return data-frame com resultados da coleta ou erro (quando dado não existe).`get_data_safe` retorna uma lista com itens `result` e `error` e é adequado para não quebrar loops.
 get_data <- function(aid, ano, mes) {
   message(str_glue("get {aid} {ano} {mes}"))
   Sys.sleep(.3)
@@ -30,19 +35,31 @@ orgaos <- "https://api.dadosjusbr.org/v1/orgaos" %>%
 # cada órgão/ano/mes é uma linha da tabela e quando um órgão/ano/mês não é
 # coletado nós mantemos a linha na tabela juntamente com o erro de coleta
 # ATENÇÃO: tempo de processamento/coleta desses dados da API pode demorar até 1h
-pacote_de_dados <- orgaos %>%
-  select(aid, name, type, entity, uf) %>%
-  crossing(ano = 2018:2022, .) %>%
-  crossing(mes = 1:12L, .) %>%
-  arrange(aid, ano, mes) %>%
-  mutate(a1 = pmap(list(aid, ano, mes), get_data_safe)) %>%
-  unnest(a1) %>%
-  group_by(aid, ano, mes) %>%
-  mutate(tipo = c("df", "error")) %>%
-  ungroup()
+{
 
-# guardo uma cópia para não precisar ficar consumindo a API toda hora
-saveRDS(pacote_de_dados, here::here(str_glue("data/load/pacote-de-dados-{today()}.rds")))
+  ini <- now()
+  message(str_glue("Início: {ini}"))
+
+  pacote_de_dados <- orgaos %>%
+    select(aid, name, type, entity, uf) %>%
+    crossing(ano = 2018:2022, .) %>%
+    crossing(mes = 1:12L, .) %>%
+    arrange(aid, ano, mes) %>%
+    mutate(a1 = pmap(list(aid, ano, mes), get_data_safe)) %>%
+    unnest(a1) %>%
+    group_by(aid, ano, mes) %>%
+    mutate(tipo = c("df", "error")) %>%
+    ungroup()
+
+  end <- now()
+  message(str_glue("Início: {ini}"))
+  message(str_glue("Fim: {end}"))
+  message(ini - end)
+
+  # guardo uma cópia para não precisar ficar consumindo a API toda hora
+  saveRDS(pacote_de_dados, here::here(str_glue("data/load/pacote-de-dados-{today()}.rds")))
+
+}
 
 # recupero a versão mais recente de `pacote_de_dados` que salvei localmente
 pacote_de_dados <- "data/load" %>%
@@ -55,6 +72,38 @@ pacote_de_dados <- "data/load" %>%
   readRDS()
 
 # AGRUPA ÓRGÃOS ----------------------------------------------------------------
+
+
+ufs <- c(
+  "ac", "al", "ap", "am",
+  "ba", "ce", "dft", "es",
+  "go", "ma", "mt", "ms",
+  "mg", "pa", "pb", "pr",
+  "pe", "pi", "rj", "rn",
+  "rs", "ro", "rr", "sc",
+  "sp", "se", "to"
+)
+
+pacote_de_dados %>%
+  arrange(aid) %>%
+  distinct(id_orgao = aid) %>%
+  mutate(
+    # cria um grupo mais amplo para separar órgãos
+    grupo = case_when(
+      id_orgao %in% str_glue("tre{ufs}") ~ "Justiça Eleitoral",
+      id_orgao %in% str_glue("mp{ufs}") ~ "Ministérios Públicos",
+      id_orgao %in% str_glue("tj{ufs}") ~ "Tribunais de Justiça",
+      id_orgao %in% str_glue("trt{1:24}") ~ "Justiça do Trabalho",
+      id_orgao %in% str_glue("tjm{ufs}") ~ "Justiça Militar",
+      id_orgao %in% str_glue("trf{1:5}") ~ "Justiça Federal",
+      id_orgao %in% c("mpf", "mpt", "stf", "stj") ~ "Justiça Federal",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  arrange(grupo, id_orgao) %>%
+    group_by(grupo) %>%
+    nest()
+  print(n = Inf)
 
 # Apronta os dados para análisar os índices e agrupa órgãos
 indices <- pacote_de_dados %>%
