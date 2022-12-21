@@ -5,6 +5,8 @@ data/raw
 data/ready
 data/load/erros_coleta*
 local-files/*
+reports/*.html
+reports/indice-transparencia_files/*
 .RData
 .Rhistory
 /.Rproj.user
