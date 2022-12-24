@@ -4,6 +4,12 @@ library(jsonlite)
 library(lubridate)
 library(here)
 
+# CARREGA TABELA DE ÓRGAOS -----------------------------------------------------
+
+# Lista de órgãos, o script abaixo pega dados da API faz um agrupamento de órgãos
+# e tratamento do campo `aid`
+source(here("src/01-tabela-de-orgaos.R"), encoding = "utf-8")
+
 # USO DA API -------------------------------------------------------------------
 
 #' @title Função para pegar dados da API para cara órgão/ano/mes
@@ -12,22 +18,19 @@ library(here)
 #' @param ano `string` com ano de referencia a partid de 2018 (ex: "2022")
 #' @param mes `string` com mês de referencia, entre 1 e 12 (ex: "6")
 #' @return data-frame com resultados da coleta ou erro (quando dado não existe).`get_data_safe` retorna uma lista com itens `result` e `error` e é adequado para não quebrar loops.
-get_data <- function(aid, ano, mes) {
-  message(str_glue("get {aid} {ano} {mes}"))
-  Sys.sleep(.3)
+#'
+get_data <- function(id_orgao, ano, mes) {
+  message(str_glue("get {id_orgao} {ano} {mes}"))
+  Sys.sleep(.15)
   fromJSON(
     # url-base
-    str_glue("https://api.dadosjusbr.org/v1/dados/{aid}/{ano}/{mes}")
+    str_glue("https://api.dadosjusbr.org/v1/dados/{id_orgao}/{ano}/{mes}")
   )
 }
 
 # safely mode
 get_data_safe <- safely(get_data)
 
-# Lista de órgãos (inclusive aqueles que o DadosJusBr ainda não coleta)
-orgaos <- "https://api.dadosjusbr.org/v1/orgaos" %>%
-  fromJSON() %>%
-  as_tibble()
 
 # PACOTE DE DADOS --------------------------------------------------------------
 
@@ -41,13 +44,13 @@ orgaos <- "https://api.dadosjusbr.org/v1/orgaos" %>%
   message(str_glue("Início: {ini}"))
 
   pacote_de_dados <- orgaos %>%
-    select(aid, name, type, entity, uf) %>%
+    select(id_orgao, name, type, entity, uf) %>%
     crossing(ano = 2018:2022, .) %>%
     crossing(mes = 1:12L, .) %>%
-    arrange(aid, ano, mes) %>%
-    mutate(a1 = pmap(list(aid, ano, mes), get_data_safe)) %>%
+    arrange(id_orgao, ano, mes) %>%
+    mutate(a1 = pmap(list(id_orgao, ano, mes), get_data_safe)) %>%
     unnest(a1) %>%
-    group_by(aid, ano, mes) %>%
+    group_by(id_orgao, ano, mes) %>%
     mutate(tipo = c("df", "error")) %>%
     ungroup()
 
@@ -73,38 +76,6 @@ pacote_de_dados <- "data/load" %>%
 
 # AGRUPA ÓRGÃOS ----------------------------------------------------------------
 
-
-ufs <- c(
-  "ac", "al", "ap", "am",
-  "ba", "ce", "dft", "es",
-  "go", "ma", "mt", "ms",
-  "mg", "pa", "pb", "pr",
-  "pe", "pi", "rj", "rn",
-  "rs", "ro", "rr", "sc",
-  "sp", "se", "to"
-)
-
-pacote_de_dados %>%
-  arrange(aid) %>%
-  distinct(id_orgao = aid) %>%
-  mutate(
-    # cria um grupo mais amplo para separar órgãos
-    grupo = case_when(
-      id_orgao %in% str_glue("tre{ufs}") ~ "Justiça Eleitoral",
-      id_orgao %in% str_glue("mp{ufs}") ~ "Ministérios Públicos",
-      id_orgao %in% str_glue("tj{ufs}") ~ "Tribunais de Justiça",
-      id_orgao %in% str_glue("trt{1:24}") ~ "Justiça do Trabalho",
-      id_orgao %in% str_glue("tjm{ufs}") ~ "Justiça Militar",
-      id_orgao %in% str_glue("trf{1:5}") ~ "Justiça Federal",
-      id_orgao %in% c("mpf", "mpt", "stf", "stj") ~ "Justiça Federal",
-      TRUE ~ NA_character_
-    )
-  ) %>%
-  arrange(grupo, id_orgao) %>%
-    group_by(grupo) %>%
-    nest()
-  print(n = Inf)
-
 # Apronta os dados para análisar os índices e agrupa órgãos
 indices <- pacote_de_dados %>%
   pivot_wider(names_from = tipo, values_from = a1) %>%
@@ -114,61 +85,23 @@ indices <- pacote_de_dados %>%
     error = map(error, as.character)
   ) %>%
   unnest(c(df, error), keep_empty = TRUE) %>%
-  transmute(
-
-    # isso preenche campos onde `id_orgao = NA`
-    id_orgao = aid,
-
-    # cria um grupo mais amplo para separar órgãos
-    grupo = case_when(
-      str_detect(id_orgao, "^tj") ~ "Tribunal de Justiça",
-      str_detect(id_orgao, "^mp[^f$]") ~ "Ministério Público",
-      str_detect(id_orgao, "^tr") ~ "Tribunal Regional",
-      TRUE ~ "Órgãos superiores"
-    ),
-
-    # cria subgrupos mais granulares
-    subgrupo = case_when(
-      grupo == "Tribunal de Justiça" & type == "Estadual" ~ "Tribunais de Justiça estaduais",
-      grupo == "Tribunal de Justiça" & type != "Estadual" & str_detect(name, "Militar") ~ "Tribunais de Justiça Militar",
-      grupo == "Ministério Público" ~ "Ministérios Públicos estaduais",
-      grupo == "Tribunal Regional" & uf == "Federal" ~ "Tribunais Regionais Federais",
-      grupo == "Tribunal Regional" & uf == "Trabalho" ~ "Tribunais Regionais do Trabalho",
-      TRUE ~ "Órgãos superiores"
-    ),
-
-    # recodifica siglas de órgão (maiúscula e com hífen)
-    aid = case_when(
-      grupo == "Ministério Público" ~ gsub("^(mp)(.+)$", "\\1-\\2", aid),
-      subgrupo == "Tribunais de Justiça estaduais" ~ gsub("^(tj)(.+)$", "\\1-\\2", aid),
-      subgrupo == "Tribunais de Justiça Militar" ~ gsub("^(tjm)(.+)$", "\\1-\\2", aid),
-      grupo == "Tribunal Regional" ~ gsub("^([a-z]+)(\\d{1,2})$", "\\1-\\2", aid),
-      TRUE ~ aid
-    ) %>% toupper(),
-
-    # colunas mes e ano
-    # mes = mes,
-    # ano = id_ano,
-    id_ano, id_mes,
-
-    # info sobre coletas
-    coletado = coletado,
-    error = error,
-
-    # base para calcular índice de transparêcia
-    Meta = Meta
+  select(
+    id_mes, id_ano, id_orgao = aid,
+    name, type, entity, error, coletado,
+    uf, mes, ano, Meta
   ) %>%
+  left_join(select(orgaos, id_orgao, aid, grupo)) %>%
   unnest(Meta)
 
-  # CONTA MESES COLETADOS --------------------------------------------------------
+# CONTA MESES COLETADOS --------------------------------------------------------
 
-  # Faço a contagem de números de órgão/ano/mês coletados.
-  # Se o valor de `total_de_meses_coletado` == 0, o órgão não está incluso (ainda)
-  # no pipeline de coletas do DadosJusBr (não há um coletor em produção)
-  indices <- indices %>%
-    group_by(aid) %>%
-    mutate(total_de_meses_coletados = sum(coletado)) %>%
-    ungroup()
+# Faço a contagem de números de órgão/ano/mês coletados.
+# Se o valor de `total_de_meses_coletado` == 0, o órgão não está incluso (ainda)
+# no pipeline de coletas do DadosJusBr (não há um coletor em produção)
+indices <- indices %>%
+  group_by(aid) %>%
+  mutate(total_de_meses_coletados = sum(coletado)) %>%
+  ungroup()
 
 # PESOS ------------------------------------------------------------------------
 
@@ -179,16 +112,21 @@ indices <- indices %>%
 
     # colunas de data e identificação de órgão
     aid = aid,
-    subgrupo = subgrupo,
+    grupo = grupo,
     mes = id_mes,
     ano = id_ano,
     data = my(str_glue("{id_mes}-{id_ano}")),
 
     # periodo inválido para controlar balanceamento da base (sempre em intervalo de 12 meses)
-    periodo_invalido = if_else(
-      id_ano == year(today()) & id_mes > month(today()) & day(today()) < 16,
-      TRUE, FALSE
+    periodo_invalido = case_when(
+      id_ano == year(today()) & id_mes == 12 ~ TRUE,
+      id_ano == year(today()) & day(today()) < 16 ~ TRUE,
+      TRUE ~ FALSE
     ),
+    # periodo_invalido = if_else(
+    #   id_ano == year(today()) & id_mes > month(today()) & day(today()) < 16,
+    #   TRUE, FALSE
+    # ),
 
     # se foi realida uma coleta para órgão/ano/mês
     coletado = coletado,
@@ -200,6 +138,7 @@ indices <- indices %>%
 
     # define o tipo de acesso aos dados
     acesso = case_when(
+      periodo_invalido ~ "Coleta fora do período",
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
       acesso == "ACESSO_DIRETO" ~ "Acesso direto",
       acesso == "AMIGAVEL_PARA_RASPAGEM" ~ "Acesso direto",
@@ -214,11 +153,13 @@ indices <- indices %>%
       acesso == "Raspagem dificultada" ~ 0.5,
       acesso == "Necessita simulação de usuário" ~ 0,
       acesso == "Órgão não prestou contas" ~ -1,
-      acesso == "Órgão não coletado pelo DadosJusBr" ~ -2
+      acesso == "Órgão não coletado pelo DadosJusBr" ~ -2,
+      acesso == "Coleta fora do período" ~ -3
     ),
 
     # define consistência de formato de dado
     manteve_consistencia_no_formato = case_when(
+      periodo_invalido ~ "Coleta fora do período",
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
       manteve_consistencia_no_formato ~ "Manteve consistência no formato",
       !manteve_consistencia_no_formato ~ "Não manteve consistência no formato",
@@ -230,7 +171,8 @@ indices <- indices %>%
       manteve_consistencia_no_formato == "Manteve consistência no formato" ~ 1L,
       manteve_consistencia_no_formato == "Não manteve consistência no formato" ~ 0L,
       manteve_consistencia_no_formato == "Órgão não prestou contas" ~ -1L,
-      manteve_consistencia_no_formato == "Órgão não coletado pelo DadosJusBr" ~ -2L
+      manteve_consistencia_no_formato == "Órgão não coletado pelo DadosJusBr" ~ -2L,
+      manteve_consistencia_no_formato == "Coleta fora do período" ~ -3L
     ),
 
     # define tabularidade dos dados
@@ -246,11 +188,13 @@ indices <- indices %>%
       dados_estritamente_tabulares == "Dados estritamente tabulares" ~ 1L,
       dados_estritamente_tabulares == "Dados não tabulares" ~ 0L,
       dados_estritamente_tabulares == "Órgão não prestou contas" ~ -1L,
-      dados_estritamente_tabulares == "Órgão não coletado pelo DadosJusBr" ~ -2L
+      dados_estritamente_tabulares == "Órgão não coletado pelo DadosJusBr" ~ -2L,
+      dados_estritamente_tabulares == "Coleta fora do período" ~ -3L
     ),
 
     # define uso de formato aberto
     extensao = case_when(
+      periodo_invalido ~ "Coleta fora do período",
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
       is.na(extensao) ~ "Órgão não prestou contas",
       TRUE ~ extensao
@@ -263,11 +207,13 @@ indices <- indices %>%
       extensao == "CSV" ~ 1L,
       extensao == "XLS" ~ 0L,
       extensao == "Órgão não prestou contas" ~ -1L,
-      extensao == "Órgão não coletado pelo DadosJusBr" ~ -2L
+      extensao == "Órgão não coletado pelo DadosJusBr" ~ -2L,
+      extensao == "Coleta fora do período" ~ -3L
     ),
 
     # define uso de formato aberto (binário)
     formato_aberto = case_when(
+      periodo_invalido ~ "Coleta fora do período",
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
       extensao %in% c("HTML", "ODS") ~ "Formato Aberto",
       extensao == "Órgão não prestou contas" ~ extensao,
@@ -276,6 +222,7 @@ indices <- indices %>%
 
     # define um peso para ordenar as categorias
     formato_aberto_wgt = case_when(
+      formato_aberto == "Coleta fora do período" ~ -3L,
       formato_aberto == "Órgão não coletado pelo DadosJusBr" ~ -2L,
       formato_aberto == "Formato Aberto" ~ 1L,
       formato_aberto == "Formato Proprietário" ~ 0L,
@@ -288,6 +235,7 @@ indices <- indices %>%
 
     # define presença e ausência de de matricula e nome
     tem_matricula = case_when(
+      periodo_invalido ~ "Coleta fora do período",
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
       tem_matricula ~ "Possui nome e matrícula",
       !tem_matricula ~ "Não possui nome e matrícula",
@@ -299,11 +247,13 @@ indices <- indices %>%
       tem_matricula == "Possui nome e matrícula" ~ 1L,
       tem_matricula == "Não possui nome e matrícula" ~ 0L,
       tem_matricula == "Órgão não prestou contas" ~ -1L,
-      tem_matricula == "Órgão não coletado pelo DadosJusBr" ~ -2L
+      tem_matricula == "Órgão não coletado pelo DadosJusBr" ~ -2L,
+      tem_matricula == "Coleta fora do período" ~ -3L
     ),
 
     # define presença e ausência de cargo
     tem_cargo = case_when(
+      periodo_invalido ~ "Coleta fora do período",
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
       tem_cargo ~ "Possui cargo",
       !tem_cargo ~ "Não possui cargo",
@@ -315,11 +265,13 @@ indices <- indices %>%
       tem_cargo == "Possui cargo" ~ 1L,
       tem_cargo == "Não possui cargo" ~ 0L,
       tem_cargo == "Órgão não prestou contas" ~ -1L,
-      tem_cargo == "Órgão não coletado pelo DadosJusBr" ~ -2L
+      tem_cargo == "Órgão não coletado pelo DadosJusBr" ~ -2L,
+      tem_cargo == "Coleta fora do período" ~ -3L
     ),
 
     # define presença e ausência de cargo
     tem_lotacao = case_when(
+      periodo_invalido ~ "Coleta fora do período",
       total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
       tem_lotacao ~ "Possui lotação",
       !tem_lotacao ~ "Não possui lotação",
@@ -331,13 +283,15 @@ indices <- indices %>%
       tem_lotacao == "Possui lotação" ~ 1L,
       tem_lotacao == "Não possui lotação" ~ 0L,
       tem_lotacao == "Órgão não prestou contas" ~ -1L,
-      tem_lotacao == "Órgão não coletado pelo DadosJusBr" ~ -2L
+      tem_lotacao == "Órgão não coletado pelo DadosJusBr" ~ -2L,
+      tem_lotacao == "Coleta fora do período" ~ -3L
     ),
 
     # define dados de remuneração básica, despesas e outras receitas
     across(
       .cols = c(remuneracao_basica, despesas, outras_receitas),
       .fns = ~ case_when(
+        periodo_invalido ~ "Coleta fora do período",
         total_de_meses_coletados == 0 ~ "Órgão não coletado pelo DadosJusBr",
         . == "DETALHADO" ~ "Dados detalhados",
         . == "SUMARIZADO" ~ "Dados sumarizados",
@@ -354,7 +308,8 @@ indices <- indices %>%
         . == "Dados sumarizados" ~ 0.5,
         . == "Dados ausentes" ~ 0,
         . == "Órgão não prestou contas" ~ -1,
-        . == "Órgão não coletado pelo DadosJusBr" ~ -2
+        . == "Órgão não coletado pelo DadosJusBr" ~ -2,
+        . == "Coleta fora do período" ~ -3
       )),
 
     # reordena as categorias de acordo com o peso
