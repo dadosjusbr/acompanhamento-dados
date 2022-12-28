@@ -18,7 +18,7 @@ format:
     toc-collapsed: false
     footnotes-hover: true
     smooth-scroll: true
-    fig-width: 10
+    fig-width: 11
     fig-height: 7
     search: true
     theme:
@@ -39,6 +39,7 @@ execute:
 
 ```{r}
 #| label: libs-e-setup
+
 library(tidyverse)
 library(lubridate)
 library(jsonlite)
@@ -46,16 +47,21 @@ library(scales)
 library(extrafont)
 library(here)
 library(gt)
+
+# O código abaixo irá preparar cores e estilos dos gráficos
 source(here("src/00-plot-aesthetics.R"), encoding = "utf-8")
+
+# o código abaixo execut o script que produz a base de dados utilizada no relatório
+# salvando uma cópia como: data/load/indices-aaaa-dd-mm.rds
 #source(here("src/01-indices-e-pesos.R"), encoding = "utf-8")
 
-# carregando os dados em disco
+# carregando os dados em disco: data/load/indices-aaaa-dd-mm.rds
 indices <- "data/load" %>%
   here() %>%
   list.files(pattern = "indices-2022-\\d{2}-\\d{2}", full.names = TRUE) %>%
   file.info() %>%
   rownames_to_column(var = "file") %>%
-  filter(ctime == max(ctime)) %>%
+  filter(ctime == max(ctime)) %>% # quero a versão mais recente
   pull(file) %>%
   readRDS()
 ```
@@ -146,14 +152,16 @@ wgt_table <- function(df, criterio) {
 ```{r}
 #| label: wgt-table-facilidade
 #| panel: fill
+
 wgt_table(gsheet, "Facilidade")
 ```
 
 ### Critérios de Completude
 
 ```{r}
-#| panel: fill
 #| label: wgt-table-completude
+#| panel: fill
+
 wgt_table(gsheet, "Completude")
 ```
 :::
@@ -163,21 +171,17 @@ wgt_table(gsheet, "Completude")
 
 plot_categoria <- function(df, orgao, categoria, pallete) {
   df <- df %>% filter(aid %in% orgao)
-  plot_title <- str_glue("{itens_categoria[[categoria]]} | {unique(df$subgrupo)}")
+  plot_title <- str_glue("{itens_categoria[[categoria]]} | {unique(df$grupo)}")
+  categoria <- sym(categoria)
   df %>%
-    filter(!periodo_invalido) %>%
-    ggplot(aes_string(x = "data", y = "aid", fill = categoria)) +
+    ggplot(aes(x = data, y = aid, fill = !! categoria)) +
     facet_wrap(ano ~ ., nrow = 1, scales = "free_x") +
-    geom_tile(color = "gray90") +
-    geom_tile(
-      data = . %>% filter(periodo_invalido),
-      fill = cores_dadosjusbr[["cinza_claro"]],
-      color = "gray90"
-    ) +
+    geom_tile(color = "gray30") +
     scale_fill_manual(values = pallete) +
     scale_x_date(
       date_breaks = "3 months",
-      date_labels = "%b"
+      date_labels = "%b",
+      expand = c(0, 0)
     ) +
     theme_adjust_waffle +
     labs(
@@ -186,9 +190,12 @@ plot_categoria <- function(df, orgao, categoria, pallete) {
       title = plot_title,
       fill = NULL
     ) +
-    guides(fill = guide_legend(nrow = 1)) +
+    guides(fill = guide_legend(nrow = 1, reverse = T)) +
     scale_y_discrete(expand = c(0, 0)) +
-    theme(axis.title.x = element_text(face = "italic"))
+    theme(
+      axis.title.x = element_text(face = "italic"),
+      axis.text.y = element_text(hjust = 0)
+    )
 }
 ```
 
@@ -198,9 +205,11 @@ plot_categoria <- function(df, orgao, categoria, pallete) {
 #| warning: false
 #| message: false
 
+# o código abaixo vai guardar no .GlobalEnv vetores com as siglas de cada órgão
+# separados por grupo - eu vou usar esses vetores para filtrar os órgãos da base
 indices %>%
-  distinct(aid, subgrupo) %>%
-  group_by(subgrupo) %>%
+  distinct(aid, grupo) %>%
+  group_by(grupo) %>%
   nest() %>%
   deframe() %>%
   map(pull) %>%
@@ -226,45 +235,48 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, acesso_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "acesso",
     pallete = cores_acesso
 )
 ```
 
-#### Tj
+#### TJ
 
 ```{r}
 #| label: plot-tj-acesso
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, acesso_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "acesso",
     pallete = cores_acesso
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-acesso
+#| label: plot-justica-federal-acesso
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, acesso_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "acesso",
     pallete = cores_acesso
 )
@@ -277,11 +289,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, acesso_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "acesso",
     pallete = cores_acesso
 )
@@ -294,28 +307,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, acesso_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "acesso",
     pallete = cores_acesso
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-acesso
+#| label: plot-tre-acesso
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, acesso_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "acesso",
     pallete = cores_acesso
 )
@@ -338,11 +353,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, manteve_consistencia_no_formato_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "manteve_consistencia_no_formato",
     pallete = cores_manteve_consistencia_no_formato
 )
@@ -355,28 +371,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, manteve_consistencia_no_formato_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "manteve_consistencia_no_formato",
     pallete = cores_manteve_consistencia_no_formato
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-manteve-consistencia
+#| label: plot-justica-federal-manteve-consistencia
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, manteve_consistencia_no_formato_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "manteve_consistencia_no_formato",
     pallete = cores_manteve_consistencia_no_formato
 )
@@ -389,11 +407,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, manteve_consistencia_no_formato_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "manteve_consistencia_no_formato",
     pallete = cores_manteve_consistencia_no_formato
 )
@@ -406,28 +425,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, manteve_consistencia_no_formato_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "manteve_consistencia_no_formato",
     pallete = cores_manteve_consistencia_no_formato
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-manteve-consistencia
+#| label: plot-tre-manteve-consistencia
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, manteve_consistencia_no_formato_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "manteve_consistencia_no_formato",
     pallete = cores_manteve_consistencia_no_formato
 )
@@ -450,11 +471,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, dados_estritamente_tabulares_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "dados_estritamente_tabulares",
     pallete = cores_dados_estritamente_tabulares
 )
@@ -467,28 +489,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, dados_estritamente_tabulares_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "dados_estritamente_tabulares",
     pallete = cores_dados_estritamente_tabulares
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-tabulares
+#| label: plot-justica-federal-tabulares
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, dados_estritamente_tabulares_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "dados_estritamente_tabulares",
     pallete = cores_dados_estritamente_tabulares
 )
@@ -501,11 +525,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, dados_estritamente_tabulares_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "dados_estritamente_tabulares",
     pallete = cores_dados_estritamente_tabulares
 )
@@ -514,32 +539,34 @@ indices %>%
 #### TJM
 
 ```{r}
-#| label: plot-tjm-extensao
+#| label: plot-tjm-tabulares
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
-  mutate(aid = reorder(aid, extensao_wgt, sum)) %>%
+  mutate(aid = reorder(aid, dados_estritamente_tabulares_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "extensao",
     pallete = cores_extensao
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-tabulares
+#| label: plot-tre-tabulares
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, dados_estritamente_tabulares_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "dados_estritamente_tabulares",
     pallete = cores_dados_estritamente_tabulares
 )
@@ -568,11 +595,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, extensao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "extensao",
     pallete = cores_extensao
 )
@@ -585,28 +613,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, extensao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "extensao",
     pallete = cores_extensao
 )
 ```
 
-##### TRF
+##### Justiça Federal
 
 ```{r}
-#| label: plot-trf-extensao
+#| label: plot-justica-federal-extensao
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, extensao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "extensao",
     pallete = cores_extensao
 )
@@ -619,28 +649,48 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, extensao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "extensao",
     pallete = cores_extensao
 )
 ```
 
-##### Órgãos superiores
+##### TJM
 
 ```{r}
-#| label: plot-superiores-extensao
+#| label: plot-tjm-extensao
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, extensao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Militar`,
+    categoria = "extensao",
+    pallete = cores_extensao
+)
+```
+
+##### TRE
+
+```{r}
+#| label: plot-tre-extensao
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-height: 8.75
+
+indices %>%
+  mutate(aid = reorder(aid, extensao_wgt, sum)) %>%
+  plot_categoria(
+    orgao = `Justiça Eleitoral`,
     categoria = "extensao",
     pallete = cores_extensao
 )
@@ -663,11 +713,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, formato_aberto_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "formato_aberto",
     pallete = cores_formato_aberto
 )
@@ -680,28 +731,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, formato_aberto_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "formato_aberto",
     pallete = cores_formato_aberto
 )
 ```
 
-##### TRF
+##### Justiça Federal
 
 ```{r}
-#| label: plot-trf-formato-aberto
+#| label: plot-justica-federal-formato-aberto
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, formato_aberto_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "formato_aberto",
     pallete = cores_formato_aberto
 )
@@ -714,28 +767,48 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, formato_aberto_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "formato_aberto",
     pallete = cores_formato_aberto
 )
 ```
 
-##### Órgãos superiores
+##### TJM
 
 ```{r}
-#| label: plot-superiores-formato-aberto
+#| label: plot-tjm-formato-aberto
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, formato_aberto_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Militar`,
+    categoria = "extensao",
+    pallete = cores_extensao
+)
+```
+
+##### TRE
+
+```{r}
+#| label: plot-tre-formato-aberto
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-height: 8.75
+
+indices %>%
+  mutate(aid = reorder(aid, formato_aberto_wgt, sum)) %>%
+  plot_categoria(
+    orgao = `Justiça Eleitoral`,
     categoria = "formato_aberto",
     pallete = cores_formato_aberto
 )
@@ -760,11 +833,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_matricula_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "tem_matricula",
     pallete = cores_tem_matricula
 )
@@ -777,28 +851,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_matricula_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "tem_matricula",
     pallete = cores_tem_matricula
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-tem-nome-matricula
+#| label: plot-justica-federal-tem-nome-matricula
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, tem_matricula_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "tem_matricula",
     pallete = cores_tem_matricula
 )
@@ -811,11 +887,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, tem_matricula_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "tem_matricula",
     pallete = cores_tem_matricula
 )
@@ -828,28 +905,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, tem_matricula_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "tem_matricula",
     pallete = cores_tem_matricula
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-nome-matricula
+#| label: plot-tre-tem-nome-matricula
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_matricula_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "tem_matricula",
     pallete = cores_tem_matricula
 )
@@ -872,11 +951,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_lotacao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "tem_lotacao",
     pallete = cores_tem_lotacao
 )
@@ -889,28 +969,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_lotacao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "tem_lotacao",
     pallete = cores_tem_lotacao
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-tem-lotacao
+#| label: plot-justica-federal-tem-lotacao
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, tem_lotacao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "tem_lotacao",
     pallete = cores_tem_lotacao
 )
@@ -923,11 +1005,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, tem_lotacao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "tem_lotacao",
     pallete = cores_tem_lotacao
 )
@@ -940,28 +1023,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, tem_lotacao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "tem_lotacao",
     pallete = cores_tem_lotacao
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-tem-lotacao
+#| label: plot-tre-tem-lotacao
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_lotacao_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "tem_lotacao",
     pallete = cores_tem_lotacao
 )
@@ -984,11 +1069,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_cargo_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "tem_cargo",
     pallete = cores_tem_cargo
 )
@@ -1001,28 +1087,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_cargo_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "tem_cargo",
     pallete = cores_tem_cargo
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-tem-cargo
+#| label: plot-justica-federal-tem-cargo
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, tem_cargo_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "tem_cargo",
     pallete = cores_tem_cargo
 )
@@ -1035,11 +1123,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, tem_cargo_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "tem_cargo",
     pallete = cores_tem_cargo
 )
@@ -1052,28 +1141,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, tem_cargo_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "tem_cargo",
     pallete = cores_tem_cargo
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-tem-cargo
+#| label: plot-tre-tem-cargo
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, tem_cargo_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "tem_cargo",
     pallete = cores_tem_cargo
 )
@@ -1098,11 +1189,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, remuneracao_basica_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "remuneracao_basica",
     pallete = cores_remuneracoes
 )
@@ -1115,28 +1207,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, remuneracao_basica_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "remuneracao_basica",
     pallete = cores_remuneracoes
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-remuneracao-basica
+#| label: plot-justica-federal-remuneracao-basica
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, remuneracao_basica_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "remuneracao_basica",
     pallete = cores_remuneracoes
 )
@@ -1149,11 +1243,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, remuneracao_basica_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "remuneracao_basica",
     pallete = cores_remuneracoes
 )
@@ -1166,28 +1261,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, remuneracao_basica_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "remuneracao_basica",
     pallete = cores_remuneracoes
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-remuneracao-basica
+#| label: plot-tre-remuneracao-basica
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, remuneracao_basica_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "remuneracao_basica",
     pallete = cores_remuneracoes
 )
@@ -1212,11 +1309,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, despesas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "despesas",
     pallete = cores_remuneracoes
 )
@@ -1229,28 +1327,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, despesas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "despesas",
     pallete = cores_remuneracoes
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-despesas
+#| label: plot-justica-federal-despesas
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, despesas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "despesas",
     pallete = cores_remuneracoes
 )
@@ -1263,11 +1363,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, despesas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "despesas",
     pallete = cores_remuneracoes
 )
@@ -1280,28 +1381,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, despesas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "despesas",
     pallete = cores_remuneracoes
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-despesas
+#| label: plot-tre-despesas
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, despesas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "despesas",
     pallete = cores_remuneracoes
 )
@@ -1326,11 +1429,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, outras_receitas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Ministérios Públicos estaduais`,
+    orgao = `Ministérios Públicos`,
     categoria = "outras_receitas",
     pallete = cores_remuneracoes
 )
@@ -1343,28 +1447,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, outras_receitas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça estaduais`,
+    orgao = `Tribunais de Justiça`,
     categoria = "outras_receitas",
     pallete = cores_remuneracoes
 )
 ```
 
-#### TRF
+#### Justiça Federal
 
 ```{r}
-#| label: plot-trf-outras-receitas
+#| label: plot-justica-federal-outras-receitas
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 5
 
 indices %>%
   mutate(aid = reorder(aid, outras_receitas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais Federais`,
+    orgao = `Justiça Federal`,
     categoria = "outras_receitas",
     pallete = cores_remuneracoes
 )
@@ -1377,11 +1483,12 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 7.25
 
 indices %>%
   mutate(aid = reorder(aid, outras_receitas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais Regionais do Trabalho`,
+    orgao = `Justiça do Trabalho`,
     categoria = "outras_receitas",
     pallete = cores_remuneracoes
 )
@@ -1394,28 +1501,30 @@ indices %>%
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 3.5
 
 indices %>%
   mutate(aid = reorder(aid, outras_receitas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Tribunais de Justiça Militar`,
+    orgao = `Justiça Militar`,
     categoria = "outras_receitas",
     pallete = cores_remuneracoes
 )
 ```
 
-#### Órgãos superiores
+#### TRE
 
 ```{r}
-#| label: plot-superiores-outras-receitas
+#| label: plot-tre-outras-receitas
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-height: 8.75
 
 indices %>%
   mutate(aid = reorder(aid, outras_receitas_wgt, sum)) %>%
   plot_categoria(
-    orgao = `Órgãos superiores`,
+    orgao = `Justiça Eleitoral`,
     categoria = "outras_receitas",
     pallete = cores_remuneracoes
 )
@@ -1455,17 +1564,28 @@ $$
 #### Ministérios Públicos
 
 ```{r}
+#| label: indices-long
+
+# vetor auxiliar
 criterios <- c("Tem cargo", "Tem lotação", "Tem matrícula", "Remuneração básica", "Outras receitas", "Despesas")
 
+orgaos_do_painel_cnj <- c(
+  `Tribunais de Justiça`,
+  `Justiça Militar`,
+  `Justiça do Trabalho`,
+  `Justiça Federal`[-("MPF", "STF", "MPT")]
+)
+
+# `indices_long`: é a tabela de índices com as pontuações por criterio em formato long. Cada linha é um órgão/mes/ano/criterio
 indices_long <- indices %>%
   filter(!periodo_invalido) %>%
   select(
-    mes, ano, aid, subgrupo, data, periodo_invalido,
+    mes, ano, aid, grupo, data, periodo_invalido,
     ends_with("_wgt"),
     -extensao_wgt
   ) %>%
   pivot_longer(
-    -c(mes, ano, data, periodo_invalido, aid, subgrupo),
+    -c(mes, ano, data, periodo_invalido, aid, grupo),
     names_to = "criterio", values_to = "pontuacao"
   ) %>%
   mutate(
@@ -1484,26 +1604,25 @@ indices_long <- indices %>%
       TRUE ~ criterio
     ),
     pontuacao = case_when(
-      subgrupo %in% c("Tribunais de Justiça estaduais",
-                      "Tribunais Regionais Federais",
-                      "Tribunais Regionais do Trabalho",
-                      "Tribunais de Justiça Militar") &
+      aid %in% orgaos_do_painel_cnj & criterio == "Acesso" & pontuacao == -1 ~ 0,
+    )
+    pontuacao = case_when(
+      grupo %in% c("Tribunais de Justiça",
+                   "Justiça do Trabalho",
+                   "Justiça Militar") &
         criterio == "Acesso" & pontuacao == -1 ~ 0,
-      subgrupo %in% c("Tribunais de Justiça estaduais",
-                      "Tribunais Regionais Federais",
-                      "Tribunais Regionais do Trabalho",
-                      "Tribunais de Justiça Militar") &
+      grupo %in% c("Tribunais de Justiça",
+                   "Justiça do Trabalho",
+                   "Justiça Militar") &
         criterio == "Extensão" & pontuacao == -1 ~ 0,
-      subgrupo %in% c("Tribunais de Justiça estaduais",
-                      "Tribunais Regionais Federais",
-                      "Tribunais Regionais do Trabalho",
-                      "Tribunais de Justiça Militar") &
+      grupo %in% c("Tribunais de Justiça",
+                   "Justiça do Trabalho",
+                   "Justiça Militar") &
         criterio == "Manteve consistência no formato" &
         pontuacao == -1 ~ 1,
-      subgrupo %in% c("Tribunais de Justiça estaduais",
-                      "Tribunais Regionais Federais",
-                      "Tribunais Regionais do Trabalho",
-                      "Tribunais de Justiça Militar") &
+      grupo %in% c("Tribunais de Justiça",
+                   "Justiça do Trabalho",
+                   "Justiça Militar") &
         criterio == "Dados estritamente tabulares" &
         pontuacao == -1 ~ 1,
       aid == "STJ" &
@@ -1527,8 +1646,10 @@ indices_pontuacoes <- indices_long %>%
   mutate(Transparência = media_harmonica(Completude, Facilidade))
 ```
 
+
 ```{r}
 #| label: indice-media-geral
+
 # `indice_media_geral`: média aritmética simples dos índices de todo o período
 indices_media_geral <- indices_pontuacoes %>%
   group_by(aid, subgrupo) %>%
@@ -1539,6 +1660,7 @@ indices_media_geral <- indices_pontuacoes %>%
       .fns = ~ if_else(Completude + Facilidade + Transparência == 0, -1, .)
   ))
 ```
+
 
 ```{r}
 #| fig-height: 9
@@ -1591,7 +1713,8 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
       limits = c(-.01, max_limit),
       breaks = c(0, .25, .5, .75, 1),
       minor_breaks = c(.25, .75),
-      expand = c(.001, 0)
+      expand = c(.001, 0),
+      labels = ~ scales::number(., decimal.mark = ",")
     ) +
     scale_fill_manual(values = c(
       "Completude" = cores_dadosjusbr[["laranja"]],
@@ -1626,6 +1749,7 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
       axis.title.x = element_text(vjust = -.5, hjust = .8),
       axis.ticks.x = element_blank(),
       axis.text.x = element_text(vjust = -.2),
+      axis.text.y = element_text(hjust = 0),
       legend.position = "top",
       legend.justification = "left",
       legend.background = element_rect(
@@ -1639,7 +1763,6 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
 
 ::: {.panel-tabset}
 
-
 #### Ranking Geral
 
 ```{r}
@@ -1648,7 +1771,7 @@ plot_indice <- function(df, aid_cut, subgroup, box_center, max_limit) {
 #| warning: false
 #| message: false
 #| fig-width: 10
-#| fig-height: 20
+#| fig-height: 25
 
 plot_indice(df = indices_media_geral,
             aid_cut = "MP-MS",
@@ -1674,6 +1797,28 @@ plot_indice(df = indices_media_geral,
             max_limit = 1.5)
 ```
 
+```{r}
+#| label: save-plot-mp
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "MP-MS",
+            subgroup = "Ministérios Públicos estaduais",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-mp.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
+```
+
 #### TJ
 
 ```{r}
@@ -1681,12 +1826,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 11
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TJ-MS",
             subgroup = "Tribunais de Justiça estaduais",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-tj
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TJ-MS",
+            subgroup = "Tribunais de Justiça estaduais",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-tj.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
 ```
 
 #### TRF
@@ -1696,6 +1865,8 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 5
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TRF-2",
@@ -1704,19 +1875,65 @@ plot_indice(df = indices_media_geral,
             max_limit = 1.5)
 ```
 
-#### TRT
+```{r}
+#| label: save-plot-justica-federal
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TRF-4",
+            subgroup = "Tribunais Regionais Federais",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-trf.svg"),
+  width = 3000,
+  height = 1000,
+  units = "px"
+)
+dev.off()
+```
+
+#### Justiça Federal
 
 ```{r}
 #| label: plot-indice-trt
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 9.5
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TRT-5",
             subgroup = "Tribunais Regionais do Trabalho",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-trt
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TRT-5",
+            subgroup = "Tribunais Regionais do Trabalho",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-trt.svg"),
+  width = 3000,
+  height = 2700,
+  units = "px"
+)
+dev.off()
 ```
 
 #### TJM
@@ -1726,12 +1943,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 3
 
 plot_indice(df = indices_media_geral,
             aid_cut = "TJM-RS",
-            subgroup = "Tribunais de Justiça Militar",
+            subgroup = "Justiça Militar",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-tjm
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "TJM-RS",
+            subgroup = "Justiça Militar",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-tjm.svg"),
+  width = 3000,
+  height = 3000,
+  units = "px"
+)
+dev.off()
 ```
 
 #### Órgãos superiores
@@ -1741,12 +1982,36 @@ plot_indice(df = indices_media_geral,
 #| echo: false
 #| warning: false
 #| message: false
+#| fig-width: 10
+#| fig-height: 3
 
 plot_indice(df = indices_media_geral,
             aid_cut = "STJ",
             subgroup = "Órgãos superiores",
             box_center = 1.3,
             max_limit = 1.5)
+```
+
+```{r}
+#| label: save-plot-tre
+#| echo: false
+#| warning: false
+#| message: false
+
+p <- plot_indice(df = indices_media_geral,
+            aid_cut = "STJ",
+            subgroup = "Órgãos superiores",
+            box_center = 1.3,
+            max_limit = 1.5) +
+            guides(fill = "none", color = "none")
+
+ggsave(
+  here("figure/indice-transparencia-superiores.svg"),
+  width = 3000,
+  height = 800,
+  units = "px"
+)
+dev.off()
 ```
 
 :::
