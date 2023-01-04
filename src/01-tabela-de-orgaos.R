@@ -1,5 +1,5 @@
 library(tidyverse)
-library(jsonlite))
+library(jsonlite)
 
 # CONSULTA TABELA DE ÒRGÂOS NA API
 orgaos_raw <- fromJSON(orgaos_endp) %>%
