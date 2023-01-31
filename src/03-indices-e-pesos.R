@@ -31,7 +31,6 @@ get_data <- function(id_orgao, ano, mes) {
 # safely mode
 get_data_safe <- safely(get_data)
 
-
 # PACOTE DE DADOS --------------------------------------------------------------
 
 # Aqui os dados são coletados para todos os órgãos/ano/mês disponíveis no site
@@ -39,19 +38,18 @@ get_data_safe <- safely(get_data)
 # coletado nós mantemos a linha na tabela juntamente com o erro de coleta
 # ATENÇÃO: tempo de processamento/coleta desses dados da API pode demorar até 1h
 {
-
   ini <- now()
   message(str_glue("Início: {ini}"))
 
   pacote_de_dados <- orgaos %>%
-    select(id_orgao, name, type, entity, uf) %>%
+    select(id_orgao, name, type, entity, uf, agropamento) %>%
     crossing(ano = 2018:2022, .) %>%
     crossing(mes = 1:12L, .) %>%
     arrange(id_orgao, ano, mes) %>%
     mutate(a1 = pmap(list(id_orgao, ano, mes), get_data_safe)) %>%
     unnest(a1) %>%
     group_by(id_orgao, ano, mes) %>%
-    mutate(tipo = c("df", "error")) %>%
+    mutate(tipo = c("df", "download_error")) %>%
     ungroup()
 
   end <- now()
@@ -61,13 +59,12 @@ get_data_safe <- safely(get_data)
 
   # guardo uma cópia para não precisar ficar consumindo a API toda hora
   saveRDS(pacote_de_dados, here::here(str_glue("data/load/pacote-de-dados-{today()}.rds")))
-
 }
 
 # recupero a versão mais recente de `pacote_de_dados` que salvei localmente
 pacote_de_dados <- "data/load" %>%
   here() %>%
-  list.files(pattern = "pacote-de-dados-2022-\\d{2}-\\d{2}", full.names = TRUE) %>%
+  list.files(pattern = "pacote-de-dados-202[2-3]-\\d{2}-\\d{2}", full.names = TRUE) %>%
   file.info() %>%
   rownames_to_column(var = "file") %>%
   filter(ctime == max(ctime)) %>%
@@ -82,9 +79,9 @@ indices <- pacote_de_dados %>%
   rename(id_ano = ano, id_mes = mes) %>%
   mutate(
     coletado = if_else(!map_lgl(df, is.null), TRUE, FALSE),
-    error = map(error, as.character)
+    download_error = map(download_error, as.character)
   ) %>%
-  unnest(c(df, error), keep_empty = TRUE) %>%
+  unnest(c(df, download_error), keep_empty = TRUE) %>%
   select(
     id_mes, id_ano, id_orgao = aid,
     name, type, entity, error, coletado,
