@@ -1,0 +1,148 @@
+---
+title: "Índice de transparência - DadosJusBr"
+lang: pt-BR
+format:
+  html:
+    html-math-method: katex
+    css: style.css
+    anchor-sections: true
+    code-fold: true
+    code-tools: true
+    code-link: true
+    code-line-numbers: true
+    code-summary: "Código"
+    toc: true
+    toc-title: "Índice"
+    toc-depth: 4
+    toc-float: false
+    toc-collapsed: false
+    footnotes-hover: true
+    smooth-scroll: true
+    fig-width: 11
+    fig-height: 7
+    search: true
+    embed-resources: true
+    theme:
+          light: flatly
+          dark: darkly
+knitr:
+  opts_chunk:
+    echo: false
+    collapse: true
+    message: false
+    warning: false
+    comment: "#>"
+editor_options:
+  chunk_output_type: console
+execute:
+  cache: false
+---
+
+## Objetivo
+
+Fazer um levantamento nos dados de Ministérios Públicos monitorados pelo DadosJusBr, pegando os 50 maiores pagamentos feitos a órgãos do MP.
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(glue)
+library(here)
+`%notin%` <- function(x, y) !(x %in% y)
+source(here("src/00-plot-aesthetics.R"), encoding = "utf-8")
+source(here("src/01-orgaos-monitorados.R"), encoding = "utf-8")
+```
+
+### Extração dos dados
+
+Foram extraídos dados da API do DadosJusBr. O código que fez o processamento da base de dado poderá ser consultado [neste link](src/04-top-50-remuneracoes-nos-mps.R)
+
+```{r}
+#| label: status-coleta
+
+mps_monitorados <- orgaos_monitorados() %>%
+  filter(agrupamento == "Ministério Público") %>%
+  transmute(aid, orgao_monitorado = is.na(timestamp))
+
+mps_nao_monitorados <- orgaos_monitorados() %>%
+  filter(agrupamento == "Ministério Público") %>%
+  filter(!is.na(timestamp)) %>%
+  transmute(
+    aid_pkg = aid,
+    agrupamento_pkg = agrupamento,
+    status = "Órgão não monitorado pelo DadosJusBr",
+    pkg_coletado = FALSE
+  ) %>%
+  crossing(ano_pkg = 2018:2022L) %>%
+  crossing(mes_pkg = 1:12L) %>%
+  mutate(date_pkg = my(glue("{mes_pkg}-{ano_pkg}")))
+
+# TODO: estilizar plot
+readRDS(here("data/load/pacote-de-dados-mps-2023-01-30.rds")) %>%
+  pivot_wider(names_from = tipo, values_from = a1) %>%
+  rename(aid = id_orgao) %>%
+  set_names(glue("{names(.)}_pkg")) %>%
+  mutate(
+    pkg_coletado = if_else(!map_lgl(df_pkg, is.null), TRUE, FALSE),
+    download_error_pkg = map(download_error_pkg, as.character)
+  ) %>%
+  left_join(mps_monitorados, by = c("aid_pkg" = "aid")) %>%
+  transmute(
+    date_pkg = my(glue("{mes_pkg}-{ano_pkg}")),
+    ano_pkg = ano_pkg,
+    pkg_coletado = pkg_coletado,
+    aid_pkg = aid_pkg,
+    agrupamento_pkg = reorder(agrupamento_pkg, pkg_coletado, sum),
+    status = case_when(
+      pkg_coletado & orgao_monitorado ~ "Órgão prestou contas",
+      !pkg_coletado & orgao_monitorado ~ "Órgão não prestou contas",
+      !orgao_monitorado ~ "Órgão não monitorado pelo DadosJusBr"
+    )
+  ) %>%
+  bind_rows(mps_nao_monitorados) %>%
+    mutate(
+      aid_pkg = reorder(aid_pkg, pkg_coletado, sum)
+    ) %>%
+    ggplot(aes(x = date_pkg, y = aid_pkg, fill = status)) +
+    facet_grid(agrupamento_pkg ~ ano_pkg, scales = "free") +
+    geom_tile() +
+    labs(
+      title = "Status de coleta de dados dos MPs pelo DadosJusBr | 2018-2022"
+    )
+```
+
+## Órgãos monitorados
+
+## Órgãos não monitorados pelo DadosJusBr
+
+- mprn - Ministério Público do Rio Grande do Norte:
+  - URLs dos arquivos publicados não possuem padrão mínimo e lógico
+- mpes - Ministério Público do Estado do Espírito Santo:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+- mprr - Ministério Público do Estado de Roraima:
+  - Não há dados abertos disponíveis
+- mpal - Ministério Público do Estado de Alagoas:
+  - URLs dos arquivos publicados não possuem padrão mínimo e lógico
+- mprs - Ministério Público do Estado do Rio Grande do Sul:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+  - Planilhas inconsistentes
+- mppi - Ministério Público do Piauí:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+  - URLs dos arquivos publicados não possuem padrão mínimo e lógico
+- mpse - Ministério Público de Sergipe:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+  - URLs dos arquivos publicados não possuem padrão mínimo e lógico
+- mpto - Ministério Público do Estado do Tocantins:
+  - URLs dos arquivos publicados não possuem padrão mínimo e lógico
+- mprj - Ministério Público do Estado do Rio de Janeiro:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+- mppa - Ministério Público do Estado do Pará:
+  - Não publica detalhes das verbas indenizatórias, gratificações e demais verbas
+- mpsc - Ministério Público do Estado de Santa Catarina:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+- mpac - Ministério Público do Estado do Acre:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+- mpsp - Ministério Público do Estado de São Paulo:
+  - Estrutura das planilhas sofre mudanças frequentes mês a mês
+  - URLs dos arquivos publicados não possuem padrão mínimo e lógico
+- mpba - Ministério Público da Bahia:
+  - URLs dos arquivos publicados não possuem padrão mínimo e lógico
