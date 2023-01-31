@@ -4,6 +4,7 @@ reports/*.html
 data/raw
 data/ready
 data/load/erros_coleta*
+data/load/temp/*
 local-files/*
 reports/*.html
 reports/indice-transparencia_files/*
