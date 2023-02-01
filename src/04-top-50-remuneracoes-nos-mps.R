@@ -104,7 +104,6 @@ pkgs <- readRDS(here("data/load/pacote-de-dados-mps-2023-01-30.rds")) %>%
   )
 
 pkgs %>%
-  filter(aid_pkg != "mpt") %>%
   transmute(
     url,
     destfile = url %>%
@@ -142,7 +141,6 @@ create_income_rank <- function(df1, df2) {
 create_income_rank_safe <- safely(create_income_rank)
 
 dados <- pkgs %>%
-  filter(aid_pkg != "mpt") %>%
   transmute(
     remuneracao_path = here(glue("data/load/temp/{aid_pkg}-{ano_pkg}-{mes_pkg}/remuneracao.csv")),
     contra_cheque_path = here(glue("data/load/temp/{aid_pkg}-{ano_pkg}-{mes_pkg}/contra_cheque.csv")),
@@ -152,20 +150,6 @@ dados <- pkgs %>%
     contra_cheque_df = map(contra_cheque_path, read_csv, col_types = cols(.default = col_character())),
     income_rank = map2(remuneracao_df, contra_cheque_df, create_income_rank_safe)
   )
-
-dados %>%
-  transmute(
-    id = remuneracao_path %>%
-      str_remove("C:/Users/rdurl/OneDrive/Documentos/acompanhamento-dados/data/load/temp/") %>%
-      str_remove("/remuneracao.csv"),
-    remuneracao_df,
-    contra_cheque_df,
-    income_rank
-  ) %>%
-  filter(id == "mpam-2020-2") %>%
-  pull(remuneracao_df) %>%
-  .[[1]] %>%
-  count(categoria)
 
 remuneracoes <- dados %>%
   transmute(
@@ -201,12 +185,12 @@ remuneracoes %>%
   select(-id_contra_cheque, -chave_coleta) %>%
   select(ranking, everything()) %>%
   mutate(ativo = if_else(ativo == "true", "Sim", "Não")) %>%
-  slice_min(order_by = ranking, n = 50) %>%
-  mutate(
-    link_para_pesquisa = glue('=HIPERLINK("https://dadosjusbr.org/pesquisar?anos={year}&meses={month}&orgaos={aid}&categorias=tudo"; "LINK - PESQUISA AVANÇADA")')
-  ) %>%
-  googlesheets4::write_sheet(
-    ss = "https://docs.google.com/spreadsheets/d/17xSfvRDoCbiqniphfIExJr4MBlL_JvZPco8rS-teDGo",
-    sheet = "Top 50 remunerações nos mínistérios públicos"
-  )
-# write_csv(here("data/load/remuneracoes-mps-2018-2022.csv"))
+  # slice_min(order_by = ranking, n = 50) %>%
+  # mutate(
+  #   link_para_pesquisa = glue('=HIPERLINK("https://dadosjusbr.org/pesquisar?anos={year}&meses={month}&orgaos={aid}&categorias=tudo"; "LINK - PESQUISA AVANÇADA")')
+  # ) %>%
+  # googlesheets4::write_sheet(
+  #   ss = "https://docs.google.com/spreadsheets/d/17xSfvRDoCbiqniphfIExJr4MBlL_JvZPco8rS-teDGo",
+  #   sheet = "Top 50 remunerações nos mínistérios públicos"
+  # )
+  write_csv(here("data/load/remuneracoes-mps-2018-2022.csv"))

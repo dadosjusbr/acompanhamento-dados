@@ -1,5 +1,5 @@
 ---
-title: "Índice de transparência - DadosJusBr"
+title: "Maiores remunerações pagas pelos MP's"
 lang: pt-BR
 format:
   html:
@@ -45,6 +45,8 @@ Fazer um levantamento nos dados de Ministérios Públicos monitorados pelo Dados
 ```{r}
 #| label: setup
 library(tidyverse)
+library(jsonlite)
+library(lubridate)
 library(glue)
 library(here)
 `%notin%` <- function(x, y) !(x %in% y)
@@ -56,14 +58,36 @@ source(here("src/01-orgaos-monitorados.R"), encoding = "utf-8")
 
 Foram extraídos dados da API do DadosJusBr. O código que fez o processamento da base de dado poderá ser consultado [neste link](src/04-top-50-remuneracoes-nos-mps.R)
 
-```{r}
-#| label: status-coleta
+## Detalhes dos 50 maiores pagamentos
 
-mps_monitorados <- orgaos_monitorados() %>%
+::: {.callout-note}
+
+#### Planilha com relação das remunerações
+
+[Clique aqui](https://docs.google.com/spreadsheets/d/17xSfvRDoCbiqniphfIExJr4MBlL_JvZPco8rS-teDGo/edit#gid=1085585379) para ver a planilha com os 50 maiores pagamentos feitos aos membros dos MP's
+
+:::
+
+## Órgãos monitorados
+
+```{r}
+#| label: mps-monitorados
+#| echo: false
+#| message: false
+#| warning: false
+#| code-fold: true
+
+quiet <- function(x) {
+  sink(tempfile())
+  on.exit(sink())
+  invisible(force(x))
+}
+
+mps_monitorados <- quiet(orgaos_monitorados()) %>%
   filter(agrupamento == "Ministério Público") %>%
   transmute(aid, orgao_monitorado = is.na(timestamp))
 
-mps_nao_monitorados <- orgaos_monitorados() %>%
+mps_nao_monitorados <- quiet(orgaos_monitorados()) %>%
   filter(agrupamento == "Ministério Público") %>%
   filter(!is.na(timestamp)) %>%
   transmute(
@@ -75,6 +99,12 @@ mps_nao_monitorados <- orgaos_monitorados() %>%
   crossing(ano_pkg = 2018:2022L) %>%
   crossing(mes_pkg = 1:12L) %>%
   mutate(date_pkg = my(glue("{mes_pkg}-{ano_pkg}")))
+```
+
+```{r}
+#| label: status-coleta
+#| fig-width: 10
+#| fig-height: 8.75
 
 # TODO: estilizar plot
 readRDS(here("data/load/pacote-de-dados-mps-2023-01-30.rds")) %>%
@@ -100,17 +130,76 @@ readRDS(here("data/load/pacote-de-dados-mps-2023-01-30.rds")) %>%
   ) %>%
   bind_rows(mps_nao_monitorados) %>%
     mutate(
-      aid_pkg = reorder(aid_pkg, pkg_coletado, sum)
+        aid_pkg = aid_pkg %>% str_replace("^mp", "mp-") %>% toupper() %>% str_replace("^MP-F$", "MPF") %>% str_replace("^MP-T$", "MPT"),
+      aid_pkg = reorder(aid_pkg, pkg_coletado, sum),
+      status = ordered(status, levels = c(
+        "Órgão prestou contas",
+        "Órgão não prestou contas",
+        "Órgão não monitorado pelo DadosJusBr"
+      ))
     ) %>%
-    ggplot(aes(x = date_pkg, y = aid_pkg, fill = status)) +
+    ggplot(aes(
+      x = date_pkg,
+      y = aid_pkg,
+      fill = status,
+      color = after_scale(prismatic::clr_darken(fill, 0.4))
+    )) +
     facet_grid(agrupamento_pkg ~ ano_pkg, scales = "free") +
-    geom_tile() +
+    geom_tile(alpha = .8) +
     labs(
-      title = "Status de coleta de dados dos MPs pelo DadosJusBr | 2018-2022"
+      title = "Status de coleta de dados dos MPs pelo DadosJusBr | 2018-2022",
+      fill = NULL,
+      y = NULL,
+      x = NULL,
+      caption = "Cada célula representa um mês"
+    ) +
+    scale_x_date(date_breaks = "4 months", date_labels = "%b") +
+    scale_fill_manual(values = c(
+      "Órgão não monitorado pelo DadosJusBr" = "gray60",
+      "Órgão não prestou contas" = cores_dadosjusbr[["lilas"]],
+      "Órgão prestou contas" = cores_dadosjusbr[["cyan"]]
+    )) +
+    scale_y_discrete(expand = c(0, 0)) +
+    guides(fill = guide_legend(nrow = 1)) +
+    theme_adjust_waffle +
+    theme(
+      legend.position = "top",
+      axis.title.x = element_text(face = "italic"),
+      axis.text.y = element_text(hjust = 0)
     )
 ```
 
-## Órgãos monitorados
+## 15 Maiores remunerações nos MPs
+
+```{r}
+#| fig-height: 10
+
+# Plot
+remuneracoes <- "data/load/remuneracoes-mps-2018-2022.csv" %>%
+  here() %>%
+  read_csv(col_types = cols(remuneracao_total = col_double(), .default = col_character()))
+
+remuneracoes %>%
+  group_by(aid) %>%
+  mutate(subrank = rank(-remuneracao_total)) %>%
+  arrange(aid, subrank) %>%
+  slice_min(order_by = subrank, n = 15) %>%
+  ungroup() %>%
+  mutate(
+    aid = aid %>% str_replace("^mp", "mp-") %>% toupper() %>% str_replace("^MP-F$", "MPF") %>% str_replace("^MP-T$", "MPT"),
+    aid = reorder(aid, remuneracao_total, sum)
+  ) %>%
+  ggplot(aes(x = remuneracao_total, y = aid, color = remuneracao_total)) +
+  geom_point(shape = 108, size = 15, show.legend = FALSE) +
+  scale_color_gradientn(colors = c(cores_dadosjusbr[c(2, 1, 3)])) +
+  scale_x_continuous(labels = scales::number) +
+  labs(
+    x = "Valor em reais (R$)",
+    y = NULL,
+    title = "Os 15 maiores pagamentos feitos pelos órgãos do MP entre 2018 e 2022",
+    subtitle = "Cada traço no gráfico representa uma remuneração paga"
+  )
+```
 
 ## Órgãos não monitorados pelo DadosJusBr
 
