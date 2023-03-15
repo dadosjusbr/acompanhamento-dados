@@ -390,6 +390,7 @@ mpm %>%
     obrigatorios_legais,
     remuneracao_basica,
     remuneracao_eventual_ou_temporaria,
+    outras_remuneracoes_temporarias,
     verbas_indenizatorias
   ) %>%
   pivot_longer(
@@ -439,7 +440,7 @@ mpm %>%
     `Função` = funcao,
     `Lotação` = local_trabalho,
     `Salário` = remuneracao_basica + remuneracao_eventual_ou_temporaria,
-    `Benefícios` = verbas_indenizatorias,
+    `Benefícios` = verbas_indenizatorias + outras_remuneracoes_temporarias,
     `Descontos` = obrigatorios_legais,
     `Remuneração total (líq)` = `Salário` + `Benefícios` + `Descontos`
   ) %>%
@@ -458,6 +459,58 @@ mpm %>%
 
 ### Outubro de 2022
 
+#### Total
+
+```{r}
+```{r}
+mpm %>%
+  filter(month == 10, year == 2022) %>%
+  group_by(aid) %>%
+  mutate(subrank = rank(-remuneracao_total)) %>%
+  arrange(aid, subrank) %>%
+  ungroup() %>%
+  mutate(
+    aid = aid %>% str_replace("^mp", "mp-") %>% toupper() %>% str_replace("^MP-F$", "MPF") %>% str_replace("^MP-T$", "MPT"),
+    aid = reorder(aid, remuneracao_total, sum)
+  ) %>%
+  transmute(
+    Data = ym(glue("{year}-{month}")),
+    Nome = nome,
+    `Matrícula` = matricula,
+    `Função` = funcao,
+    `Lotação` = local_trabalho,
+    `Salário` = remuneracao_basica + remuneracao_eventual_ou_temporaria,
+    `Benefícios` = verbas_indenizatorias + outras_remuneracoes_temporarias,
+    `Descontos` = obrigatorios_legais,
+    `Remuneração total (líq)` = `Salário` + `Benefícios` + `Descontos`
+  ) %>%
+  group_by(Data) %>%
+  summarise(across(where(is.double), \(x) sum(x))) %>%
+  pivot_longer(cols = -Data, names_to = "categoria", values_to = "valor") %>%
+  filter(categoria != "Remuneração total (líq)") %>%
+  mutate(categoria = reorder(categoria, -valor, sum)) %>%
+  ggplot(aes(
+    x = categoria,
+    y = valor,
+    fill = categoria,
+    color = after_scale(colorspace::darken(fill, .4))
+  )) +
+  geom_col() +
+  geom_text(
+    aes(label = reais(valor)),
+    vjust = -.3, fontface = "bold"
+  ) +
+  scale_y_continuous(labels = reais) +
+  scale_fill_manual(values = cores_para_categorias_de_remuneracao) +
+  labs(
+    title = "Total de remunerações no mês de Outubro/2022",
+    y = "Valor em R$", x = "Tipo de remuneração",
+    fill = "Tipo de remuneração"
+  )
+```
+
+#### Todas as remunerações pagas
+
 ```{r}
 mpm %>%
   filter(month == 10, year == 2022) %>%
@@ -474,6 +527,7 @@ mpm %>%
     obrigatorios_legais,
     remuneracao_basica,
     remuneracao_eventual_ou_temporaria,
+    outras_remuneracoes_temporarias,
     verbas_indenizatorias
   ) %>%
   pivot_longer(
@@ -531,7 +585,7 @@ mpm %>%
     `Função` = funcao,
     `Lotação` = local_trabalho,
     `Salário` = remuneracao_basica + remuneracao_eventual_ou_temporaria,
-    `Benefícios` = verbas_indenizatorias,
+    `Benefícios` = verbas_indenizatorias + outras_remuneracoes_temporarias,
     `Descontos` = obrigatorios_legais,
     `Remuneração total (líq)` = `Salário` + `Benefícios` + `Descontos`
   ) %>%
