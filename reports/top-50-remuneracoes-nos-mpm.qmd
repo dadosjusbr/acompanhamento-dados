@@ -1,0 +1,208 @@
+---
+title: "Resumo dos dados coletados do Ministério Público Militar"
+lang: pt-BR
+format:
+  html:
+    html-math-method: katex
+    css: style.css
+    anchor-sections: true
+    code-fold: true
+    code-tools: true
+    code-link: true
+    code-line-numbers: true
+    code-summary: "Código"
+    toc: true
+    toc-title: "Índice"
+    toc-depth: 4
+    toc-float: false
+    toc-collapsed: false
+    footnotes-hover: true
+    smooth-scroll: true
+    fig-width: 11
+    fig-height: 7
+    search: true
+    embed-resources: true
+    theme:
+          light: flatly
+          dark: darkly
+knitr:
+  opts_chunk:
+    echo: false
+    collapse: true
+    message: false
+    warning: false
+    comment: "#>"
+editor_options:
+  chunk_output_type: console
+execute:
+  cache: false
+---
+
+## Objetivo
+
+Fazer um levantamento nos dados do Ministério Público Militar, pegando salários e benefícios, as médias anuais de remunerações e os 50 maiores pagamentos feitos ao órgão.
+
+```{r}
+#| label: setup
+library(tidyverse)
+library(jsonlite)
+library(lubridate)
+library(glue)
+library(here)
+`%notin%` <- function(x, y) !(x %in% y)
+source(here("src/00-plot-aesthetics.R"), encoding = "utf-8")
+```
+
+### Extração dos dados
+
+Obter valores resumidos para o **Ministério Público Militar**:
+
+- Salários e benefícios (2018-2022)
+- Média das remunerações (2018-2022)
+- Disponibilidade dos dados (2018-2022)
+
+[//]: # (Seria o valor de benefícios e salário, separadamente, das remunerações em outubro/22, e a média mensal da remuneração para todo o período de dados que temos (2018-agora))
+
+Foram extraídos dados da API do DadosJusBr. O código que fez o processamento da base de dado poderá ser consultado [neste link](src/04-top-50-remuneracoes-no-mpm.R)
+
+## Detalhes dos pagamentos
+
+::: {.callout-note}
+
+#### Planilha com relação das remunerações
+
+[Clique aqui](https://docs.google.com/spreadsheets/d/17xSfvRDoCbiqniphfIExJr4MBlL_JvZPco8rS-teDGo/edit#gid=1085585379) para ver a planilha com os 50 maiores pagamentos feitos aos membros dos MP's
+
+:::
+
+## Resumo dos dados coletados
+
+### Valor total por categoria de remuneração
+
+::: {.panel-tabset}
+
+
+```{r}
+#| label: leitura-dos-dados
+mpm <- readRDS(here("data/load/remuneracoes-mpm-2018-2022.rds"))
+
+```
+
+### Total
+
+```{r}
+#| label: plot-total-remuneracoes-mpm
+mpm %>%
+  select(-ranking_remuneracao_total) %>%
+  group_by(
+    aid = aid,
+    data = ym(glue("{year}-{month}"))
+  ) %>%
+  summarise(
+    across(where(is.double), \(x) sum(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = -c(aid, data),
+    names_to = "categoria",
+    values_to = "valor"
+  ) %>%
+  filter(categoria != "remuneracao_total") %>%
+  mutate(grp = case_when(
+    categoria %in% c("remuneracao_basica", "remuneracao_eventual_ou_temporaria") ~ "Salário",
+    categoria == "obrigatorios_legais" ~ "Descontos",
+    TRUE ~ "Benefícios"
+  )) %>%
+  count(grp, wt = valor) %>%
+  mutate(grp = reorder(grp, -n)) %>%
+  ggplot(aes(
+    y = n,
+    x = grp,
+    fill = grp,
+    color = after_scale(colorspace::darken(fill, .4))
+  )) +
+  geom_col(alpha = .9) +
+  geom_text(
+    aes(label = reais_milhoes(n)),
+    data = . %>% filter(n > 0),
+    vjust = -.3,
+    fontface = "bold"
+  ) +
+  geom_text(
+    aes(label = reais_milhoes(n)),
+    data = . %>% filter(n < 0),
+    vjust = 1.3,
+    fontface = "bold"
+  ) +
+  geom_hline(yintercept = 0, color = cores_dadosjusbr[["cinza_azulado"]]) +
+  scale_fill_manual(values = cores_para_categorias_de_remuneracao) +
+  scale_y_continuous(
+    labels = reais,
+    limits = c(-7e7, 2e8),
+    breaks = seq(-5e7, 15e7, 5e7)
+  ) +
+  labs(
+    title = "Entre 2018 e 2022 os membros do MPM receberam:",
+    x = "Categoria da remuneração",
+    y = "Valor recebido",
+    fill = "Grupos de\nremuneração"
+  )
+```
+
+### YoY
+
+```{r}
+mpm %>%
+  select(-ranking_remuneracao_total) %>%
+  group_by(
+    aid = aid,
+    data = ym(glue("{year}-{month}"))
+  ) %>%
+  summarise(
+    across(where(is.double), \(x) sum(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = -c(aid, data),
+    names_to = "categoria",
+    values_to = "valor"
+  ) %>%
+  filter(categoria != "remuneracao_total") %>%
+  mutate(grp = case_when(
+    categoria %in% c("remuneracao_basica", "remuneracao_eventual_ou_temporaria") ~ "Salário",
+    categoria == "obrigatorios_legais" ~ "Descontos",
+    TRUE ~ "Benefícios"
+  )) %>%
+  count(ano = year(data), grp, wt = valor, name = "valor") %>%
+  mutate(grp = reorder(grp, -valor, sum)) %>%
+  ggplot(aes(
+    x = "",
+    y = valor,
+    fill = grp,
+    color = after_scale(colorspace::darken(fill, .4))
+  )) +
+  geom_col(position = "dodge") +
+  geom_text(
+    aes(label = reais_milhoes(valor)),
+    vjust = .2,
+    position = position_dodge(width = .9)
+  ) +
+  scale_fill_manual(values = cores_para_categorias_de_remuneracao) +
+  scale_y_continuous(labels = reais, limits = c(-2e7, 4e7)) +
+  facet_wrap(~ano, nrow = 1, scales = "free_x", strip.position = "bottom") +
+  theme(
+    strip.text = element_text(hjust = .5),
+    axis.ticks.x = element_blank()
+  ) +
+  labs(
+    title = "Entre 2018 e 2022 os membros do MPM receberam:",
+    x = "Categoria da remuneração",
+    y = "Valor recebido",
+    fill = "Grupos de\nremuneração"
+  )
+```
+
+:::
+
+#### Médias
+
