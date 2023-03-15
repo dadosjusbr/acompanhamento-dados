@@ -59,7 +59,6 @@ Obter valores resumidos para o **Ministério Público Militar**:
 
 - Salários e benefícios (2018-2022)
 - Média das remunerações (2018-2022)
-- Disponibilidade dos dados (2018-2022)
 
 [//]: # (Seria o valor de benefícios e salário, separadamente, das remunerações em outubro/22, e a média mensal da remuneração para todo o período de dados que temos (2018-agora))
 
@@ -71,7 +70,7 @@ Foram extraídos dados da API do DadosJusBr. O código que fez o processamento d
 
 #### Planilha com relação das remunerações
 
-[Clique aqui](https://docs.google.com/spreadsheets/d/17xSfvRDoCbiqniphfIExJr4MBlL_JvZPco8rS-teDGo/edit#gid=1085585379) para ver a planilha com os 50 maiores pagamentos feitos aos membros dos MP's
+[Clique aqui](https://docs.google.com/spreadsheets/d/17xSfvRDoCbiqniphfIExJr4MBlL_JvZPco8rS-teDGo/edit#gid=1085585379) para ver a planilha com **todos** os pagamentos feitos para o Ministério Público Militar
 
 :::
 
@@ -80,7 +79,6 @@ Foram extraídos dados da API do DadosJusBr. O código que fez o processamento d
 ### Valor total por categoria de remuneração
 
 ::: {.panel-tabset}
-
 
 ```{r}
 #| label: leitura-dos-dados
@@ -204,5 +202,348 @@ mpm %>%
 
 :::
 
-#### Médias
+### Médias
 
+```{r}
+gera_plot_media <- function(df, ano_ref) {
+  df %>%
+      select(-ranking_remuneracao_total) %>%
+  group_by(
+    aid = aid,
+    data = ym(glue("{year}-{month}")),
+    id_membro = glue("{nome}-{matricula}")
+  ) %>%
+  summarise(
+    across(where(is.double), \(x) sum(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = -c(aid, data, id_membro),
+    names_to = "categoria",
+    values_to = "valor"
+  ) %>%
+  filter(categoria == "remuneracao_total") %>%
+  group_by(aid, data) %>%
+  summarise(
+    remuneracao_total_max = max(valor),
+    remuneracao_total_min = min(valor),
+    remuneracao_total_mean = mean(valor),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = -c(aid, data),
+    names_to = "categoria",
+    values_to = "valor"
+  ) %>%
+  mutate(shapemode = case_when(
+    categoria == "remuneracao_total_mean" ~ "Média",
+    categoria == "remuneracao_total_min" ~ "Mínima",
+    categoria == "remuneracao_total_max" ~ "Máxima",
+  )) %>%
+  mutate(
+    categoria = case_when(
+      categoria == "remuneracao_total_mean" ~ "Média",
+      categoria == "remuneracao_total_min" ~ "Mínima",
+      categoria == "remuneracao_total_max" ~ "Remuneração total máxima"
+    )
+  ) %>%
+  filter(year(data) == ano_ref) %>%
+  ggplot(aes(
+    x = data,
+    y = valor,
+    color = categoria,
+    fill = after_scale(colorspace::lighten(color, .2)),
+    )) +
+  geom_point(aes(size = categoria, shape = categoria)) +
+  scale_shape_manual(values = c(
+    "Média" = 21,
+    "Mínima" = 95,
+    "Remuneração total máxima" = 95
+  )) +
+  scale_size_manual(values = c(
+    "Média" = 3,
+    "Mínima" = 15,
+    "Remuneração total máxima" = 15
+  )) +
+  scale_color_manual(values = c(
+    "Média" = cores_dadosjusbr[["cinza_azulado"]],
+    "Mínima"  = cores_dadosjusbr[["cyan"]],
+    "Remuneração total máxima" = cores_dadosjusbr[["lilas"]]
+  )) +
+  scale_y_continuous(
+    labels = reais, limits = c(-10000, 600000),
+    breaks = seq(0, 5e6, 5e4)
+  ) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b.%Y") +
+  labs(
+    title = glue("Média das remunerações pagas pelo MPM | {ano_ref}"),
+    x = "Ano/mês",
+    y = "Valor em R$",
+    color = NULL,
+    fill = NULL,
+    shape = NULL,
+    size = NULL
+  ) +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.justification = "left"
+  )
+}
+```
+
+
+::: {.panel-tabset}
+
+#### 2018
+
+```{r}
+gera_plot_media(mpm, "2018")
+```
+
+#### 2019
+
+```{r}
+gera_plot_media(mpm, "2019")
+```
+
+#### 2020
+
+```{r}
+gera_plot_media(mpm, "2020")
+```
+
+#### 2021
+
+```{r}
+gera_plot_media(mpm, "2021")
+```
+
+#### 2022
+
+```{r}
+gera_plot_media(mpm, "2022")
+```
+
+:::
+
+```{r}
+library(DT)
+mpm %>%
+  select(-ranking_remuneracao_total) %>%
+  group_by(
+    aid = aid,
+    data = ym(glue("{year}-{month}")),
+    id_membro = glue("{nome}-{matricula}")
+  ) %>%
+  summarise(
+    across(where(is.double), \(x) sum(x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = -c(aid, data, id_membro),
+    names_to = "categoria",
+    values_to = "valor"
+  ) %>%
+  filter(categoria == "remuneracao_total") %>%
+  group_by(aid, data) %>%
+  summarise(
+    `Remuneracao Total mínima` = min(valor),
+    `Média` = mean(valor),
+    `Máxima` = max(valor),
+    .groups = "drop"
+  ) %>%
+  select(-aid) %>%
+  rename(`Mês de referência` = data) %>%
+  datatable(
+    rownames = FALSE,
+    caption = "Remunerações médias por mês",
+    filter = "top",
+    escape = FALSE,
+    options = list(pageLength = 25)
+  ) %>%
+  formatCurrency(
+    c("Remuneracao Total mínima",
+      "Média",
+      "Máxima"),
+    currency = "R$ ", mark = ".", dec.mark = ","
+  )
+```
+
+### Top 50 remunerações
+
+```{r}
+mpm %>%
+  group_by(aid) %>%
+  mutate(subrank = rank(-remuneracao_total)) %>%
+  arrange(aid, subrank) %>%
+  slice_min(order_by = subrank, n = 50) %>%
+  ungroup() %>%
+  mutate(
+    aid = aid %>% str_replace("^mp", "mp-") %>% toupper() %>% str_replace("^MP-F$", "MPF") %>% str_replace("^MP-T$", "MPT"),
+    aid = reorder(aid, remuneracao_total, sum)
+  ) %>%
+  select(
+    subrank,
+    obrigatorios_legais,
+    remuneracao_basica,
+    remuneracao_eventual_ou_temporaria,
+    verbas_indenizatorias
+  ) %>%
+  pivot_longer(
+    cols = -subrank,
+    names_to = "categoria",
+    values_to = "valor"
+  ) %>%
+  mutate(grp = case_when(
+    categoria %in% c("remuneracao_basica", "remuneracao_eventual_ou_temporaria") ~ "Salário",
+    categoria == "obrigatorios_legais" ~ "Descontos",
+    TRUE ~ "Benefícios"
+  )) %>%
+  count(subrank, grp, wt = valor, name = "valor") %>%
+  ggplot(aes(
+    x = subrank,
+    y = valor,
+    fill = grp,
+    color = after_scale(colorspace::darken(fill, .4))
+  )) +
+  geom_col() +
+  scale_fill_manual(values = cores_para_categorias_de_remuneracao) +
+  scale_y_continuous(labels = reais) +
+  scale_x_continuous(breaks = seq(1, 50, 2)) +
+  labs(
+    title = "50 maiores pagamentos feitos para membros do MPM",
+    y = "Valor em R$",
+    x = "Posição",
+    fill = "Tipo de\nremuneração"
+  ) +
+  theme(panel.grid.minor.x = element_blank())
+```
+
+<br>
+
+```{r}
+mpm %>%
+  group_by(aid) %>%
+  mutate(subrank = rank(-remuneracao_total)) %>%
+  arrange(aid, subrank) %>%
+  slice_min(order_by = subrank, n = 50) %>%
+  ungroup() %>%
+  transmute(
+    Rank = subrank,
+    Data = ym(glue("{year}-{month}")),
+    Nome = nome,
+    `Matrícula` = matricula,
+    `Função` = funcao,
+    `Lotação` = local_trabalho,
+    `Salário` = remuneracao_basica + remuneracao_eventual_ou_temporaria,
+    `Benefícios` = verbas_indenizatorias,
+    `Descontos` = obrigatorios_legais,
+    `Remuneração total (líq)` = `Salário` + `Benefícios` + `Descontos`
+  ) %>%
+  datatable(
+    rownames = FALSE,
+    caption = "50 maiores remunerações pagas pelo MPM (Salário + Benefícios + Descontos)",
+    filter = "top",
+    escape = FALSE,
+    options = list(pageLength = 25)
+  ) %>%
+  formatCurrency(
+    c("Salário", "Benefícios", "Descontos", "Remuneração total (líq)"),
+    currency = "R$ ", mark = ".", dec.mark = ","
+  )
+```
+
+### Outubro de 2022
+
+```{r}
+mpm %>%
+  filter(month == 10, year == 2022) %>%
+  group_by(aid) %>%
+  mutate(subrank = rank(-remuneracao_total)) %>%
+  arrange(aid, subrank) %>%
+  ungroup() %>%
+  mutate(
+    aid = aid %>% str_replace("^mp", "mp-") %>% toupper() %>% str_replace("^MP-F$", "MPF") %>% str_replace("^MP-T$", "MPT"),
+    aid = reorder(aid, remuneracao_total, sum)
+  ) %>%
+  transmute(
+    id_membro = row_number(),
+    obrigatorios_legais,
+    remuneracao_basica,
+    remuneracao_eventual_ou_temporaria,
+    verbas_indenizatorias
+  ) %>%
+  pivot_longer(
+    cols = -id_membro,
+    names_to = "categoria",
+    values_to = "valor"
+  ) %>%
+  mutate(grp = case_when(
+    categoria %in% c("remuneracao_basica", "remuneracao_eventual_ou_temporaria") ~ "Salário",
+    categoria == "obrigatorios_legais" ~ "Descontos",
+    TRUE ~ "Benefícios"
+  )) %>%
+  count(id_membro, grp, wt = valor, name = "valor") %>%
+  mutate(
+    grp = ordered(grp, levels = c(
+      "Salário", "Benefícios", "Descontos"
+    ))
+  ) %>%
+  ggplot(aes(
+    x = id_membro,
+    y = valor,
+    fill = grp,
+    color = after_scale(colorspace::darken(fill, .4))
+  )) +
+  geom_col() +
+  scale_fill_manual(values = cores_para_categorias_de_remuneracao) +
+  scale_x_continuous(breaks = seq(1, 67, 2)) +
+  scale_y_continuous(labels = reais) +
+  labs(
+    title = "Distribuição dos pagamentos feitos para membros do MPM em Outubro de 2022",
+    y = "Valor em R$",
+    x = "Posição",
+    fill = "Tipo de\nremuneração"
+  ) +
+  theme(panel.grid.minor.x = element_blank())
+```
+
+<br>
+
+```{r}
+mpm %>%
+  filter(month == 10, year == 2022) %>%
+  group_by(aid) %>%
+  mutate(subrank = rank(-remuneracao_total)) %>%
+  arrange(aid, subrank) %>%
+  ungroup() %>%
+  mutate(
+    aid = aid %>% str_replace("^mp", "mp-") %>% toupper() %>% str_replace("^MP-F$", "MPF") %>% str_replace("^MP-T$", "MPT"),
+    aid = reorder(aid, remuneracao_total, sum)
+  ) %>%
+  transmute(
+    Data = ym(glue("{year}-{month}")),
+    Nome = nome,
+    `Matrícula` = matricula,
+    `Função` = funcao,
+    `Lotação` = local_trabalho,
+    `Salário` = remuneracao_basica + remuneracao_eventual_ou_temporaria,
+    `Benefícios` = verbas_indenizatorias,
+    `Descontos` = obrigatorios_legais,
+    `Remuneração total (líq)` = `Salário` + `Benefícios` + `Descontos`
+  ) %>%
+  datatable(
+    rownames = FALSE,
+    caption = "Pagamentos feitos para membros do MPM em Outubro de 2022",
+    filter = "top",
+    escape = FALSE,
+    options = list(pageLength = 25)
+  ) %>%
+  formatCurrency(
+    c("Salário", "Benefícios", "Descontos", "Remuneração total (líq)"),
+    currency = "R$ ", mark = ".", dec.mark = ","
+  )
+```
