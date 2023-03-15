@@ -1,0 +1,727 @@
+---
+title: "Exemplos de uso da API DadosJusBr"
+lang: pt-BR
+format:
+  html:
+    html-math-method: katex
+    css: style.css
+    anchor-sections: true
+    code-fold: true
+    code-tools: true
+    code-link: true
+    code-line-numbers: true
+    code-summary: "Código"
+    toc: true
+    toc-title: "Índice"
+    toc-depth: 4
+    toc-float: false
+    toc-collapsed: false
+    footnotes-hover: true
+    smooth-scroll: true
+    fig-width: 11
+    fig-height: 7
+    search: true
+    embed-resources: true
+    theme:
+          light: flatly
+          dark: darkly
+knitr:
+  opts_chunk:
+    echo: true
+    collapse: true
+    message: false
+    warning: false
+    comment: "#>"
+editor_options:
+  chunk_output_type: console
+execute:
+  cache: false
+---
+
+```{r}
+#| label: libs
+library(tidyverse)
+library(glue)
+library(httr2)
+library(jsonlite)
+
+documentacao_paths <- "https://api.dadosjusbr.org/swagger/doc.json" %>%
+  fromJSON() %>%
+  pluck("paths") %>%
+  map(pluck, "get") %>%
+  map(enframe) %>%
+  enframe() %>%
+  mutate(value = map(value, pivot_wider)) %>%
+  unnest(value) %>%
+  unnest(c(
+    description, produces, tags, operationId
+  ))
+```
+
+# Objetivo
+
+Esse documento apresenta exemplos de consultas à API do DadosJusBr utilizando o `R`.
+
+## Função que consulta a API
+
+```{r}
+#| label: consulta-basica
+#| code-fold: false
+
+#' @title Base das consultas na API do DadosJusBr
+#' @param endp endpoint da API DadosJusBr
+#'
+consulta_basica <- function(endp, ...) {
+  endp %>%
+    request() %>%
+    req_method("GET") %>%
+    req_headers(accept = "application/json") %>%
+    req_perform() %>%
+    resp_body_json(...)
+}
+```
+
+# `ui_api`
+
+
+## `/uiapi/v1/orgao/resumo/{orgao}`
+
+Retorna os dados anuais de um orgão
+
+**operationID**: `GetAnnualSummary`
+
+```{r}
+#| label: parametros-uiapi-v1-orgao-resumo-{orgao}
+documentacao_paths %>%
+  filter(name == "/uiapi/v1/orgao/resumo/{orgao}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v1-orgao-resumo-{orgao}
+#| code-fold: false
+annual_summary <- consulta_basica("https://api.dadosjusbr.org/uiapi/v1/orgao/resumo/tjpr")
+
+annual_summary_orgao <- annual_summary %>%
+  pluck("orgao") %>%
+  enframe() %>%
+  unnest(value) %>%
+  pivot_wider()
+
+annual_summary_dados_anuais <- annual_summary %>%
+  pluck("dados_anuais") %>%
+  map(enframe) %>%
+  map_df(pivot_wider) %>%
+  unnest(c(
+    ano, num_membros, remuneracao_base,
+    outras_remuneracoes, meses_com_dados
+  )) %>%
+  mutate(
+    package = map(package, enframe),
+    package = map(package, pivot_wider),
+    package = map(package, unnest, c(url, hash, size))
+  ) %>%
+  unnest(package)
+
+glimpse(annual_summary_orgao)
+glimpse(annual_summary_dados_anuais)
+```
+
+## `/uiapi/v2/download`
+
+Baixa dados referentes a remunerações a partir de filtros
+
+**operationID**: `DownloadByUrl`
+
+```{r}
+#| label: parametros-uiapi-v2-download
+documentacao_paths %>%
+  filter(name == "/uiapi/v2/download") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Download dos dados
+
+```{r}
+#| label: -uiapi-v2-download
+#| code-fold: false
+#| eval: false
+
+# base
+"https://api.dadosjusbr.org/uiapi/v2/download?anos=2020&meses=1&orgaos=tjpr&categorias=base" %>%
+  download.file(mode = "wb", destfile = here("data/base-tjpr-2020-1.csv"))
+
+# outras
+"https://api.dadosjusbr.org/uiapi/v2/download?anos=2020&meses=1&orgaos=tjpr&categorias=outras" %>%
+  download.file(mode = "wb", destfile = here("data/outras-tjpr-2020-1.csv"))
+
+# descontos
+"https://api.dadosjusbr.org/uiapi/v2/download?anos=2020&meses=1&orgaos=tjpr&categorias=descontos" %>%
+  download.file(mode = "wb", destfile = here("data/descontos-tjpr-2020-1.csv"))
+```
+
+## `/uiapi/v2/geral/remuneracao/{ano}`
+
+Busca os dados, das remunerações de um ano inteiro, agrupados por mês.
+
+**operationID**: `GetGeneralRemunerationFromYear`
+
+```{r}
+#| label: parametros-uiapi-v2-geral-remuneracao-{ano}
+documentacao_paths %>%
+  filter(name == "/uiapi/v2/geral/remuneracao/{ano}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v2-geral-remuneracao-{ano}
+#| code-fold: false
+general_remuneration_from_year <- consulta_basica(
+  endp = "https://api.dadosjusbr.org/uiapi/v2/geral/remuneracao/2020",
+  simplifyVector = TRUE
+) %>% as_tibble()
+
+glimpse(general_remuneration_from_year)
+```
+
+## `/uiapi/v2/geral/resumo`
+
+Busca e resume os dados das remunerações de todos os anos
+
+**operationID**: `GetGeneralSummary`
+
+```{r}
+#| label: parametros-uiapi-v2-geral-resumo
+# documentacao_paths  %>% filter(name == '/uiapi/v2/geral/resumo') %>% pull(parameters) %>% pluck(1) %>% gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v2-geral-resumo
+#| code-fold: false
+
+general_summary <- "https://api.dadosjusbr.org/uiapi/v2/geral/resumo" %>%
+  consulta_basica() %>%
+  enframe() %>%
+  pivot_wider() %>%
+  unnest(cols = c(
+    num_orgaos, num_meses_coletados,
+    data_inicio, data_fim, remuneracao_total
+  ))
+
+glimpse(general_summary)
+```
+
+## `/uiapi/v2/orgao/resumo/{orgao}/{ano}/{mes}`
+
+Resume os dados de remuneração mensal de um órgão.
+
+**operationID**: `GetSummaryOfAgency`
+
+```{r}
+#| label: parametros-uiapi-v2-orgao-resumo-{orgao}-{ano}-{mes}
+documentacao_paths %>%
+  filter(name == "/uiapi/v2/orgao/resumo/{orgao}/{ano}/{mes}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v2-orgao-resumo-{orgao}-{ano}-{mes}
+#| code-fold: false
+
+summary_of_agency <- "https://api.dadosjusbr.org/uiapi/v2/orgao/resumo/tjpr/2020/1" %>%
+  consulta_basica() %>%
+  enframe() %>%
+  pivot_wider() %>%
+  mutate(
+    timestamp = map(timestamp, enframe),
+    timestamp = map(timestamp, pivot_wider),
+    timestamp = map(timestamp, unnest, c(seconds, nanos))
+  ) %>%
+  unnest(timestamp) %>%
+  unnest(cols = c(
+    orgao, remuneracao_base, max_remuneracao_base,
+    outras_remuneracoes, max_outras_remuneracoes,
+    total_membros, total_remuneracao,
+    tem_proximo, tem_anterior
+  ))
+
+glimpse(summary_of_agency)
+```
+
+## `/uiapi/v2/orgao/salario/{orgao}/{ano}/{mes}`
+
+Busca dados das remunerações mensais de um órgão.
+
+**operationID**: `GetSalaryOfAgencyMonthYear`
+
+```{r}
+#| label: parametros-uiapi-v2-orgao-salario-{orgao}-{ano}-{mes}
+documentacao_paths %>%
+  filter(name == "/uiapi/v2/orgao/salario/{orgao}/{ano}/{mes}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v2-orgao-salario-{orgao}-{ano}-{mes}
+#| code-fold: false
+
+salary_of_agency_month_year <- "https://api.dadosjusbr.org/uiapi/v2/orgao/salario/tjpr/2020/1" %>%
+  consulta_basica() %>%
+  map_at(
+    "histograma",
+    ~ enframe(.x, name = "faixa_remuneracao", value = "frequencia") %>%
+      unnest(c(faixa_remuneracao, frequencia))
+  ) %>%
+  map_at(
+    "package",
+    ~ enframe(.x) %>%
+      pivot_wider() %>%
+      unnest(c(url, hash, size)) %>%
+      rename(
+        url_package = url,
+        hash_package = hash,
+        size_package = size
+      )
+  ) %>%
+  enframe() %>%
+  pivot_wider() %>%
+  unnest(c(max_salario, histograma, package))
+
+glimpse(salary_of_agency_month_year)
+```
+
+## `/uiapi/v2/orgao/totais/{orgao}/{ano}`
+
+Busca os dados de remuneração de um órgão em um ano específico.
+
+**operationID**: `GetTotalsOfAgencyYear`
+pluck
+```{r}
+#| label: parametros-uiapi-v2-orgao-totais-{orgao}-{ano}
+documentacao_paths %>%
+  filter(name == "/uiapi/v2/orgao/totais/{orgao}/{ano}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v2-orgao-totais-{orgao}-{ano}
+#| code-fold: false
+
+totals_of_agency_year <- "https://api.dadosjusbr.org/uiapi/v2/orgao/totais/tjpr/2020" %>%
+  consulta_basica() %>%
+  map_at(
+    "orgao",
+    ~ enframe(.x) %>%
+      pivot_wider() %>%
+      unnest(c(id_orgao, nome, jurisdicao, entidade, uf, url, twitter_handle, ouvidoria))
+  ) %>%
+  map_at(
+    "meses",
+    ~ enframe(.x) %>%
+      mutate(
+        value = map(value, enframe),
+        value = map(value, pivot_wider),
+        value = map(value, unnest, c(
+          mes, total_membros,
+          remuneracao_base, outras_remuneracoes
+        ))
+      ) %>%
+      unnest(value) %>% # pull(timestamp)
+      mutate(
+        timestamp = map(timestamp, enframe),
+        timestamp = map(timestamp, pivot_wider),
+        timestamp = map(timestamp, unnest, c(seconds, nanos))
+      ) %>%
+      unnest(timestamp)
+  ) %>%
+  map_at(
+    "package",
+    ~ enframe(.x) %>%
+      pivot_wider() %>%
+      unnest(c(url, hash, size)) %>%
+      rename(
+        url_package = url,
+        hash_package = hash,
+        size_package = size
+      )
+  ) %>%
+  enframe() %>%
+  pivot_wider() %>%
+  unnest(c(ano, orgao, meses, package))
+
+
+glimpse(totals_of_agency_year)
+```
+
+## `/uiapi/v2/orgao/{grupo}`
+
+Busca os órgãos de um determinado grupo.
+
+**operationID**: `GetBasicInfoOfType`
+
+```{r}
+#| label: parametros-uiapi-v2-orgao-{grupo}
+documentacao_paths %>%
+  filter(name == "/uiapi/v2/orgao/{grupo}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v2-orgao-{grupo}
+#| code-fold: false
+grupo_de_orgaos <- c(
+  "justica-eleitoral", "ministerios-publicos", "justica-estadual",
+  "justica-do-trabalho", "justica-federal", "justica-militar",
+  "justica-superior", "conselhos-de-justica"
+)
+
+get_tabela_orgaos <- function(aid_group) {
+  message(aid_group)
+  "https://api.dadosjusbr.org/uiapi/v2/orgao/%s" %>%
+    sprintf(aid_group) %>%
+    consulta_basica() %>%
+    map_at(
+      "orgaos",
+      ~ map(.x, enframe) %>%
+        map_df(pivot_wider) %>%
+        unnest(c(id_orgao, nome, entidade))
+    ) %>%
+    enframe() %>%
+    pivot_wider() %>%
+    unnest(c(grupo, orgaos))
+}
+
+basic_info_of_type <- map_df(grupo_de_orgaos, get_tabela_orgaos) %>%
+  arrange(id_orgao)
+
+glimpse(basic_info_of_type)
+```
+
+## `/uiapi/v2/pesquisar`
+
+Faz uma busca por remunerações a partir de filtros
+
+**operationID**: `SearchByUrl`
+
+```{r}
+#| label: parametros-uiapi-v2-pesquisar
+documentacao_paths %>%
+  filter(name == "/uiapi/v2/pesquisar") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -uiapi-v2-pesquisar
+#| code-fold: false
+search_by_url <- "https://api.dadosjusbr.org/uiapi/v2/pesquisar?anos=2020%2C2021&meses=1%2C2%2C3&orgaos=tjpr%2Cmppr&categorias=base" %>%
+  consulta_basica() %>%
+  enframe() %>%
+  pivot_wider() %>%
+  unnest(c(
+    download_available, num_rows_if_available, search_limit,
+    download_limit
+  )) %>%
+  mutate(
+    result = map(result, enframe)
+  ) %>%
+  unnest(result) %>%
+  mutate(
+    value = map(value, enframe),
+    value = map(value, pivot_wider)
+  ) %>%
+  unnest(value) %>%
+  unnest(c(
+    orgao, mes, ano, matricula, nome, cargo,
+    lotacao, categoria_contracheque,
+    detalhamento_contracheque, valor
+  ))
+
+glimpse(search_by_url)
+```
+
+# `public_api`
+
+## `/v2/dados/{orgao}/{ano}`
+
+Busca os dados mensais de um órgão por ano
+
+**operationID**: `GetMonthlyInfosByYear`
+
+```{r}
+#| label: parametros-v2-dados-{orgao}-{ano}
+documentacao_paths %>%
+  filter(name == "/v2/dados/{orgao}/{ano}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -v2-dados-{orgao}-{ano}
+#| code-fold: false
+
+monthly_infos_by_year <- "https://api.dadosjusbr.org/v2/dados/tjpr/2020" %>%
+  consulta_basica() %>%
+  map(enframe) %>%
+  map_df(pivot_wider) %>%
+  unnest(c(id_orgao, mes, ano)) %>%
+  mutate(
+    sumarios = map(sumarios, pluck, "membros_ativos"),
+    sumarios = map(sumarios, enframe),
+    sumarios = map(sumarios, pivot_wider),
+    sumarios = map(sumarios, unnest, quantidade)
+  ) %>%
+  unnest(sumarios) %>%
+  mutate(
+    across(c(remuneracao_base, outras_remuneracoes), ~ map(., enframe)),
+    across(c(remuneracao_base, outras_remuneracoes), ~ map(., pivot_wider)),
+    across(c(remuneracao_base, outras_remuneracoes), ~ map(., unnest, c(max, media, total))),
+    remuneracao_base = map(
+      remuneracao_base, rename,
+      remuneracao_base_max = max,
+      remuneracao_base_media = media,
+      remuneracao_base_total = total
+    ),
+    outras_remuneracoes = map(
+      outras_remuneracoes, rename,
+      outras_remuneracoes_max = max,
+      outras_remuneracoes_media = media,
+      outras_remuneracoes_total = total
+    )
+  ) %>%
+  unnest(c(remuneracao_base, outras_remuneracoes)) %>%
+  mutate(
+    pacote_de_dados = map(pacote_de_dados, enframe),
+    pacote_de_dados = map(pacote_de_dados, pivot_wider),
+    pacote_de_dados = map(pacote_de_dados, unnest, c(url, hash, size)),
+    pacote_de_dados = map(
+      pacote_de_dados, rename,
+      pacote_de_dados_url = url,
+      pacote_de_dados_hash = hash,
+      pacote_de_dados_size = size
+    )
+  ) %>%
+  unnest(pacote_de_dados) %>%
+  mutate(
+    metadados = map(metadados, enframe),
+    metadados = map(metadados, pivot_wider),
+    metadados = map(metadados, unnest, c(
+      formato_aberto, acesso, extensao, dados_estritamente_tabulares,
+      manteve_consistencia_no_formato, tem_matricula,
+      tem_lotacao, tem_cargo, remuneracao_basica,
+      outras_receitas, despesas
+    ))
+  ) %>%
+  unnest(metadados) %>%
+  mutate(
+    indice_transparencia = map(indice_transparencia, enframe),
+    indice_transparencia = map(indice_transparencia, pivot_wider),
+    indice_transparencia = map(indice_transparencia, unnest, c(
+      indice_transparencia, indice_completude, indice_facilidade
+    ))
+  ) %>%
+  unnest(indice_transparencia) %>%
+  mutate(
+    dados_coleta = map(dados_coleta, enframe),
+    dados_coleta = map(dados_coleta, pivot_wider),
+    dados_coleta = map(dados_coleta, unnest, c(repositorio_coletor, versao_coletor)),
+  ) %>%
+  unnest(dados_coleta)
+
+glimpse(monthly_infos_by_year)
+```
+
+## `/v2/dados/{orgao}/{ano}/{mes}`
+
+Busca um dado mensal de um órgão
+
+**operationID**: `GetMonthlyInfo`
+
+```{r}
+#| label: parametros-v2-dados-{orgao}-{ano}-{mes}
+documentacao_paths %>%
+  filter(name == "/v2/dados/{orgao}/{ano}/{mes}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -v2-dados-{orgao}-{ano}-{mes}
+#| code-fold: false
+
+monthly_info <- "https://api.dadosjusbr.org/v2/dados/tjpr/2020/1" %>%
+  consulta_basica() %>%
+  enframe() %>%
+  pivot_wider() %>%
+  unnest(c(id_orgao, mes, ano)) %>%
+  mutate(
+    sumarios = map(sumarios, pluck, "membros_ativos"),
+    sumarios = map(sumarios, enframe),
+    sumarios = map(sumarios, pivot_wider),
+    sumarios = map(sumarios, unnest, quantidade)
+  ) %>%
+  unnest(sumarios) %>%
+  mutate(
+    across(c(remuneracao_base, outras_remuneracoes), ~ map(., enframe)),
+    across(c(remuneracao_base, outras_remuneracoes), ~ map(., pivot_wider)),
+    across(c(remuneracao_base, outras_remuneracoes), ~ map(., unnest, c(max, media, total))),
+    remuneracao_base = map(
+      remuneracao_base, rename,
+      remuneracao_base_max = max,
+      remuneracao_base_media = media,
+      remuneracao_base_total = total
+    ),
+    outras_remuneracoes = map(
+      outras_remuneracoes, rename,
+      outras_remuneracoes_max = max,
+      outras_remuneracoes_media = media,
+      outras_remuneracoes_total = total
+    )
+  ) %>%
+  unnest(c(remuneracao_base, outras_remuneracoes)) %>%
+  mutate(
+    pacote_de_dados = map(pacote_de_dados, enframe),
+    pacote_de_dados = map(pacote_de_dados, pivot_wider),
+    pacote_de_dados = map(pacote_de_dados, unnest, c(url, hash, size)),
+    pacote_de_dados = map(
+      pacote_de_dados, rename,
+      pacote_de_dados_url = url,
+      pacote_de_dados_hash = hash,
+      pacote_de_dados_size = size
+    )
+  ) %>%
+  unnest(pacote_de_dados) %>%
+  mutate(
+    metadados = map(metadados, enframe),
+    metadados = map(metadados, pivot_wider),
+    metadados = map(metadados, unnest, c(
+      formato_aberto, acesso, extensao, dados_estritamente_tabulares,
+      manteve_consistencia_no_formato, tem_matricula,
+      tem_lotacao, tem_cargo, remuneracao_basica,
+      outras_receitas, despesas
+    ))
+  ) %>%
+  unnest(metadados) %>%
+  mutate(
+    indice_transparencia = map(indice_transparencia, enframe),
+    indice_transparencia = map(indice_transparencia, pivot_wider),
+    indice_transparencia = map(indice_transparencia, unnest, c(
+      indice_transparencia, indice_completude, indice_facilidade
+    ))
+  ) %>%
+  unnest(indice_transparencia) %>%
+  mutate(
+    dados_coleta = map(dados_coleta, enframe),
+    dados_coleta = map(dados_coleta, pivot_wider),
+    dados_coleta = map(dados_coleta, unnest, c(repositorio_coletor, versao_coletor)),
+  ) %>%
+  unnest(dados_coleta)
+
+glimpse(monthly_info)
+```
+
+
+## `/v2/orgao/{orgao}`
+
+Busca um órgão específico utilizando seu ID.
+
+**operationID**: `GetAgencyById`
+
+```{r}
+#| label: parametros-v2-orgao-{orgao}
+documentacao_paths %>%
+  filter(name == "/v2/orgao/{orgao}") %>%
+  pull(parameters) %>%
+  pluck(1) %>%
+  gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -v2-orgao-{orgao}
+#| code-fold: false
+agency_by_id <- "https://api.dadosjusbr.org/v2/orgao/tjpr" %>%
+  consulta_basica() %>%
+  enframe() %>%
+  pivot_wider() %>%
+  unnest(c(id_orgao, nome, jurisdicao, entidade, uf, url, twitter_handle, ouvidoria))
+
+glimpse(agency_by_id)
+```
+
+## `/v2/orgaos`
+
+Busca todos os órgãos disponíveis.
+
+**operationID**: `GetAllAgencies`
+
+```{r}
+#| label: parametros-v2-orgaos
+# documentacao_paths  %>% filter(name == '/v2/orgaos') %>% pull(parameters) %>% pluck(1) %>% gt::gt()
+```
+
+### Consulta
+
+```{r}
+#| label: -v2-orgaos
+#| code-fold: false
+all_agencies <- "https://api.dadosjusbr.org/v2/orgaos" %>%
+  consulta_basica() %>%
+  map(enframe) %>%
+  map_df(pivot_wider) %>%
+  unnest(c(id_orgao, nome, jurisdicao, entidade, uf, url, twitter_handle, coletando, ouvidoria)) %>%
+  mutate(
+    coletando = map(coletando, enframe),
+    coletando = if_else(
+      map_int(coletando, nrow) == 0,
+      list(tibble(name = c("timestamp", "descricao"), value = NA)),
+      coletando
+    ),
+    coletando = map(coletando, pivot_wider),
+    coletando = map(coletando, unnest, c(timestamp, descricao)),
+    coletando = map(coletando, unnest, c(descricao)),
+    coletando = map(coletando, mutate, idx = glue("descricao_{1:n()}")),
+    coletando = map(coletando, pivot_wider, names_from = idx, values_from = descricao)
+  ) %>%
+  unnest(coletando)
+
+glimpse(all_agencies)
+```
